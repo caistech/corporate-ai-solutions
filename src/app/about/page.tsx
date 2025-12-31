@@ -4,7 +4,7 @@ import { ArrowRight, Linkedin, Youtube, Calendar, Building2, Factory, Newspaper,
 import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
-  title: 'About Dennis Quirk',
+  title: 'About Dennis McMahon',
   description: '30+ years solving business problems. From construction to AI platforms. Building what I need, then sharing it with others.',
 }
 
@@ -17,7 +17,7 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-12 items-start">
             <div className="md:col-span-2">
               <p className="text-accent font-medium mb-4">About</p>
-              <h1 className="mb-6">Dennis Quirk</h1>
+              <h1 className="mb-6">Dennis McMahon</h1>
               <p className="text-xl text-gray-light mb-6 leading-relaxed">
                 30+ years in business. Not in tech—in construction, manufacturing, and operations. 
                 The messy stuff where things actually get built.
@@ -52,7 +52,7 @@ export default function AboutPage() {
               <div className="relative">
                 <img 
                   src="/dennis_web_image.jpg" 
-                  alt="Dennis Quirk - Founder of Long Tail AI Studio"
+                  alt="Dennis McMahon - Founder of Long Tail AI Studio"
                   className="w-full aspect-square object-cover rounded-lg border-2 border-accent/30"
                 />
                 <div className="absolute -bottom-2 -right-2 bg-accent text-black text-xs font-bold px-3 py-1 rounded">
