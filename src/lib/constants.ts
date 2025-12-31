@@ -15,7 +15,7 @@ export const SITE = {
 
 // Founder info
 export const FOUNDER = {
-  name: 'Dennis McMahon,
+  name: 'Dennis McMahon',
   title: 'Founder & CEO',
   linkedin: 'https://www.linkedin.com/in/denniskl/',
   calendly: 'https://www.calendly.com/mcmdennis',
