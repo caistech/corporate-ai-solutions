@@ -88,7 +88,7 @@ export const PLATFORMS: Platform[] = [
   // ============================================
   // PARENT PLATFORMS (Public Landing Pages)
   // ============================================
-  
+
   // Voice Coaching Suite
   {
     id: 'rehearsals-ai',
@@ -119,7 +119,7 @@ export const PLATFORMS: Platform[] = [
     featured: true,
     type: 'parent',
     isGenerator: true,
-    children: ['raiseready-impact', 'lionhearted', 'ether-software', 'soxton-law', 'msci', 'creative-action'],
+    children: ['raiseready-impact', 'lionhearted', 'ether-software', 'soxton-law', 'msci', 'creative-action', 'coachingyuk', 'long-tail-ai-ventures'],
   },
   {
     id: 'connexions',
@@ -137,8 +137,22 @@ export const PLATFORMS: Platform[] = [
     isGenerator: true,
     children: ['universal-interviews'],
   },
-  
+
   // Business Tools
+  {
+    id: 'launchready',
+    name: 'LaunchReady',
+    slug: 'launchready',
+    tagline: 'Voice-guided IP protection for founders',
+    problem: 'Founders\' IP is vulnerable - 72% have unprotected assets',
+    description: 'Protect your ideas before someone else does. Voice-guided IP discovery, automatic evidence capture from GitHub, trademark monitoring, patent deadline tracking, and lawyer-ready packages. Free tier with shared infrastructure, $30/mo for dedicated isolation.',
+    url: 'https://launchready-ruby.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    featured: true,
+    type: 'parent',
+  },
   {
     id: 'dealfindrs',
     name: 'DealFindrs',
@@ -209,7 +223,7 @@ export const PLATFORMS: Platform[] = [
   // ============================================
   // CHILD PLATFORMS (White-Label Examples)
   // ============================================
-  
+
   // Children of RaiseReady Template
   {
     id: 'raiseready-impact',
@@ -295,7 +309,35 @@ export const PLATFORMS: Platform[] = [
     type: 'child',
     parentId: 'raiseready-template',
   },
-  
+  {
+    id: 'coachingyuk',
+    name: 'CoachingYuk',
+    slug: 'coachingyuk',
+    tagline: 'AI pitch coaching platform',
+    problem: 'Founders need accessible pitch practice',
+    description: 'White-label RaiseReady for CoachingYuk. AI-powered pitch coaching with customized branding for Ari\'s coaching practice.',
+    url: 'https://coachingyuk.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'raiseready-template',
+  },
+  {
+    id: 'long-tail-ai-ventures',
+    name: 'Long Tail AI Ventures',
+    slug: 'long-tail-ai-ventures',
+    tagline: 'Internal AI pitch coaching demo',
+    problem: 'Demonstrating RaiseReady capabilities',
+    description: 'Internal white-label RaiseReady demo for Long Tail AI Ventures. Showcases the full founder pitch coaching experience.',
+    url: 'https://long-tail-ai-ventures.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'raiseready-template',
+  },
+
   // Children of Connexions
   {
     id: 'universal-interviews',
@@ -362,9 +404,9 @@ export const PRICING_TIERS: PricingTier[] = [
     name: 'Pro',
     price: '$199',
     period: '/mo',
-    description: 'Full access to all 17 platforms. Best value for power users.',
+    description: 'Full access to all platforms. Best value for power users.',
     features: [
-      'All 17 platforms',
+      'All platforms',
       'Unlimited usage',
       'Priority support',
       'Early access to new platforms',
@@ -467,7 +509,7 @@ export const DEFAULT_AGENT = 'alex'
 
 // Stats for homepage
 export const STATS = [
-  { number: '17', label: 'Platforms Built' },
+  { number: '19', label: 'Platforms Built' },
   { number: '72h', label: 'Average Build Time' },
   { number: '35+', label: 'Years Experience' },
 ]

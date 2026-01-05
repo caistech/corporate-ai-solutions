@@ -7,7 +7,7 @@ import { Platform } from '@/types'
 
 export const metadata: Metadata = {
   title: 'Marketplace',
-  description: '8 parent platforms. Generators that spin up white-label versions. Visit the landing pages.',
+  description: '9 parent platforms. Generators that spin up white-label versions. Visit the landing pages.',
 }
 
 export default function MarketplacePage() {
@@ -24,7 +24,7 @@ export default function MarketplacePage() {
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="text-accent font-medium mb-4">The Marketplace</p>
-            <h1 className="mb-6">8 Parent Platforms.<br />Infinite White-Label Potential.</h1>
+            <h1 className="mb-6">9 Parent Platforms.<br />Infinite White-Label Potential.</h1>
             <p className="text-xl text-gray-light mb-8">
               Each platform below has its own public landing page. Visit to learn more.
               Our generators can spin up customized versions for your business in days.
@@ -41,7 +41,7 @@ export default function MarketplacePage() {
       <section className="py-8 px-6 bg-gray-dark border-y border-gray-border">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-12 text-center">
           <div>
-            <div className="text-3xl font-bold text-accent">8</div>
+            <div className="text-3xl font-bold text-accent">9</div>
             <div className="text-sm text-gray-light">Parent Platforms</div>
           </div>
           <div>
@@ -49,11 +49,11 @@ export default function MarketplacePage() {
             <div className="text-sm text-gray-light">Generators</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-white">7+</div>
+            <div className="text-3xl font-bold text-white">9</div>
             <div className="text-sm text-gray-light">White-Label Examples</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-purple">5</div>
+            <div className="text-3xl font-bold text-purple">6</div>
             <div className="text-sm text-gray-light">With Voice AI</div>
           </div>
         </div>
@@ -217,11 +217,11 @@ function ParentPlatformCard({ platform }: { platform: Platform }) {
           <span className="status-building">Building</span>
         )}
       </div>
-      
+
       <h3 className="text-xl font-bold mb-2">{platform.name}</h3>
       <p className="text-sm text-gray-light mb-1 font-medium">{platform.problem}</p>
       <p className="text-sm text-gray-light mb-6">{platform.description}</p>
-      
+
       {platform.status === 'live' ? (
         <a
           href={platform.url}
