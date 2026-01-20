@@ -121,13 +121,14 @@ export const PLATFORMS: Platform[] = [
     isGenerator: true,
     children: ['raiseready-impact', 'lionhearted', 'ether-software', 'soxton-law', 'msci', 'creative-action', 'coachingyuk', 'long-tail-ai-ventures'],
   },
+  // UPDATED: Connexions - Enhanced AI analysis description
   {
     id: 'connexions',
     name: 'Connexions',
     slug: 'connexions',
-    tagline: 'White-label AI interviewer and researcher panels',
-    problem: 'Customer research and interviews don\'t scale',
-    description: 'Generator platform for white-label AI voice interviewers. Customer research, user feedback, exit interviews, compliance audits - all with observable quality and measurable performance.',
+    tagline: 'AI-powered survey and interview analysis',
+    problem: 'Qualitative research is time-consuming and insights get lost',
+    description: 'Generator platform for white-label AI voice interviewers with enhanced AI analysis. Conduct customer research, user feedback, exit interviews, and compliance audits - then let AI extract themes, sentiment, and actionable insights from your surveys and research interviews automatically.',
     url: 'https://connexions-silk.vercel.app',
     status: 'live',
     category: 'generators',
@@ -136,6 +137,23 @@ export const PLATFORMS: Platform[] = [
     type: 'parent',
     isGenerator: true,
     children: ['universal-interviews'],
+  },
+
+  // NEW: Kira - Personalized AI Thinking Partner
+  {
+    id: 'kira',
+    name: 'Kira',
+    slug: 'kira',
+    tagline: 'Your personalized AI thinking partner',
+    problem: 'Generic AI assistants don\'t know your context and make you repeat yourself',
+    description: 'Not one AI for everyone — a unique thinking partner built around YOUR specific goal. Whether it\'s career decisions, financial planning, business strategy, or life changes, Kira learns your context through voice conversation and remembers everything. She asks questions before jumping to answers, pushes back when something\'s unclear, and thinks WITH you instead of just answering.',
+    url: 'https://kira-ai-two.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
+    featured: true,
+    type: 'parent',
+    isGenerator: false,
   },
 
   // Business Tools
@@ -205,6 +223,21 @@ export const PLATFORMS: Platform[] = [
     category: 'business-tools',
     hasVoiceAI: true,
     type: 'parent',
+  },
+  // NEW: ConferenceLingo - Based on TourLingo
+  {
+    id: 'conferencelingo',
+    name: 'ConferenceLingo',
+    slug: 'conferencelingo',
+    tagline: 'Multi-language AI for conference attendees',
+    problem: 'International conference attendees struggle with language barriers',
+    description: 'AI-powered multilingual assistant for conferences and events. Based on the TourLingo platform, ConferenceLingo helps conference organizers deliver real-time translation, session guidance, networking facilitation, and venue navigation in any language. Voice AI support for hands-free assistance.',
+    url: 'https://tourlingo-operator.vercel.app',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'parent',
+    isGenerator: false,
   },
   {
     id: 'cleanclose',
@@ -362,6 +395,7 @@ export const getGeneratorPlatforms = () => PLATFORMS.filter(p => p.isGenerator)
 export const getChildrenOf = (parentId: string) => PLATFORMS.filter(p => p.parentId === parentId)
 export const getLivePlatforms = () => PLATFORMS.filter(p => p.status === 'live')
 export const getFeaturedPlatforms = () => PLATFORMS.filter(p => p.featured)
+export const getVoiceAIPlatforms = () => PLATFORMS.filter(p => p.hasVoiceAI && p.type === 'parent')
 
 // Pricing tiers
 export const PRICING_TIERS: PricingTier[] = [
@@ -507,9 +541,9 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
 // Default agent when specific agent isn't available
 export const DEFAULT_AGENT = 'alex'
 
-// Stats for homepage
+// Stats for homepage - UPDATED to reflect new platform count
 export const STATS = [
-  { number: '19', label: 'Platforms Built' },
+  { number: '21', label: 'Platforms Built' },
   { number: '72h', label: 'Average Build Time' },
   { number: '35+', label: 'Years Experience' },
 ]
