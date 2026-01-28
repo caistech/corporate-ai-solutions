@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   ArrowRight,
   CheckCircle2,
@@ -19,7 +20,8 @@ import {
   Building2,
   Lightbulb,
   MessageCircle,
-  Mic
+  Mic,
+  Linkedin
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { FOUNDER } from '@/lib/constants'
@@ -33,6 +35,73 @@ export const metadata: Metadata = {
 export default function LaunchStackPage() {
   return (
     <>
+      {/* Brand Header */}
+      <section className="pt-12 pb-8 px-6 bg-black border-b border-gray-border">
+        <div className="max-w-7xl mx-auto">
+          {/* LaunchStack Branding */}
+          <div className="text-center mb-10">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-3">LaunchStack</h1>
+            <p className="text-xl md:text-2xl text-accent font-medium">Strategy. Product. Funding. One package.</p>
+          </div>
+
+          {/* Partner Photos */}
+          <div className="flex justify-center items-start gap-12 md:gap-24">
+            {/* Dennis - Left */}
+            <div className="text-center">
+              <a
+                href="https://www.linkedin.com/in/denniskl/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-orange group-hover:border-accent transition-colors mx-auto mb-3">
+                  <Image
+                    src="/dennis_web_image.jpg"
+                    alt="Dennis McMahon"
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="font-bold text-white group-hover:text-accent transition-colors">Dennis McMahon</p>
+                <p className="text-sm text-orange">Tech & Product</p>
+                <div className="flex items-center justify-center gap-1 mt-1 text-gray-light group-hover:text-accent transition-colors">
+                  <Linkedin size={14} />
+                  <span className="text-xs">LinkedIn</span>
+                </div>
+              </a>
+            </div>
+
+            {/* Daniel - Right */}
+            <div className="text-center">
+              <a
+                href="https://www.linkedin.com/in/daniel-maneveld-2246a81b1/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-accent group-hover:border-orange transition-colors mx-auto mb-3">
+                  {/* Add Daniel's photo to /public/daniel_maneveld.jpg */}
+                  <Image
+                    src="/daniel_image.jpg"
+                    alt="Daniel Maneveld"
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="font-bold text-white group-hover:text-accent transition-colors">Daniel Maneveld</p>
+                <p className="text-sm text-accent">Strategy & GTM</p>
+                <div className="flex items-center justify-center gap-1 mt-1 text-gray-light group-hover:text-accent transition-colors">
+                  <Linkedin size={14} />
+                  <span className="text-xs">LinkedIn</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero */}
       <section className="section bg-grid">
         <div className="max-w-7xl mx-auto">
@@ -42,13 +111,12 @@ export default function LaunchStackPage() {
               For Experienced Professionals Building What&apos;s Next
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
               You have the expertise.<br />
               <span className="text-accent">We build the tech.</span>
-            </h1>
+            </h2>
 
             <p className="text-xl text-gray-light mb-8 max-w-2xl">
-              Strategy. Product. Funding. One package.<br />
               Turn decades of industry knowledge into a funded startup — in weeks, not years.
             </p>
 
@@ -496,70 +564,8 @@ export default function LaunchStackPage() {
         </div>
       </section>
 
-      {/* The Team */}
-      <section className="section bg-gray-dark">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Your Team</h2>
-            <p className="text-gray-light">Two partners. Complementary expertise. One outcome.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Daniel */}
-            <div className="card">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center">
-                  <Users className="text-accent" size={28} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Daniel Maneveld</h3>
-                  <p className="text-sm text-accent">JustFound • Strategy & GTM</p>
-                </div>
-              </div>
-              <p className="text-gray-light text-sm mb-4">
-                First Antler Vietnam cohort. Co-founder of LingoPure.
-                Deep experience in go-to-market strategy, pitch preparation,
-                and helping founders navigate the path to funding.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {['Brand Strategy', 'Pitch Coaching', 'GTM', 'Investor Network'].map((tag) => (
-                  <span key={tag} className="text-xs bg-accent/10 text-accent px-2 py-1 rounded">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Dennis */}
-            <div className="card">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full bg-orange/20 flex items-center justify-center">
-                  <Code className="text-orange" size={28} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Dennis McMahon</h3>
-                  <p className="text-sm text-orange">Corporate AI Solutions • Tech & Product</p>
-                </div>
-              </div>
-              <p className="text-gray-light text-sm mb-4">
-                35+ years in construction and tech. Built 28+ AI platforms.
-                Founder of Long Tail AI Studio. Turns complex problems into
-                working software in weeks, not months.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {['AI Development', 'MVP Build', 'Voice AI', 'Platform Architecture'].map((tag) => (
-                  <span key={tag} className="text-xs bg-orange/10 text-orange px-2 py-1 rounded">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section className="section">
+      <section className="section bg-gray-dark">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
 
