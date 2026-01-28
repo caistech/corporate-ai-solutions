@@ -89,6 +89,10 @@ export const PLATFORMS: Platform[] = [
   // PARENT PLATFORMS (Public Landing Pages)
   // ============================================
 
+  // ----------------------------------------
+  // GENERATOR PLATFORMS
+  // ----------------------------------------
+
   // Voice Coaching Suite
   {
     id: 'rehearsals-ai',
@@ -99,7 +103,7 @@ export const PLATFORMS: Platform[] = [
     description: 'Our platform generation model for AI voice coaching. Multiple verticals built and ready to spin up for any industry that needs conversation practice.',
     url: 'https://rehearsals-ai.vercel.app',
     status: 'live',
-    category: 'voice-coaching',
+    category: 'generators',
     hasVoiceAI: true,
     featured: true,
     type: 'parent',
@@ -121,7 +125,6 @@ export const PLATFORMS: Platform[] = [
     isGenerator: true,
     children: ['raiseready-impact', 'lionhearted', 'ether-software', 'soxton-law', 'msci', 'creative-action', 'coachingyuk', 'long-tail-ai-ventures'],
   },
-  // UPDATED: Connexions - Enhanced AI analysis description
   {
     id: 'connexions',
     name: 'Connexions',
@@ -138,8 +141,28 @@ export const PLATFORMS: Platform[] = [
     isGenerator: true,
     children: ['universal-interviews'],
   },
+  // UniversalLingo - Real-time Translation Generator
+  {
+    id: 'universallingo',
+    name: 'UniversalLingo',
+    slug: 'universallingo',
+    tagline: 'Break language barriers in real-time',
+    problem: 'Businesses need scalable multilingual communication',
+    description: 'Generator platform for real-time AI translation across industries. One core capability—<1s latency translation in 100+ languages—verticalized into industry-specific products. Spin up white-label translation solutions for tourism, healthcare, government, education, hospitality, and more.',
+    url: 'https://universallingo.vercel.app',
+    status: 'live',
+    category: 'generators',
+    hasVoiceAI: true,
+    featured: true,
+    type: 'parent',
+    isGenerator: true,
+    children: ['tourlingo', 'conferencelingo', 'govlingo', 'censuslingo', 'videolingo', 'hotellingo', 'doctorlingo', 'edulingo', 'personallingo'],
+  },
 
-  // NEW: Kira - Personalized AI Thinking Partner
+  // ----------------------------------------
+  // VOICE COACHING (Non-Generator Parents)
+  // ----------------------------------------
+
   {
     id: 'kira',
     name: 'Kira',
@@ -156,7 +179,10 @@ export const PLATFORMS: Platform[] = [
     isGenerator: false,
   },
 
-  // Business Tools
+  // ----------------------------------------
+  // BUSINESS TOOLS
+  // ----------------------------------------
+
   {
     id: 'launchready',
     name: 'LaunchReady',
@@ -212,34 +238,6 @@ export const PLATFORMS: Platform[] = [
     type: 'parent',
   },
   {
-    id: 'tourlingo',
-    name: 'TourLingo',
-    slug: 'tourlingo',
-    tagline: 'Multi-language tourism platform',
-    problem: 'Tour operators struggle with international visitors',
-    description: 'Platform for the tourism guiding industry. Multi-language support, booking management, operator portal. Complete dual-app ecosystem for tour operators and travelers.',
-    url: 'https://tour-lingo.vercel.app',
-    status: 'live',
-    category: 'business-tools',
-    hasVoiceAI: true,
-    type: 'parent',
-  },
-  // NEW: ConferenceLingo - Based on TourLingo
-  {
-    id: 'conferencelingo',
-    name: 'ConferenceLingo',
-    slug: 'conferencelingo',
-    tagline: 'Multi-language AI for conference attendees',
-    problem: 'International conference attendees struggle with language barriers',
-    description: 'AI-powered multilingual assistant for conferences and events. Based on the TourLingo platform, ConferenceLingo helps conference organizers deliver real-time translation, session guidance, networking facilitation, and venue navigation in any language. Voice AI support for hands-free assistance.',
-    url: 'https://tourlingo-operator.vercel.app',
-    status: 'building',
-    category: 'business-tools',
-    hasVoiceAI: true,
-    type: 'parent',
-    isGenerator: false,
-  },
-  {
     id: 'cleanclose',
     name: 'CleanClose',
     slug: 'cleanclose',
@@ -257,7 +255,10 @@ export const PLATFORMS: Platform[] = [
   // CHILD PLATFORMS (White-Label Examples)
   // ============================================
 
+  // ----------------------------------------
   // Children of RaiseReady Template
+  // ----------------------------------------
+
   {
     id: 'raiseready-impact',
     name: 'RaiseReady Impact',
@@ -371,7 +372,10 @@ export const PLATFORMS: Platform[] = [
     parentId: 'raiseready-template',
   },
 
+  // ----------------------------------------
   // Children of Connexions
+  // ----------------------------------------
+
   {
     id: 'universal-interviews',
     name: 'Universal Interviews',
@@ -385,6 +389,137 @@ export const PLATFORMS: Platform[] = [
     hasVoiceAI: true,
     type: 'child',
     parentId: 'connexions',
+  },
+
+  // ----------------------------------------
+  // Children of UniversalLingo
+  // ----------------------------------------
+
+  {
+    id: 'tourlingo',
+    name: 'TourLingo',
+    slug: 'tourlingo',
+    tagline: 'Real-time translation for tour groups',
+    problem: 'Tour operators struggle with international visitors',
+    description: 'Multi-language platform for tourism. Real-time translation, booking management, operator portal. Complete dual-app ecosystem for tour operators and travelers.',
+    url: 'https://tour-lingo.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'conferencelingo',
+    name: 'ConferenceLingo',
+    slug: 'conferencelingo',
+    tagline: 'Live translation for events and seminars',
+    problem: 'International conference attendees struggle with language barriers',
+    description: 'AI-powered multilingual assistant for conferences and events. Real-time translation, session guidance, networking facilitation, and venue navigation in any language.',
+    url: 'https://conferencelingo.vercel.app',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'govlingo',
+    name: 'GovLingo',
+    slug: 'govlingo',
+    tagline: 'Multilingual government service access',
+    problem: 'Government services inaccessible to non-English speakers',
+    description: 'AI translation platform for government agencies. Enable multilingual access to public services, forms, and citizen communications.',
+    url: 'https://universallingo.vercel.app/govlingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'censuslingo',
+    name: 'CensusLingo',
+    slug: 'censuslingo',
+    tagline: 'Multilingual census operations support',
+    problem: 'Census data collection limited by language barriers',
+    description: 'AI translation for large-scale census and survey operations. Enable accurate data collection across all language communities.',
+    url: 'https://universallingo.vercel.app/censuslingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'videolingo',
+    name: 'VideoLingo',
+    slug: 'videolingo',
+    tagline: 'Real-time translation for video calls',
+    problem: 'Remote teams struggle with multilingual communication',
+    description: 'AI-powered real-time translation for video conferencing. Break language barriers in Zoom, Teams, and any video platform.',
+    url: 'https://universallingo.vercel.app/videolingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'hotellingo',
+    name: 'HotelLingo',
+    slug: 'hotellingo',
+    tagline: 'Guest communication for hospitality',
+    problem: 'Hotels struggle to serve international guests',
+    description: 'AI translation platform for hotels and hospitality. Enable seamless guest communication, concierge services, and room service in any language.',
+    url: 'https://universallingo.vercel.app/hotellingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'doctorlingo',
+    name: 'DoctorLingo',
+    slug: 'doctorlingo',
+    tagline: 'Medical interpretation made accessible',
+    problem: 'Healthcare providers can\'t communicate with non-English patients',
+    description: 'AI medical interpretation platform. HIPAA-aware translation for patient consultations, medical history, and care instructions.',
+    url: 'https://universallingo.vercel.app/doctorlingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'edulingo',
+    name: 'EduLingo',
+    slug: 'edulingo',
+    tagline: 'Classroom translation for inclusive education',
+    problem: 'Schools can\'t support non-English speaking students and parents',
+    description: 'AI translation for education. Real-time classroom translation, parent-teacher communication, and multilingual learning materials.',
+    url: 'https://universallingo.vercel.app/edulingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
+  },
+  {
+    id: 'personallingo',
+    name: 'PersonalLingo',
+    slug: 'personallingo',
+    tagline: 'Your personal interpreter',
+    problem: 'Individuals need on-demand translation for daily life',
+    description: 'Personal AI interpreter in your pocket. Real-time translation for travel, shopping, appointments, and everyday conversations.',
+    url: 'https://universallingo.vercel.app/personallingo',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'child',
+    parentId: 'universallingo',
   },
 ]
 
@@ -495,7 +630,7 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_SCOUT || '',
     name: 'Scout',
     personality: 'Curious and helpful, knowledgeable about platforms',
-    greeting: "Hi, I'm Scout! I help people find the right AI platform for their needs. We've got 17 to choose from. What kind of problem are you trying to solve?",
+    greeting: "Hi, I'm Scout! I help people find the right AI platform for their needs. We've got over 20 to choose from. What kind of problem are you trying to solve?",
     pageContext: 'marketplace',
     gender: 'female',
     avatar: '/female_avatar.jpeg',
@@ -541,9 +676,9 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
 // Default agent when specific agent isn't available
 export const DEFAULT_AGENT = 'alex'
 
-// Stats for homepage - UPDATED to reflect new platform count
+// Stats for homepage
 export const STATS = [
-  { number: '21', label: 'Platforms Built' },
+  { number: '28', label: 'Platforms Built' },
   { number: '72h', label: 'Average Build Time' },
   { number: '35+', label: 'Years Experience' },
 ]
