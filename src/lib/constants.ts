@@ -611,6 +611,7 @@ export const PRICING_TIERS: PricingTier[] = [
 // Voice Agents - IDs populated by setup:elevenlabs script or env vars
 // After running `npm run setup:elevenlabs`, agent IDs will be in env vars or elevenlabs-agents.ts
 
+
 export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
   alex: {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ALEX || '',
@@ -626,6 +627,22 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
       pricing: true,
     },
   },
+   kira: {
+     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_KIRA || '',
+     name: 'Kira',
+     personality: 'Thoughtful and direct, a thinking partner not a cheerleader',
+     greeting: "Hi, I'm Kira — I help experienced professionals think through their startup ideas. I'm curious about what you're building. What's the problem you want to solve?",
+     pageContext: 'launchstack',
+     gender: 'female',
+     avatar: '/female_avatar.jpeg',
+     canRoute: {
+       solutions: false,
+       partner: true,
+       community: false,
+        pricing: true,
+     },
+   },
+
   scout: {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_SCOUT || '',
     name: 'Scout',
