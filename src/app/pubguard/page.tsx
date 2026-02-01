@@ -17,9 +17,11 @@ export default function PubGuardPage() {
           <span className="text-red-400">Guard</span>
         </h1>
 
-        <p className="text-2xl md:text-3xl text-slate-300 mb-10 leading-relaxed">
-          Pre-publication security vetting for tech writers.<br />
-          <span className="text-slate-400">Because recommending the wrong software can destroy your career.</span>
+        <p className="text-2xl md:text-3xl text-slate-300 mb-4 leading-relaxed">
+          Software Security Scanner powered by Kira AI
+        </p>
+        <p className="text-xl text-slate-400 mb-10">
+          Know the risks before you publish, ship, or install.
         </p>
 
         {/* CTA Button - Primary */}
@@ -30,17 +32,79 @@ export default function PubGuardPage() {
           Start Scanning Free →
         </a>
 
-        {/* Critical Warning Box */}
+        {/* Who It's For - 4 User Types */}
+        <div className="mb-12">
+          <h3 className="text-white font-semibold text-2xl mb-6">Who Uses PubGuard?</h3>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Tech Writers */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-red-500/50 transition-colors">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">✏️</span>
+                <div>
+                  <h4 className="font-semibold text-white text-xl mb-2">Tech Writers & Bloggers</h4>
+                  <p className="text-base text-slate-300 leading-relaxed">
+                    Vet tools before recommending them. Protect your reputation and reduce liability risk with documented due diligence.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Developers */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-blue-500/50 transition-colors">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">💻</span>
+                <div>
+                  <h4 className="font-semibold text-white text-xl mb-2">Software Developers</h4>
+                  <p className="text-base text-slate-300 leading-relaxed">
+                    Audit your own projects before release. Get actionable security feedback and best practice recommendations.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Prospective Users */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-green-500/50 transition-colors">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">👤</span>
+                <div>
+                  <h4 className="font-semibold text-white text-xl mb-2">Prospective Users</h4>
+                  <p className="text-base text-slate-300 leading-relaxed">
+                    Check if software is safe before you install it. Understand what permissions it needs and what risks you're taking.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Analysts */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-purple-500/50 transition-colors">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">🔍</span>
+                <div>
+                  <h4 className="font-semibold text-white text-xl mb-2">Security Analysts</h4>
+                  <p className="text-base text-slate-300 leading-relaxed">
+                    Rapid security assessments with technical depth. CVE lookups, exposure scans, and framework references for your reports.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Critical Warning Box - Tech Writers Focus */}
         <div className="bg-red-950/50 border border-red-500/40 rounded-xl p-8 mb-10">
-          <h2 className="text-red-400 font-semibold text-2xl mb-4">⚠️ The Risk You&apos;re Taking Every Time You Hit Publish</h2>
+          <h2 className="text-red-400 font-semibold text-2xl mb-4">⚠️ The Risk You're Taking</h2>
           <p className="text-red-200/90 text-lg leading-relaxed mb-5">
-            When you recommend software to your audience and that software causes harm—credential theft, data breaches,
-            financial loss—you&apos;re not just facing angry readers. In the US, class action attorneys are actively
-            targeting influencers and publishers who promoted products that harmed consumers.
+            <strong className="text-red-300">For writers:</strong> When you recommend software that causes harm—credential theft, data breaches,
+            financial loss—you face angry readers and potential legal action. Class actions targeting influencers and publishers are on the rise.
+          </p>
+          <p className="text-red-200/90 text-lg leading-relaxed mb-5">
+            <strong className="text-red-300">For developers:</strong> Shipping software with security vulnerabilities damages user trust,
+            invites negative publicity, and can expose you to liability claims.
           </p>
           <p className="text-red-200/90 text-lg leading-relaxed">
-            <strong className="text-red-300">This isn&apos;t hypothetical.</strong> Class actions seeking $50M–$500M have been
-            filed against brands and individual influencers in 2025 alone.
+            <strong className="text-red-300">For users:</strong> Installing unvetted software can compromise your credentials,
+            expose sensitive data, or give attackers access to your systems.
           </p>
         </div>
 
@@ -56,7 +120,7 @@ export default function PubGuardPage() {
                   <h4 className="font-semibold text-white text-xl mb-2">OpenClaw / Clawdbot (January 2026)</h4>
                   <p className="text-base text-slate-300 leading-relaxed">
                     Hit 100K+ GitHub stars in 48 hours. Security researchers found 1,800+ exposed installations within days.
-                    Credential theft via prompt injection demonstrated in under 5 minutes. Cisco called it &quot;an absolute nightmare.&quot;
+                    Credential theft via prompt injection demonstrated in under 5 minutes. Cisco called it "an absolute nightmare."
                   </p>
                 </div>
               </div>
@@ -103,29 +167,6 @@ export default function PubGuardPage() {
           </div>
         </div>
 
-        {/* Liability Deep Dive */}
-        <div className="bg-amber-950/30 border border-amber-500/30 rounded-xl p-8 mb-12">
-          <h3 className="text-amber-400 font-semibold text-2xl mb-4">📋 The Legal Reality for Publishers</h3>
-          <div className="space-y-4 text-lg text-amber-200/80 leading-relaxed">
-            <p>
-              <strong className="text-amber-300">Class actions are exploding:</strong> Data breach lawsuits tripled in 2023.
-              Influencer marketing class actions emerged as a major trend in 2025.
-            </p>
-            <p>
-              <strong className="text-amber-300">Major settlements prove the risk:</strong> Equifax paid $700M. T-Mobile paid
-              $350M. Yahoo paid $117.5M.
-            </p>
-            <p>
-              <strong className="text-amber-300">Influencers are liable too:</strong> Courts have ruled that anyone receiving
-              compensation to promote something can be held responsible under product liability law.
-            </p>
-            <p>
-              <strong className="text-amber-300">Even winning costs everything:</strong> Defending a lawsuit takes years and
-              drains your resources—even if you&apos;re ultimately cleared.
-            </p>
-          </div>
-        </div>
-
         {/* Solution Section */}
         <div className="mb-12">
           <h3 className="text-white font-semibold text-2xl mb-6">What PubGuard Does</h3>
@@ -138,7 +179,7 @@ export default function PubGuardPage() {
               </div>
               <div>
                 <h4 className="font-semibold text-slate-100 text-xl mb-2">Paste a GitHub URL. Get a risk report.</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">We scan repos, CVE databases, security publications, Shodan exposure data, and researcher warnings—aggregated and synthesized so you don&apos;t have to become a security expert.</p>
+                <p className="text-lg text-slate-300 leading-relaxed">We scan repos, CVE databases, security publications, Shodan exposure data, and researcher warnings—aggregated and synthesized so you don't have to become a security expert.</p>
               </div>
             </div>
 
@@ -150,7 +191,19 @@ export default function PubGuardPage() {
               </div>
               <div>
                 <h4 className="font-semibold text-slate-100 text-xl mb-2">Traffic-light risk rating</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">Green, amber, or red—with plain-English explanation of what was found and what it means for your readers (and your liability).</p>
+                <p className="text-lg text-slate-300 leading-relaxed">Green, amber, or red—with plain-English explanation of what was found and what it means for your specific use case.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-5">
+              <div className="w-14 h-14 bg-green-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-slate-100 text-xl mb-2">Kira AI explains the results</h4>
+                <p className="text-lg text-slate-300 leading-relaxed">Our AI security analyst walks you through the findings by voice. Ask follow-up questions, get recommendations tailored to your role—writer, developer, user, or analyst.</p>
               </div>
             </div>
 
@@ -161,29 +214,78 @@ export default function PubGuardPage() {
                 </svg>
               </div>
               <div>
-                <h4 className="font-semibold text-slate-100 text-xl mb-2">Liability-ready documentation</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">PDF report proving you performed due diligence before publishing. Timestamped. Sourced. Defensible.</p>
+                <h4 className="font-semibold text-slate-100 text-xl mb-2">Documented due diligence</h4>
+                <p className="text-lg text-slate-300 leading-relaxed">Timestamped, sourced reports proving you checked before publishing, shipping, or installing. Defensible if questions arise later.</p>
               </div>
             </div>
 
             <div className="flex gap-5">
               <div className="w-14 h-14 bg-green-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
               <div>
-                <h4 className="font-semibold text-slate-100 text-xl mb-2">Post-publication monitoring</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">Get alerts if security issues emerge after you&apos;ve published—so you can update your article or warn readers before damage spreads.</p>
+                <h4 className="font-semibold text-slate-100 text-xl mb-2">Scan history & comparisons</h4>
+                <p className="text-lg text-slate-300 leading-relaxed">Track how a project's security posture changes over time. Compare before and after scans to see if issues have been fixed.</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 14 Automated Tests */}
+        <div className="bg-slate-800/30 border border-slate-700 rounded-xl p-8 mb-12">
+          <h3 className="text-white font-semibold text-2xl mb-6">14 Automated Security Tests</h3>
+          <div className="grid md:grid-cols-2 gap-4 text-slate-300">
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> GitHub Repository Analysis
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> CVE Database Lookup
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Security News Scan
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Expert/Researcher Warnings
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Credential Storage Audit
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Permission Scope Analysis
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Prompt Injection Risk
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Supply Chain Check
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Config Defaults Review
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Internet Exposure (Shodan)
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Identity Stability (Renames)
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Maintainer Responsiveness
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> SECURITY.md Policy Check
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span> Community Health Indicators
             </div>
           </div>
         </div>
 
         {/* CTA Section */}
         <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-10 mb-10 text-center">
-          <h2 className="text-3xl font-semibold mb-4">Protect yourself before your next article</h2>
-          <p className="text-xl text-slate-400 mb-8">Vet tools before you stake your reputation on them.</p>
+          <h2 className="text-3xl font-semibold mb-4">Know the risks before it's too late</h2>
+          <p className="text-xl text-slate-400 mb-8">Scan any GitHub project in seconds.</p>
 
           <a
             href={PUBGUARD_APP_URL}
@@ -195,11 +297,30 @@ export default function PubGuardPage() {
           <p className="text-slate-500 mt-6 text-base">Free to try • No credit card required</p>
         </div>
 
-        {/* Target Audience */}
-        <p className="text-center text-slate-400 text-lg italic mb-10">
-          <strong className="text-slate-300">Built for:</strong> Newsletter authors, tech bloggers, developer advocates,
-          YouTubers, podcasters—anyone who recommends tools to an audience.
-        </p>
+        {/* Contact */}
+        <div className="text-center mb-10">
+          <p className="text-slate-400 mb-2">Questions? Need custom analysis?</p>
+          <div className="flex items-center justify-center gap-4 text-slate-300">
+            <a href="mailto:dennis@corporateaisolutions.com" className="hover:text-white transition-colors">
+              dennis@corporateaisolutions.com
+            </a>
+            <span className="text-slate-600">|</span>
+            <a href="https://www.calendly.com/mcmdennis" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              Book a call
+            </a>
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-4 mb-10">
+          <p className="text-xs text-slate-500 leading-relaxed">
+            <span className="text-amber-500 font-medium">Disclaimer:</span> PubGuard scans are performed in good faith using automated analysis.
+            Results are informational only and do not constitute professional security advice.
+            Users must conduct their own due diligence before using any software.
+            By using this service, you accept full responsibility for your own decisions.
+            No liability is assumed for any outcomes resulting from software assessed here.
+          </p>
+        </div>
 
         {/* Footer */}
         <div className="text-center pt-8 border-t border-white/10">
