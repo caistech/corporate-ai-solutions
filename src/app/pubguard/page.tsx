@@ -48,7 +48,7 @@ export default function PubGuardLandingPage() {
           </p>
 
           <Link
-            href="/pubguard/scan"
+            href="https://kira-rho.vercel.app/pubguard/scan"
             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-lg font-semibold rounded-xl hover:from-red-600 hover:to-red-700 hover:shadow-xl hover:shadow-red-500/20 transition-all"
           >
             Start Scanning Free
@@ -177,7 +177,7 @@ export default function PubGuardLandingPage() {
           <p className="text-slate-400 mb-8">It&apos;s free, instant, and powered by Kira AI.</p>
 
           <Link
-            href="/pubguard/scan"
+            href="https://kira-rho.vercel.app/pubguard/scan"
             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-lg font-semibold rounded-xl hover:from-red-600 hover:to-red-700 hover:shadow-xl hover:shadow-red-500/20 transition-all"
           >
             Start Your Free Scan
