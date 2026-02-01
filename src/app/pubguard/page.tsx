@@ -42,7 +42,7 @@ export default function PubGuardPage() {
               <div className="flex items-start gap-4">
                 <span className="text-3xl">✏️</span>
                 <div>
-                  <h4 className="font-semibold text-white text-xl mb-2">Tech Writers & Bloggers</h4>
+                  <h4 className="font-semibold text-white text-xl mb-2">Tech Writers &amp; Bloggers</h4>
                   <p className="text-base text-slate-300 leading-relaxed">
                     Vet tools before recommending them. Protect your reputation and reduce liability risk with documented due diligence.
                   </p>
@@ -70,7 +70,7 @@ export default function PubGuardPage() {
                 <div>
                   <h4 className="font-semibold text-white text-xl mb-2">Prospective Users</h4>
                   <p className="text-base text-slate-300 leading-relaxed">
-                    Check if software is safe before you install it. Understand what permissions it needs and what risks you're taking.
+                    Check if software is safe before you install it. Understand what permissions it needs and what risks you&apos;re taking.
                   </p>
                 </div>
               </div>
@@ -93,7 +93,7 @@ export default function PubGuardPage() {
 
         {/* Critical Warning Box - Tech Writers Focus */}
         <div className="bg-red-950/50 border border-red-500/40 rounded-xl p-8 mb-10">
-          <h2 className="text-red-400 font-semibold text-2xl mb-4">⚠️ The Risk You're Taking</h2>
+          <h2 className="text-red-400 font-semibold text-2xl mb-4">⚠️ The Risk You&apos;re Taking</h2>
           <p className="text-red-200/90 text-lg leading-relaxed mb-5">
             <strong className="text-red-300">For writers:</strong> When you recommend software that causes harm—credential theft, data breaches,
             financial loss—you face angry readers and potential legal action. Class actions targeting influencers and publishers are on the rise.
@@ -120,7 +120,7 @@ export default function PubGuardPage() {
                   <h4 className="font-semibold text-white text-xl mb-2">OpenClaw / Clawdbot (January 2026)</h4>
                   <p className="text-base text-slate-300 leading-relaxed">
                     Hit 100K+ GitHub stars in 48 hours. Security researchers found 1,800+ exposed installations within days.
-                    Credential theft via prompt injection demonstrated in under 5 minutes. Cisco called it "an absolute nightmare."
+                    Credential theft via prompt injection demonstrated in under 5 minutes. Cisco called it &quot;an absolute nightmare.&quot;
                   </p>
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function PubGuardPage() {
               </div>
               <div>
                 <h4 className="font-semibold text-slate-100 text-xl mb-2">Paste a GitHub URL. Get a risk report.</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">We scan repos, CVE databases, security publications, Shodan exposure data, and researcher warnings—aggregated and synthesized so you don't have to become a security expert.</p>
+                <p className="text-lg text-slate-300 leading-relaxed">We scan repos, CVE databases, security publications, Shodan exposure data, and researcher warnings—aggregated and synthesized so you don&apos;t have to become a security expert.</p>
               </div>
             </div>
 
@@ -226,8 +226,8 @@ export default function PubGuardPage() {
                 </svg>
               </div>
               <div>
-                <h4 className="font-semibold text-slate-100 text-xl mb-2">Scan history & comparisons</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">Track how a project's security posture changes over time. Compare before and after scans to see if issues have been fixed.</p>
+                <h4 className="font-semibold text-slate-100 text-xl mb-2">Scan history &amp; comparisons</h4>
+                <p className="text-lg text-slate-300 leading-relaxed">Track how a project&apos;s security posture changes over time. Compare before and after scans to see if issues have been fixed.</p>
               </div>
             </div>
           </div>
@@ -284,7 +284,7 @@ export default function PubGuardPage() {
 
         {/* CTA Section */}
         <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-10 mb-10 text-center">
-          <h2 className="text-3xl font-semibold mb-4">Know the risks before it's too late</h2>
+          <h2 className="text-3xl font-semibold mb-4">Know the risks before it&apos;s too late</h2>
           <p className="text-xl text-slate-400 mb-8">Scan any GitHub project in seconds.</p>
 
           <a
