@@ -6,9 +6,9 @@ export default function PubGuardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-slate-200">
       <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Badge */}
+        {/* Forever Free Badge */}
         <span className="inline-block bg-green-500/15 text-green-400 px-4 py-2 rounded-full text-base font-medium mb-6 border border-green-500/30">
-          🛡️ Now Available
+          🎁 Forever Free — No Catch
         </span>
 
         {/* Heading */}
@@ -32,9 +32,28 @@ export default function PubGuardPage() {
           Start Scanning Free →
         </a>
 
-        {/* Who It's For - 4 User Types */}
+        {/* Origin Story - Why We Built This */}
+        <div className="bg-slate-800/50 border border-slate-600 rounded-xl p-8 mb-12">
+          <h2 className="text-white font-semibold text-2xl mb-4">Why We Built This</h2>
+          <p className="text-slate-300 text-lg leading-relaxed mb-4">
+            We&apos;re <a href="https://www.corporateaisolutions.com" target="_blank" rel="noopener noreferrer" className="text-red-400 hover:text-red-300 underline">Corporate AI Solutions</a>.
+            We build AI tools for businesses—and we almost got burned recommending software that turned out to have serious security issues.
+          </p>
+          <p className="text-slate-300 text-lg leading-relaxed mb-4">
+            After that close call, we built PubGuard for ourselves. Then we realized:
+            <strong className="text-white"> everyone evaluating software needs this</strong>—writers, developers, users, analysts.
+            So we&apos;re giving it away.
+          </p>
+          <p className="text-slate-400 text-base">
+            <strong className="text-green-400">Forever free.</strong> No premium tier. No feature limits. No data harvesting.
+            Just a tool we wish we&apos;d had, now available to the community.
+          </p>
+        </div>
+
+        {/* Who It's For - The Trouble You're Avoiding */}
         <div className="mb-12">
-          <h3 className="text-white font-semibold text-2xl mb-6">Who Uses PubGuard?</h3>
+          <h3 className="text-white font-semibold text-2xl mb-2">Who Uses PubGuard?</h3>
+          <p className="text-slate-400 mb-6">Four types of people. Four types of trouble. One tool to avoid it all.</p>
 
           <div className="grid md:grid-cols-2 gap-5">
             {/* Tech Writers */}
@@ -43,8 +62,13 @@ export default function PubGuardPage() {
                 <span className="text-3xl">✏️</span>
                 <div>
                   <h4 className="font-semibold text-white text-xl mb-2">Tech Writers &amp; Bloggers</h4>
+                  <p className="text-red-300/90 text-sm mb-2 font-medium">
+                    🚨 The trouble: You recommend a tool, it gets hacked, your readers lose money.
+                    Angry comments. Damaged reputation. Potential lawsuits.
+                  </p>
                   <p className="text-base text-slate-300 leading-relaxed">
-                    Vet tools before recommending them. Protect your reputation and reduce liability risk with documented due diligence.
+                    <span className="text-green-400">✓</span> PubGuard gives you documented due diligence—timestamped proof you vetted the software before recommending it.
+                    Copy the security summary directly into your article.
                   </p>
                 </div>
               </div>
@@ -56,8 +80,13 @@ export default function PubGuardPage() {
                 <span className="text-3xl">💻</span>
                 <div>
                   <h4 className="font-semibold text-white text-xl mb-2">Software Developers</h4>
+                  <p className="text-red-300/90 text-sm mb-2 font-medium">
+                    🚨 The trouble: You ship code with a vulnerability. Users get compromised.
+                    Your project gets roasted on Hacker News. Career damage.
+                  </p>
                   <p className="text-base text-slate-300 leading-relaxed">
-                    Audit your own projects before release. Get actionable security feedback and best practice recommendations.
+                    <span className="text-green-400">✓</span> PubGuard audits your project before release.
+                    Get a prioritized checklist of issues to fix, with specific remediation steps. Ship with confidence.
                   </p>
                 </div>
               </div>
@@ -69,8 +98,13 @@ export default function PubGuardPage() {
                 <span className="text-3xl">👤</span>
                 <div>
                   <h4 className="font-semibold text-white text-xl mb-2">Prospective Users</h4>
+                  <p className="text-red-300/90 text-sm mb-2 font-medium">
+                    🚨 The trouble: You install something cool, it steals your credentials,
+                    drains your crypto wallet, or installs malware. Real people lose real money every day.
+                  </p>
                   <p className="text-base text-slate-300 leading-relaxed">
-                    Check if software is safe before you install it. Understand what permissions it needs and what risks you&apos;re taking.
+                    <span className="text-green-400">✓</span> PubGuard gives you a plain-English verdict: safe, caution, or avoid.
+                    No security expertise needed—just paste the GitHub URL and get the answer.
                   </p>
                 </div>
               </div>
@@ -82,8 +116,13 @@ export default function PubGuardPage() {
                 <span className="text-3xl">🔍</span>
                 <div>
                   <h4 className="font-semibold text-white text-xl mb-2">Security Analysts</h4>
+                  <p className="text-red-300/90 text-sm mb-2 font-medium">
+                    🚨 The trouble: Manual assessments take hours. You miss something.
+                    Your report is incomplete. Your client gets breached.
+                  </p>
                   <p className="text-base text-slate-300 leading-relaxed">
-                    Rapid security assessments with technical depth. CVE lookups, exposure scans, and framework references for your reports.
+                    <span className="text-green-400">✓</span> PubGuard runs 14 automated checks in seconds.
+                    CVE lookups, Shodan exposure, supply chain analysis—all in one exportable report with full technical depth.
                   </p>
                 </div>
               </div>
@@ -91,20 +130,20 @@ export default function PubGuardPage() {
           </div>
         </div>
 
-        {/* Critical Warning Box - Tech Writers Focus */}
+        {/* Critical Warning Box */}
         <div className="bg-red-950/50 border border-red-500/40 rounded-xl p-8 mb-10">
-          <h2 className="text-red-400 font-semibold text-2xl mb-4">⚠️ The Risk You&apos;re Taking</h2>
+          <h2 className="text-red-400 font-semibold text-2xl mb-4">⚠️ This Isn&apos;t Hypothetical</h2>
           <p className="text-red-200/90 text-lg leading-relaxed mb-5">
-            <strong className="text-red-300">For writers:</strong> When you recommend software that causes harm—credential theft, data breaches,
-            financial loss—you face angry readers and potential legal action. Class actions targeting influencers and publishers are on the rise.
+            In the last year alone, millions of people have been affected by software they trusted:
           </p>
-          <p className="text-red-200/90 text-lg leading-relaxed mb-5">
-            <strong className="text-red-300">For developers:</strong> Shipping software with security vulnerabilities damages user trust,
-            invites negative publicity, and can expose you to liability claims.
-          </p>
+          <ul className="text-red-200/90 text-lg leading-relaxed space-y-2 mb-5">
+            <li>• <strong className="text-red-300">OpenClaw</strong> hit 100K stars, then researchers found 1,800+ exposed installations stealing credentials</li>
+            <li>• <strong className="text-red-300">Log4j</strong> affected 100+ million servers worldwide—Apple, Amazon, Tesla all exposed</li>
+            <li>• <strong className="text-red-300">NPM packages</strong> get hijacked regularly—colors.js, faker.js, ua-parser-js all compromised</li>
+          </ul>
           <p className="text-red-200/90 text-lg leading-relaxed">
-            <strong className="text-red-300">For users:</strong> Installing unvetted software can compromise your credentials,
-            expose sensitive data, or give attackers access to your systems.
+            The pattern is always the same: software goes viral → people trust it → something goes wrong →
+            <strong className="text-white"> someone gets blamed</strong>. Don&apos;t let it be you.
           </p>
         </div>
 
@@ -158,7 +197,7 @@ export default function PubGuardPage() {
                 <div>
                   <h4 className="font-semibold text-white text-xl mb-2">NPM Package Attacks (Ongoing)</h4>
                   <p className="text-base text-slate-300 leading-relaxed">
-                    Colors.js and Faker.js (20M+ weekly downloads combined) were deliberately sabotaged.
+                    Colors.js and Faker.js (20M+ weekly downloads combined) were deliberately sabotaged by their maintainer.
                     UA-Parser-JS (8M weekly downloads) was hijacked for crypto-mining malware.
                   </p>
                 </div>
@@ -167,26 +206,15 @@ export default function PubGuardPage() {
           </div>
         </div>
 
-        {/* Solution Section */}
+        {/* What PubGuard Does */}
         <div className="mb-12">
           <h3 className="text-white font-semibold text-2xl mb-6">What PubGuard Does</h3>
+
           <div className="space-y-6">
             <div className="flex gap-5">
               <div className="w-14 h-14 bg-green-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-100 text-xl mb-2">Paste a GitHub URL. Get a risk report.</h4>
-                <p className="text-lg text-slate-300 leading-relaxed">We scan repos, CVE databases, security publications, Shodan exposure data, and researcher warnings—aggregated and synthesized so you don&apos;t have to become a security expert.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-5">
-              <div className="w-14 h-14 bg-green-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
@@ -294,12 +322,12 @@ export default function PubGuardPage() {
             Start Scanning Now →
           </a>
 
-          <p className="text-slate-500 mt-6 text-base">Free to try • No credit card required</p>
+          <p className="text-slate-500 mt-6 text-base">Forever free • No signup required • No data harvesting</p>
         </div>
 
         {/* Contact */}
         <div className="text-center mb-10">
-          <p className="text-slate-400 mb-2">Questions? Need custom analysis?</p>
+          <p className="text-slate-400 mb-2">Questions? Need custom analysis for your enterprise?</p>
           <div className="flex items-center justify-center gap-4 text-slate-300">
             <a href="mailto:dennis@corporateaisolutions.com" className="hover:text-white transition-colors">
               dennis@corporateaisolutions.com
@@ -325,7 +353,10 @@ export default function PubGuardPage() {
         {/* Footer */}
         <div className="text-center pt-8 border-t border-white/10">
           <p className="text-slate-500 text-base">
-            A <a href="/" className="text-slate-400 hover:text-slate-200 transition-colors">Corporate AI Solutions</a> project
+            A <a href="https://www.corporateaisolutions.com" className="text-slate-400 hover:text-slate-200 transition-colors">Corporate AI Solutions</a> community project
+          </p>
+          <p className="text-slate-600 text-sm mt-2">
+            Built with 💚 because we needed it ourselves
           </p>
         </div>
       </div>
