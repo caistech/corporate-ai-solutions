@@ -7,7 +7,7 @@ import { Platform } from '@/types'
 
 export const metadata: Metadata = {
   title: 'Marketplace',
-  description: '9 parent platforms. Generators that spin up white-label versions. Visit the landing pages.',
+  description: 'Parent platforms, generators, and white-label solutions. Visit the landing pages.',
 }
 
 export default function MarketplacePage() {
@@ -16,6 +16,8 @@ export default function MarketplacePage() {
   const voiceCoaching = parentPlatforms.filter(p => p.category === 'voice-coaching')
   const businessTools = parentPlatforms.filter(p => p.category === 'business-tools')
   const generatorPlatforms = parentPlatforms.filter(p => p.category === 'generators')
+  const childPlatforms = PLATFORMS.filter(p => p.type === 'child')
+  const voiceAIParents = parentPlatforms.filter(p => p.hasVoiceAI)
 
   return (
     <>
@@ -24,7 +26,7 @@ export default function MarketplacePage() {
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="text-accent font-medium mb-4">The Marketplace</p>
-            <h1 className="mb-6">9 Parent Platforms.<br />Infinite White-Label Potential.</h1>
+            <h1 className="mb-6">{parentPlatforms.length} Parent Platforms.<br />Infinite White-Label Potential.</h1>
             <p className="text-xl text-gray-light mb-8">
               Each platform below has its own public landing page. Visit to learn more.
               Our generators can spin up customized versions for your business in days.
@@ -41,19 +43,19 @@ export default function MarketplacePage() {
       <section className="py-8 px-6 bg-gray-dark border-y border-gray-border">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-12 text-center">
           <div>
-            <div className="text-3xl font-bold text-accent">9</div>
+            <div className="text-3xl font-bold text-accent">{parentPlatforms.length}</div>
             <div className="text-sm text-gray-light">Parent Platforms</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-orange">3</div>
+            <div className="text-3xl font-bold text-orange">{generators.length}</div>
             <div className="text-sm text-gray-light">Generators</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-white">9</div>
+            <div className="text-3xl font-bold text-white">{childPlatforms.length}</div>
             <div className="text-sm text-gray-light">White-Label Examples</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-purple">6</div>
+            <div className="text-3xl font-bold text-purple">{voiceAIParents.length}</div>
             <div className="text-sm text-gray-light">With Voice AI</div>
           </div>
         </div>
