@@ -116,9 +116,9 @@ export default function PubGuardLandingPage() {
           <h2 className="text-2xl font-bold text-white text-center mb-8">Traffic Light Rating System</h2>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 text-center">
+            <div className="bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-xl p-6 text-center">
               <div className="text-5xl mb-4">🟢</div>
-              <h3 className="font-bold text-emerald-400 text-xl mb-2">GREEN</h3>
+              <h3 className="font-bold text-[#22c55e] text-xl mb-2">GREEN</h3>
               <p className="text-slate-300 text-sm">Safe to recommend, ship, or install</p>
             </div>
 
@@ -160,7 +160,7 @@ export default function PubGuardLandingPage() {
               <div key={test.name} className="flex items-center gap-3 bg-slate-800/30 rounded-lg p-3">
                 <span className="text-xl">{test.icon}</span>
                 <span className="text-slate-300">{test.name}</span>
-                <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
+                <CheckCircle className="w-4 h-4 text-[#22c55e] ml-auto" />
               </div>
             ))}
           </div>

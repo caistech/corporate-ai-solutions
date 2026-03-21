@@ -40,8 +40,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['DM Sans', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['var(--font-inter)', 'Inter', 'sans-serif'],
+        body: ['var(--font-inter)', 'Inter', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       animation: {
