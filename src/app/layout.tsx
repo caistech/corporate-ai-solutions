@@ -20,17 +20,17 @@ const navItems = [
 
 export const metadata: Metadata = {
   title: {
-    default: 'Corporate AI Solutions | Build to $1M ARR. Auction for 6-10x. Repeat.',
+    default: 'Corporate AI Solutions | The Factory That Builds AI Companies',
     template: '%s | Corporate AI Solutions',
   },
-  description: 'We turn problems into platforms. 17 platforms built. Subscribe to existing solutions or partner to build yours.',
+  description: '38 AI platforms built by one founder in 12 months. The studio is the product. The portfolio is the moat.',
   openGraph: {
     type: 'website',
     locale: 'en_AU',
     url: 'https://corporateaisolutions.com',
     siteName: 'Corporate AI Solutions',
-    title: 'Corporate AI Solutions | Venture Farming, Not Venture Capital',
-    description: 'Build cheap. Grow to $1M ARR. Auction for 6-10x. Repeat.',
+    title: 'Corporate AI Solutions | The Factory That Builds AI Companies',
+    description: '38 AI platforms. One founder. Zero employees. The unicorn isn\'t the product — it\'s the factory.',
   },
 }
 

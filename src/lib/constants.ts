@@ -3,7 +3,7 @@ import { Platform, PricingTier, NavItem, VoiceAgentConfig } from '@/types'
 // Site info
 export const SITE = {
   name: 'Corporate AI Solutions',
-  tagline: "Got a problem? We've probably solved it. If not, let's build it together.",
+  tagline: "The factory that builds AI companies. 38 platforms. One founder. Zero employees.",
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://corporateaisolutions.com',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@corporateaisolutions.com',
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+61402612471',
@@ -598,7 +598,7 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ALEX || '',
     name: 'Alex',
     personality: 'Warm and approachable, direct and efficient',
-    greeting: "Hey! I'm Alex from Long Tail AI Studio. We build AI platforms fast and cheap. Are you looking to use our existing platforms, or do you have a problem you'd like us to solve?",
+    greeting: "Hey! I'm Alex from Long Tail AI Studio. We're the factory that builds AI companies — 38 platforms and counting. Are you looking to use our existing platforms, or do you have a problem you'd like us to solve?",
     pageContext: 'homepage',
     gender: 'male',
     canRoute: {
@@ -628,7 +628,7 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_SCOUT || '',
     name: 'Scout',
     personality: 'Curious and helpful, knowledgeable about platforms',
-    greeting: "Hi, I'm Scout! I help people find the right AI platform for their needs. We've got over 20 to choose from. What kind of problem are you trying to solve?",
+    greeting: "Hi, I'm Scout! I help people find the right AI platform for their needs. We've got 38 to choose from. What kind of problem are you trying to solve?",
     pageContext: 'marketplace',
     gender: 'female',
     avatar: '/female_avatar.jpeg',

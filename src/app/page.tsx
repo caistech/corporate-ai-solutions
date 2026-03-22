@@ -14,17 +14,17 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="max-w-5xl mx-auto px-6 py-24 relative z-10">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 px-4 py-2 rounded-full mb-8">
-            <Mic size={16} className="text-accent" />
-            <span className="text-sm text-accent">AI Voice Agents for Business</span>
+            <Sparkles size={16} className="text-accent" />
+            <span className="text-sm text-accent">AI Venture Studio</span>
           </div>
-          
+
           <h1 className="mb-6">
-            We build AI platforms that improve how businesses talk to their customers.
+            The factory that builds AI companies.
           </h1>
-          
+
           <p className="text-xl text-gray-light max-w-3xl mb-10 leading-relaxed">
-            Voice AI that actually works. Not chatbots that frustrate. Not scripts that bore.
-            Real conversational AI that handles the conversations your team doesn&apos;t have time for.
+            38 platforms built in 12 months. One founder. Zero employees.
+            AI collapsed the cost of building software by 100x — we&apos;re the first to exploit that at scale.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -119,15 +119,15 @@ export default function HomePage() {
               </div>
               <div className="bg-orange/10 p-6 rounded-lg border-2 border-orange">
                 <p className="text-orange text-sm font-medium mb-2">Where We Are Now</p>
-                <h3 className="text-xl font-semibold mb-3">Long Tail Venture Studio</h3>
+                <h3 className="text-xl font-semibold mb-3">The Factory Is the Product</h3>
                 <p className="text-gray-light mb-4">
-                  All of this led to a realization: we&apos;d built a machine for turning problems 
-                  into platforms. Fast. Cheap. Repeatable. That&apos;s the Long Tail Venture Studio—
-                  a portfolio of AI platforms, each solving a specific problem, each growing toward 
-                  $1M ARR, each a potential exit.
+                  All of this led to a realization: we&apos;d built a machine for turning problems
+                  into platforms. Fast. Cheap. Repeatable. The unicorn isn&apos;t any single product —
+                  it&apos;s the factory that creates them. 38 platforms, compounding into a portfolio
+                  targeting $200M+ ARR.
                 </p>
                 <p className="text-white font-medium">
-                  17 platforms built. More coming. And we&apos;re just getting started.
+                  38 platforms built. The factory is running. Now we scale.
                 </p>
               </div>
             </div>
@@ -342,8 +342,8 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-12">
             <div>
               <p className="text-accent font-medium mb-2">Our Platforms</p>
-              <h2>8 Parent Platforms. Infinite Possibilities.</h2>
-              <p className="text-gray-light mt-2">Each platform is a public landing page you can visit. Generators can spin up white-label versions.</p>
+              <h2>38 Platforms Built. The Factory Never Stops.</h2>
+              <p className="text-gray-light mt-2">Each platform is a public landing page you can visit. Generators spin up white-label versions in days.</p>
             </div>
             <Button href="/marketplace" variant="secondary">
               View All Details →
@@ -463,14 +463,14 @@ export default function HomePage() {
             <div className="p-8 rounded-lg border border-orange/30 bg-orange/5">
               <h3 className="text-2xl font-semibold mb-4 text-orange">Long Tail Venture Studio</h3>
               <p className="text-gray-light mb-6">
-                The venture arm. A portfolio of AI platforms, each targeting a specific niche. 
-                Build cheap, grow to $1M ARR, auction for 6-10x. Repeat.
+                The venture arm. A platform that manufactures AI companies at near-zero marginal cost.
+                The factory is the unicorn — the portfolio compounds to billion-dollar scale.
               </p>
               <ul className="space-y-2 text-sm text-gray-light mb-6">
-                <li>• 8 parent platforms + children</li>
-                <li>• $5K build cost average</li>
-                <li>• Portfolio diversification</li>
-                <li>• Investment opportunities</li>
+                <li>• 38 platforms built, 200+ planned</li>
+                <li>• $5K build cost, 7-day cycle</li>
+                <li>• Portfolio targets $200M+ ARR</li>
+                <li>• Individual exits at 6-10x are bonus liquidity</li>
               </ul>
               <Button href="/studio/thesis" variant="orange">Read the Thesis →</Button>
             </div>

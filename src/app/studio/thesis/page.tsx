@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
   title: 'Our Thesis',
-  description: 'The Long Tail of AI Solutions. Build cheap. Grow to $1M ARR. Auction for 6-10x. Repeat.',
+  description: 'The unicorn isn\'t the product — it\'s the factory. 38 AI platforms built. Targeting $200M+ portfolio ARR.',
 }
 
 export default function ThesisPage() {
@@ -13,10 +13,10 @@ export default function ThesisPage() {
       <section className="section bg-grid min-h-[60vh] flex items-center">
         <div className="max-w-4xl mx-auto">
           <div className="tag mb-4">Our Thesis</div>
-          <h1 className="mb-6">The Long Tail of AI Solutions</h1>
+          <h1 className="mb-6">The Unicorn Is the Factory</h1>
           <p className="text-2xl text-gray-light">
-            Amazon proved you don&apos;t need bestsellers when you have infinite shelf space.
-            We&apos;re proving you don&apos;t need unicorns when you can build fast and cheap.
+            AI collapsed the cost of building software by 100x. We built a machine that exploits that —
+            manufacturing AI companies at near-zero marginal cost. The portfolio compounds to billion-dollar scale.
           </p>
         </div>
       </section>
@@ -52,7 +52,7 @@ export default function ThesisPage() {
             <p>
               This is the same shift that enabled Amazon&apos;s long tail.
               Suddenly, every book was worth stocking.
-              <strong className="text-white"> Now, every valid problem is worth solving.</strong>
+              <strong className="text-white"> Now, every valid problem is worth solving — and every solution is worth building.</strong>
             </p>
           </div>
         </div>
@@ -64,23 +64,23 @@ export default function ThesisPage() {
           <h2 className="text-3xl font-bold mb-8">The Model</h2>
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             <div className="p-6 border border-red-500/30 bg-red-500/5">
-              <h3 className="text-lg font-bold mb-4 text-red-400">❌ Traditional VC</h3>
+              <h3 className="text-lg font-bold mb-4 text-red-400">❌ Old Model: Hunt One Unicorn</h3>
               <ul className="space-y-3 text-gray-light">
-                <li>• Need 1 unicorn out of 20 investments</li>
-                <li>• $500K minimum per bet</li>
+                <li>• Bet $500K+ per company, pray for 100x</li>
                 <li>• 90% complete failures</li>
                 <li>• 7-10 year liquidity wait</li>
                 <li>• Binary outcomes: moonshot or bust</li>
+                <li>• One product, one team, one shot</li>
               </ul>
             </div>
             <div className="p-6 border-2 border-accent bg-accent/5">
-              <h3 className="text-lg font-bold mb-4 text-accent">✓ Long Tail Studio</h3>
+              <h3 className="text-lg font-bold mb-4 text-accent">✓ New Model: Build the Factory</h3>
               <ul className="space-y-3 text-gray-light">
-                <li>• Need 50 subscribers per platform</li>
-                <li>• $10K per platform (build + GTM)</li>
-                <li>• Portfolio diversification</li>
-                <li>• Cash flow in months</li>
-                <li>• Gradient outcomes: all levels win</li>
+                <li>• $5K per product, manufactured in 7 days</li>
+                <li>• Portfolio diversification across 200+ products</li>
+                <li>• Cash flow in months, exits as bonus liquidity</li>
+                <li>• The factory scales — each product is near-zero marginal cost</li>
+                <li>• 200 products × $1M ARR = $200M ARR portfolio</li>
               </ul>
             </div>
           </div>
@@ -106,8 +106,10 @@ export default function ThesisPage() {
               </div>
             </div>
             <div className="mt-6 pt-6 border-t border-gray-border text-center">
-              <p className="text-2xl font-bold text-accent">$500K+ MRR = $6M+ ARR</p>
-              <p className="text-gray-light">Before any exits.</p>
+              <p className="text-2xl font-bold text-accent">$500K+ MRR = $6M+ ARR at 100 platforms</p>
+              <p className="text-gray-light mb-2">Before any exits. And this is just phase one.</p>
+              <p className="text-lg text-white font-semibold">At 200 platforms: $200M+ ARR. At 10-15x: $2B+ valuation.</p>
+              <p className="text-gray-light">The unicorn isn&apos;t the product. It&apos;s the factory.</p>
             </div>
           </div>
         </div>
@@ -136,9 +138,9 @@ export default function ThesisPage() {
             ))}
           </div>
           <div className="card-orange p-8 text-center">
-            <p className="text-xl font-bold mb-2">Target Exit: $6-10M per platform</p>
+            <p className="text-xl font-bold mb-2">Individual exits at $6-10M are optional liquidity events</p>
             <p className="text-gray-light">
-              Corporates pay 6-10x because our 24 months beats their 48 months.
+              The real play is the compounding portfolio. Individual product exits are bonus cash flow, not the endgame.
             </p>
           </div>
         </div>
@@ -176,9 +178,9 @@ export default function ThesisPage() {
           <h2 className="text-3xl font-bold mb-8">The 3-Year Vision</h2>
           <div className="space-y-8">
             {[
-              { year: 'Year 1', title: 'Foundation', items: ['30 platforms (17 built, 13 more)', '$50K MRR target', 'Prove the model works'] },
-              { year: 'Year 2', title: 'Scale', items: ['70 platforms', '$200K MRR target', 'First exits/acqui-hires', 'Team of 5-10'] },
-              { year: 'Year 3', title: 'Cash Cow', items: ['100+ platforms', '$500K+ MRR', 'Quarterly distributions', 'Breakout platforms raising independently'] },
+              { year: 'Year 1', title: 'Prove', items: ['50 platforms (38 built)', '$100K MRR target', 'Factory process validated', 'RevAgent GTM operational'] },
+              { year: 'Year 2', title: 'Scale', items: ['100 platforms', '$500K MRR ($6M ARR)', 'First strategic exits', 'Factory replication playbook'] },
+              { year: 'Year 3', title: 'Compound', items: ['200+ platforms', '$2M+ MRR ($24M+ ARR)', 'Portfolio valued at 10-15x ARR', 'Path to $200M ARR visible'] },
             ].map((y) => (
               <div key={y.year} className="card p-6">
                 <div className="flex items-center gap-4 mb-4">

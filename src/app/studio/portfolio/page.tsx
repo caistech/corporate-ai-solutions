@@ -5,7 +5,7 @@ import { PLATFORMS } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Portfolio',
-  description: '17 AI platforms built and counting. See what we\'ve created.',
+  description: '38 AI platforms built in 12 months by one founder. The factory never stops.',
 }
 
 export default function PortfolioPage() {
@@ -115,8 +115,8 @@ export default function PortfolioPage() {
             ))}
           </div>
           <p className="text-center text-gray-light mt-8">
-            Every platform is built with an exit in mind. 
-            The question isn&apos;t IF we exit—it&apos;s WHEN and TO WHOM.
+            Individual exits are optional liquidity events.
+            The real value is the compounding portfolio — and the factory that creates it.
           </p>
         </div>
       </section>
