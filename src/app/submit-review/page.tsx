@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function SubmitReviewPage() {
-  const supabase = createClientComponentClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,7 +79,7 @@ export default function SubmitReviewPage() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold mb-2">Share Your Experience</h1>
           <p className="text-gray-600 mb-8">
-            We'd love to hear about your experience with Corporate AI Solutions.
+            We&apos;d love to hear about your experience with Corporate AI Solutions.
             Your feedback helps us improve and helps others make informed decisions.
           </p>
           

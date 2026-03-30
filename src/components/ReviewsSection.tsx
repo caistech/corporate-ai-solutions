@@ -57,7 +57,7 @@ export function ReviewsSection() {
               
               {/* Review Text */}
               <p className="text-gray-700 mb-4 italic">
-                "{review.reviewText}"
+                &ldquo;{review.reviewText}&rdquo;
               </p>
               
               {/* Client Info */}
