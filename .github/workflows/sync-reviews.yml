@@ -1,0 +1,50 @@
+name: Sync Reviews to Website
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+  
+  # Scheduled: Daily at midnight UTC
+  schedule:
+    - cron: '0 0 * * *'
+  
+  # Webhook trigger (when review approved)
+  repository_dispatch:
+    types: [review_approved]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Sync reviews from Supabase
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CI: true
+        run: npx ts-node scripts/sync-reviews.ts
+      
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'Review Sync Bot'
+          git config --global user.email 'bot@corporateaisolutions.com'
+          git add src/lib/review-constants.ts
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-sync client reviews" && git push)
+      
+      - name: Trigger Vercel deployment
+        run: |
+          curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
