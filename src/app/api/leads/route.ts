@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { notifySubmission } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     const { name, email, phone, company, source_page, source_agent, intent, problem_description } = body
 
     if (!name || !email || !intent) {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = supabaseAdmin()
-    
+
     const { data, error } = await supabase
       .from('leads')
       .insert({
@@ -36,6 +37,11 @@ export async function POST(request: NextRequest) {
       console.error('Supabase error:', error)
       return NextResponse.json({ error: 'Failed to save lead' }, { status: 500 })
     }
+
+    await notifySubmission('New Lead', {
+      Name: name, Email: email, Phone: phone, Company: company,
+      Source: source_page, Agent: source_agent, Intent: intent, Problem: problem_description,
+    })
 
     return NextResponse.json({ success: true, lead: data })
   } catch (error) {

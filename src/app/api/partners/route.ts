@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { notifySubmission } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, phone, industry, problem_description, why_you } = body
+    const { name, email, phone, industry, years_in_industry, problem_description, why_you } = body
 
     if (!name || !email || !industry || !problem_description) {
       return NextResponse.json(
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = supabaseAdmin()
-    
+
     const { data, error } = await supabase
       .from('partnership_applications')
       .insert({
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
       console.error('Supabase error:', error)
       return NextResponse.json({ error: 'Failed to submit partnership request' }, { status: 500 })
     }
+
+    await notifySubmission('New Partner Application', {
+      Name: name, Email: email, Phone: phone, Industry: industry,
+      'Years in Industry': years_in_industry, Problem: problem_description, 'Why Them': why_you,
+    })
 
     return NextResponse.json({ success: true, partnership: data })
   } catch (error) {
