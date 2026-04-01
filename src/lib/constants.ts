@@ -390,7 +390,7 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Shared property intelligence platform',
     problem: 'Property products duplicate data and infrastructure',
     description: 'Shared property intelligence platform powering F2K, DealFindrs, and MMC Build. Supabase edge functions, TypeScript SDK, 20 LGA databases, and QLD Globe integration. One data layer for all property-related ventures.',
-    url: 'https://property-services-xi.vercel.app/',
+    url: 'https://property-services-kappa.vercel.app/',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
