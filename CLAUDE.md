@@ -1,3 +1,33 @@
+<!-- SESSION CONTEXT - Injected by Easy Claude Code -->
+## Prior Session Context
+
+> Continuing from a recent session. Pick up where you left off.
+
+### Last Session Summary
+I can't access `/home/runner/PycharmProjects/` — it's outside the allowed working directory for this session (`/home/runner/work/corporate-ai-solutions/corporate-ai-solutions`).
+
+Could you share the list of projects from PycharmProjects? You can paste:
+- The directory listing (output of `ls ~/PycharmProjects/`)
+- Or a list of project names/URLs you want added
+
+I'll then update the `PLATFORMS` array in `constants.ts` accordingly.
+
+### Recent Conversation (last 2 turns)
+**User (3m ago):** go to constants.ts and update Marketplace with all current Projects in PycharmProjects
+
+**Claude (2m ago):** I can't access `/home/runner/PycharmProjects/` — it's outside the allowed working directory for this session (`/home/runner/work/corporate-ai-solutions/corporate-ai-solutions`).
+
+Could you share the list of projects from PycharmProjects? You can paste:
+- The directory listing (output of `ls ~/PycharmProjects/`)
+- Or a list of project names/URLs you want added
+
+I'll then update the `PLATFORMS` array in `constants.ts` accordingly.
+
+### Instructions
+- Continue from the context above. Do not ask the user to re-explain.
+- When you make significant decisions, emit: <!-- MEMORY type=decision importance=8 | description -->
+- When you create files, emit: <!-- MEMORY type=file_created importance=6 | path/to/file.ts - description -->
+<!-- END SESSION CONTEXT -->
 # Corporate AI Solutions — Project Instructions
 
 ## What is this?
