@@ -92,7 +92,7 @@ jobs:
           curl -s -X PATCH "${{ inputs.callback_url }}/api/dispatch/poll" \
             -H "Content-Type: application/json" \
             -H "X-API-Key: ${{ secrets.EASY_CLAUDE_API_KEY }}" \
-            -d "{\"command_id\": \"${{ inputs.command_id }}\"}" \
+            -d "{\\"command_id\\": \\"${{ inputs.command_id }}\\"}" \
             || true
 
       - name: Write safety settings
