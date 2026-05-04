@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink } from 'lucide-react'
+import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PLATFORMS, getParentPlatforms, getChildrenOf } from '@/lib/constants'
 import { Platform } from '@/types'
@@ -16,6 +16,7 @@ export default function MarketplacePage() {
   const voiceCoaching = parentPlatforms.filter(p => p.category === 'voice-coaching')
   const businessTools = parentPlatforms.filter(p => p.category === 'business-tools')
   const generatorPlatforms = parentPlatforms.filter(p => p.category === 'generators')
+  const infrastructure = parentPlatforms.filter(p => p.category === 'infrastructure')
   const childPlatforms = PLATFORMS.filter(p => p.type === 'child')
   const voiceAIParents = parentPlatforms.filter(p => p.hasVoiceAI)
 
@@ -144,8 +145,29 @@ export default function MarketplacePage() {
         </div>
       </section>
 
+      {/* Core Infrastructure Layer */}
+      {infrastructure.length > 0 && (
+        <section id="infrastructure" className="section bg-gray-dark">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-2">
+                <Shield className="text-accent" size={24} />
+                <h2 className="text-3xl font-bold">Core Infrastructure Layer</h2>
+              </div>
+              <p className="text-gray-light">Foundational trust, security, and observability shared across every platform</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {infrastructure.map((platform) => (
+                <ParentPlatformCard key={platform.id} platform={platform} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Voice Coaching Platforms */}
-      <section id="voice-coaching" className="section bg-gray-dark">
+      <section id="voice-coaching" className="section">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
@@ -164,7 +186,7 @@ export default function MarketplacePage() {
       </section>
 
       {/* Business Tools */}
-      <section id="business-tools" className="section">
+      <section id="business-tools" className="section bg-gray-dark">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-2">Business Tools</h2>

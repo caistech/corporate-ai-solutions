@@ -8,7 +8,7 @@ export interface Platform {
   description: string
   url: string
   status: 'live' | 'building' | 'planned'
-  category: 'voice-coaching' | 'business-tools' | 'generators'
+  category: 'voice-coaching' | 'business-tools' | 'generators' | 'infrastructure'
   hasVoiceAI: boolean
   featured?: boolean
   type: 'parent' | 'child'

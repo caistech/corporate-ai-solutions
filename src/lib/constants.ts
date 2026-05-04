@@ -3,7 +3,7 @@ import { Platform, PricingTier, NavItem, VoiceAgentConfig } from '@/types'
 // Site info
 export const SITE = {
   name: 'Corporate AI Solutions',
-  tagline: "The factory that builds AI companies. 42 platforms. One founder. Zero employees.",
+  tagline: "The factory that builds AI companies. One founder. Zero employees.",
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://corporateaisolutions.com',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@corporateaisolutions.com',
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+61402612471',
@@ -88,6 +88,38 @@ export const PLATFORMS: Platform[] = [
   // ============================================
   // PARENT PLATFORMS (Public Landing Pages)
   // ============================================
+
+  // ----------------------------------------
+  // CORE INFRASTRUCTURE LAYER
+  // ----------------------------------------
+
+  {
+    id: 'platform-trust',
+    name: 'Platform Trust',
+    slug: 'platform-trust',
+    tagline: 'Universal trust, security, and observability for AI platforms',
+    problem: 'Production AI agents need security, audit trails, and compliance evidence — none of it comes free',
+    description: 'The brakes layer for the entire platform portfolio. Six modules: automated security scanning, agent quality evals, structured audit logging, per-tenant token/cost metering, permission governance with human-in-the-loop gates, and rate limiting. Compliance evidence for Australian Privacy Act, OWASP Top 10, and SOC 2 readiness — installed as @platform-trust/middleware in every product.',
+    url: 'https://platform-trust.vercel.app',
+    status: 'live',
+    category: 'infrastructure',
+    hasVoiceAI: false,
+    featured: true,
+    type: 'parent',
+  },
+  {
+    id: 'pubguard',
+    name: 'PubGuard',
+    slug: 'pubguard',
+    tagline: 'Automated vulnerability scanning and OWASP compliance for AI platforms',
+    problem: 'AI products ship to enterprises without documented security posture — buyers demand evidence',
+    description: 'The security scanning engine inside Platform Trust. Runs on PR merge, deploy events, and weekly cron: dependency audits, secret exposure checks, API endpoint classification (read/write, auth-required), agent tool permission surface analysis, and the OWASP Top 10 checklist for API surfaces. Outputs severity-graded findings, downloadable PDF compliance reports for buyer sign-off, and public compliance badges.',
+    url: 'https://kira-rho.vercel.app/pubguard/scan',
+    status: 'live',
+    category: 'infrastructure',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
 
   // ----------------------------------------
   // GENERATOR PLATFORMS
@@ -435,6 +467,97 @@ export const PLATFORMS: Platform[] = [
     hasVoiceAI: false,
     type: 'parent',
   },
+  {
+    id: 'mmcbuild',
+    name: 'MMC Build',
+    slug: 'mmcbuild',
+    tagline: 'Modern methods of construction compliance & management',
+    problem: 'MMC projects are buried in compliance, drawings, and document chaos',
+    description: 'Property compliance and construction management platform for modern methods of construction. 3D visualization, document processing, and project workflows tailored to modular and prefab builds.',
+    url: 'https://mmcbuild.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
+  {
+    id: 'mova',
+    name: 'Mova',
+    slug: 'mova',
+    tagline: 'Voice-powered multilingual mobility',
+    problem: 'Transport providers struggle to serve non-English-speaking riders',
+    description: 'AI-powered multi-language mobility and transportation platform. Voice agent handles bookings, navigation, and rider communication in any language — with maps integration and real-time coordination.',
+    url: 'https://mova.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'parent',
+  },
+  {
+    id: 'lingopure-ai',
+    name: 'LingoPure AI',
+    slug: 'lingopure-ai',
+    tagline: 'AI-first business English platform',
+    problem: 'Business English learners need real conversation practice, not textbooks',
+    description: 'AI-first business English learning platform with placement assessment, ClassIn integration, and voice agent practice. Students get adaptive lessons and conversation reps with an ElevenLabs-powered tutor.',
+    url: 'https://lingo-pure-ai.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
+    type: 'parent',
+  },
+  {
+    id: 'hairstylist-ai',
+    name: 'HairStylist AI',
+    slug: 'hairstylist-ai',
+    tagline: 'In-chair AI consultation for stylists',
+    problem: 'Clients can\'t visualize a new cut before committing — and stylists lose time on miscommunication',
+    description: 'In-chair consultation tool for hair stylists. Take a selfie, generate AI previews of proposed cuts and styles, and align with the client before the first snip. Reduces re-dos and builds confidence in the chair.',
+    url: 'https://hair-stylist-ai.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
+  {
+    id: 'f2k-offshore-modular',
+    name: 'F2K Offshore Modular',
+    slug: 'f2k-offshore-modular',
+    tagline: 'Pre-vetted offshore modular manufacturer marketplace',
+    problem: 'Australian housing buyers can\'t safely source offshore modular manufacturers',
+    description: 'Two-sided platform connecting Australian housing buyers with pre-vetted offshore modular manufacturers. Prequalification, compliance verification, and structured deal flow between buyer and factory.',
+    url: 'https://f2-k-offshore-modular.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
+  {
+    id: 'leadspark',
+    name: 'LeadSpark',
+    slug: 'leadspark',
+    tagline: 'Embeddable AI lead-capture chat widget',
+    problem: 'Static contact forms convert poorly and waste warm visitor intent',
+    description: 'Multi-tenant lead-capture platform with an embeddable chat widget, voice-enabled qualification, knowledge-base-aware responses, and a tenant portal for lead triage. Drop the widget on any site, capture qualified leads, and route them to your CRM.',
+    url: 'https://leadspark-tenant.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'parent',
+  },
+  {
+    id: 'omq-outreach',
+    name: 'OMQ Outreach',
+    slug: 'omq-outreach',
+    tagline: 'AI-powered procurement contact discovery and outreach',
+    problem: 'Reaching named procurement decision-makers at scale is slow, manual, and brittle',
+    description: 'Procurement-focused outreach pipeline: discover named contacts at target organisations via Brave Search and Claude scoring, enrich verified emails through Hunter.io, draft personalised email and LinkedIn copy, send via Resend, and triage replies into a managed cohort queue. Purpose-built for the F2K Offshore Modular Qualified Australian Market Validation campaign.',
+    url: 'https://omq-outreach.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
 
   // ============================================
   // CHILD PLATFORMS (White-Label Examples)
@@ -690,7 +813,7 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ALEX || '',
     name: 'Alex',
     personality: 'Warm and approachable, direct and efficient',
-    greeting: "Hey! I'm Alex from Long Tail AI Studio. We're the factory that builds AI companies — 38 platforms and counting. Are you looking to use our existing platforms, or do you have a problem you'd like us to solve?",
+    greeting: `Hey! I'm Alex from Long Tail AI Studio. We're the factory that builds AI companies — ${PLATFORMS.length} platforms and counting. Are you looking to use our existing platforms, or do you have a problem you'd like us to solve?`,
     pageContext: 'homepage',
     gender: 'male',
     canRoute: {
@@ -720,7 +843,7 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_SCOUT || '',
     name: 'Scout',
     personality: 'Curious and helpful, knowledgeable about platforms',
-    greeting: "Hi, I'm Scout! I help people find the right AI platform for their needs. We've got 38 to choose from. What kind of problem are you trying to solve?",
+    greeting: `Hi, I'm Scout! I help people find the right AI platform for their needs. We've got ${PLATFORMS.length} to choose from. What kind of problem are you trying to solve?`,
     pageContext: 'marketplace',
     gender: 'female',
     avatar: '/female_avatar.jpeg',
@@ -768,7 +891,7 @@ export const DEFAULT_AGENT = 'alex'
 
 // Stats for homepage
 export const STATS = [
-  { number: '38', label: 'Platforms Built' },
+  { number: String(PLATFORMS.length), label: 'Platforms Built' },
   { number: '72h', label: 'Average Build Time' },
   { number: '35+', label: 'Years Experience' },
 ]
