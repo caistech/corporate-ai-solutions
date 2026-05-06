@@ -558,6 +558,19 @@ export const PLATFORMS: Platform[] = [
     hasVoiceAI: false,
     type: 'parent',
   },
+  {
+    id: 'aiftis',
+    name: 'AIFTIS Recognition Rail',
+    slug: 'aiftis',
+    tagline: 'Cross-border professional credential infrastructure for ASEAN MRA signatories',
+    problem: 'Professionals face 12–18 months of redundant verification when seeking work across ASEAN borders',
+    description: 'Trust infrastructure layer above credentialing providers — enables associations to issue, and regulators to verify, portable professional credentials across ASEAN Mutual Recognition Agreement nations. Cryptographic credential wallets, regulator verification portals, and instant access to portable credentials anchored in regional qualification frameworks. Cuts cross-border verification from 12–18 months to 4–6 weeks while preserving each nation\'s regulatory sovereignty.',
+    url: 'https://aiftis-demo.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
 
   // ============================================
   // CHILD PLATFORMS (White-Label Examples)
