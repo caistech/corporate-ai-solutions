@@ -20,6 +20,7 @@ export const FOUNDER = {
   linkedin: 'https://www.linkedin.com/in/denniskl/',
   calendly: 'https://www.calendly.com/mcmdennis',
   youtube: 'https://www.youtube.com/@globalbuildtech',
+  github: 'https://github.com/dennissolver',
   newsletters: {
     goOffsite: {
       name: 'Go Offsite',

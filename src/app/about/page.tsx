@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Linkedin, Youtube, Calendar, Building2, Factory, Newspaper, ExternalLink, FileText } from 'lucide-react'
+import { ArrowRight, Linkedin, Youtube, Calendar, Building2, Factory, Newspaper, ExternalLink, FileText, Github } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
@@ -97,8 +97,20 @@ export default function AboutPage() {
                   <p className="text-xs text-gray-light">@denniskl</p>
                 </div>
               </a>
-              <a 
-                href="https://www.youtube.com/@globalbuildtech" 
+              <a
+                href="https://github.com/dennissolver"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-4 bg-gray-dark rounded-lg border border-gray-border hover:border-accent/50 transition-colors"
+              >
+                <Github className="text-white" size={24} />
+                <div>
+                  <p className="font-medium">GitHub</p>
+                  <p className="text-xs text-gray-light">@dennissolver &middot; public source</p>
+                </div>
+              </a>
+              <a
+                href="https://www.youtube.com/@globalbuildtech"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 bg-gray-dark rounded-lg border border-gray-border hover:border-accent/50 transition-colors"
