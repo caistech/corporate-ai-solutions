@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
   title: 'About Dennis McMahon',
-  description: '30+ years solving business problems. From construction to AI platforms. Building what I need, then sharing it with others.',
+  description: '35+ years solving business problems across construction, aerospace, hospitality and SaaS. Solutions Architect, AI Platform Engineer, and CTO Advisor at PreLabz and LingoPure.',
 }
 
 export default function AboutPage() {
@@ -19,11 +19,16 @@ export default function AboutPage() {
               <p className="text-accent font-medium mb-4">About</p>
               <h1 className="mb-6">Dennis McMahon</h1>
               <p className="text-xl text-gray-light mb-6 leading-relaxed">
-                30+ years in business. Not in tech—in construction, manufacturing, and operations. 
-                The messy stuff where things actually get built.
+                Solutions Architect &amp; AI Platform Engineer. Chief Technology Advisor at
+                PreLabz &amp; LingoPure. Founder of Corporate AI Solutions.
+              </p>
+              <p className="text-gray-light mb-4">
+                35+ years of executive operations across construction, aerospace, hospitality and
+                SaaS &mdash; including 14 years operating between Australia and Southeast Asia
+                (Malaysia, Indonesia).
               </p>
               <p className="text-gray-light mb-6">
-                I started building AI platforms because the tools I needed didn&apos;t exist. 
+                I started building AI platforms because the tools I needed didn&apos;t exist.
                 Now they do. And I&apos;m sharing them with others who have the same problems.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -64,7 +69,7 @@ export default function AboutPage() {
                   className="w-full aspect-square object-cover rounded-lg border-2 border-accent/30"
                 />
                 <div className="absolute -bottom-2 -right-2 bg-accent text-black text-xs font-bold px-3 py-1 rounded">
-                  30+ Years
+                  35+ Years
                 </div>
               </div>
               
@@ -109,6 +114,66 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Current Engagements */}
+      <section className="section">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="mb-2">Current Engagements</h2>
+          <p className="text-gray-light mb-8">May 2026 &mdash; three concurrent engagements.</p>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-6 bg-gray-dark rounded-lg border-l-4 border-accent">
+              <p className="text-xs uppercase tracking-wider text-accent mb-2 font-mono">Live Commercial Contract</p>
+              <h3 className="text-lg font-semibold mb-2">MMC Build</h3>
+              <p className="text-sm text-gray-light mb-2">
+                Sole developer on a fixed-price contract delivering a multi-tenant AI platform
+                for Australian modular construction. Stages 0&ndash;5 shipped in 5 weeks against
+                a 14-week schedule.
+              </p>
+              <p className="text-xs text-gray-light/70">
+                Anthropic + OpenAI + HuggingFace · agentic compliance + cost estimation ·
+                RAG · Stripe per-module billing.
+              </p>
+            </div>
+
+            <a
+              href="https://lingopure.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-6 bg-gray-dark rounded-lg border-l-4 border-blue-400 hover:bg-gray-dark/70 transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-wider text-blue-400 mb-2 font-mono inline-flex items-center gap-2">
+                Chief Technology Advisor
+                <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
+              <h3 className="text-lg font-semibold mb-2">LingoPure</h3>
+              <p className="text-sm text-gray-light mb-2">
+                AI voice tutoring platform. Architecture, AI stack design, and technical execution
+                guidance.
+              </p>
+              <p className="text-xs text-blue-400/70">lingopure.com</p>
+            </a>
+
+            <a
+              href="https://prelabz.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-6 bg-gray-dark rounded-lg border-l-4 border-orange hover:bg-gray-dark/70 transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-wider text-orange mb-2 font-mono inline-flex items-center gap-2">
+                Chief Technology Advisor
+                <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
+              <h3 className="text-lg font-semibold mb-2">PreLabz</h3>
+              <p className="text-sm text-gray-light mb-2">
+                Venture studio for pre-seed through Series A investor readiness. Technical
+                evaluation and architecture review across portfolio ventures.
+              </p>
+              <p className="text-xs text-orange/70">prelabz.com</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* The Journey */}
       <section className="section bg-gray-dark">
         <div className="max-w-4xl mx-auto">
@@ -122,7 +187,7 @@ export default function AboutPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Construction & Modular Expert</h3>
                 <p className="text-gray-light mb-3">
-                  Started in construction over 30 years ago. Became a specialist in modular and 
+                  Started in construction over 35 years ago. Became a specialist in modular and
                   prefabricated building methods. Seen the industry evolve from traditional 
                   stick-built to factory-manufactured.
                 </p>
@@ -203,7 +268,7 @@ export default function AboutPage() {
               <h3 className="text-xl font-semibold mb-2">Global Buildtech</h3>
               <p className="text-sm text-accent mb-3">Modular Construction Consultancy</p>
               <p className="text-gray-light text-sm">
-                30+ years of building expertise. Helping developers, governments, and 
+                35+ years of building expertise. Helping developers, governments, and
                 manufacturers navigate the modular construction landscape.
               </p>
             </a>
@@ -367,7 +432,7 @@ export default function AboutPage() {
             </p>
 
             <p className="text-gray-light">
-              After 30+ years in construction, I&apos;ve learned that the best solutions come from 
+              After 35+ years in construction, I&apos;ve learned that the best solutions come from 
               people who actually do the work. Not consultants who observe. Not developers who 
               assume. People who feel the pain.
             </p>

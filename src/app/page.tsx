@@ -141,7 +141,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <p className="text-accent font-medium mb-4">Who&apos;s Behind This</p>
-              <h2 className="mb-6">30+ Years Solving Business Problems</h2>
+              <h2 className="mb-6">35+ Years Solving Business Problems</h2>
               <p className="text-gray-light mb-4">
                 I&apos;m {FOUNDER.name}. I&apos;ve been in business for over three decades—not in tech, 
                 but in construction, manufacturing, and operations. The messy stuff.

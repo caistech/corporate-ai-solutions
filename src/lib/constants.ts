@@ -36,7 +36,7 @@ export const FOUNDER = {
     globalBuildtech: {
       name: 'Global Buildtech',
       url: 'https://www.global-buildtech.com',
-      description: 'Modular construction consultancy. 30+ years of building expertise.',
+      description: 'Modular construction consultancy. 35+ years of building expertise.',
     },
     factory2key: {
       name: 'Factory2Key',
