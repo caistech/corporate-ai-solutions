@@ -154,7 +154,7 @@ export default function SubmitReviewPage() {
                 <option value="">Select a platform</option>
                 <option value="Rehearsals AI">Rehearsals AI</option>
                 <option value="Checkpoint">Checkpoint</option>
-                <option value="Store MCP">Store MCP</option>
+                <option value="Storefront MCP">Storefront MCP</option>
                 <option value="DealFindrs">DealFindrs</option>
                 <option value="Other">Other</option>
               </select>

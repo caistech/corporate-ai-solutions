@@ -65,7 +65,7 @@ export default function InvestPage() {
           <div className="text-center mb-12">
             <div className="tag tag-center mb-4">Proof the Factory Works</div>
             <h2>{livePlatforms.length} Platforms Already Built</h2>
-            <p className="text-gray-light mt-4">38 production platforms in 12 months. One founder. Zero employees. This isn&apos;t a pitch — it&apos;s a portfolio.</p>
+            <p className="text-gray-light mt-4">{livePlatforms.length} production platforms in 12 months. One founder. Zero employees. This isn&apos;t a pitch — it&apos;s a portfolio.</p>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
             {livePlatforms.map((platform) => (

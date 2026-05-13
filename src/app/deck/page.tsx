@@ -100,7 +100,7 @@ export default function DeckPage() {
               <span className="bg-gradient-to-r from-[#00ff88] to-[#00d4ff] bg-clip-text text-transparent">AI Companies</span>
             </h1>
             <p className="text-xl text-gray-400 mb-12">
-              38 platforms. One founder. Zero employees. Near-zero marginal cost.
+              {PLATFORMS.length} platforms. One founder. Zero employees. Near-zero marginal cost.
             </p>
             <div className="flex justify-center gap-8 font-mono text-sm text-gray-500">
               <span>Dennis McMahon</span>
@@ -214,7 +214,7 @@ export default function DeckPage() {
           <div>
             <p className="font-mono text-sm text-[#00ff88] tracking-widest uppercase mb-4">Proof</p>
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              38 platforms built in 12 months.
+              {PLATFORMS.length} platforms built in 12 months.
             </h2>
             <p className="text-xl text-gray-400 mb-10">
               Not prototypes. Production SaaS with auth, billing, databases, and AI workflows.
@@ -228,7 +228,7 @@ export default function DeckPage() {
             </div>
             <div className="grid grid-cols-4 gap-6 text-center">
               <div>
-                <div className="text-3xl font-bold text-[#00ff88]">38</div>
+                <div className="text-3xl font-bold text-[#00ff88]">{livePlatforms.length}</div>
                 <div className="text-sm text-gray-400">Platforms live</div>
               </div>
               <div>
@@ -522,7 +522,7 @@ export default function DeckPage() {
                 <div className="font-mono text-sm text-[#00ff88] mb-3">DONE — Year 0</div>
                 <h3 className="font-bold text-lg mb-4">Factory Built</h3>
                 <ul className="space-y-2 text-sm text-gray-400">
-                  <li>38 platforms deployed</li>
+                  <li>{PLATFORMS.length} platforms deployed</li>
                   <li>First paying client (MMC Build)</li>
                   <li>5 voice AI agents live</li>
                   <li>4 generator platforms</li>

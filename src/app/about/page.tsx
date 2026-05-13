@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Linkedin, Youtube, Calendar, Building2, Factory, Newspaper, ExternalLink } from 'lucide-react'
+import { ArrowRight, Linkedin, Youtube, Calendar, Building2, Factory, Newspaper, ExternalLink, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
@@ -35,17 +35,25 @@ export default function AboutPage() {
                 >
                   <Calendar size={18} /> Book a Call
                 </a>
-                <a 
-                  href="https://www.linkedin.com/in/denniskl/" 
-                  target="_blank" 
+                <a
+                  href="https://www.linkedin.com/in/denniskl/"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-secondary inline-flex items-center gap-2"
                 >
                   <Linkedin size={18} /> Connect on LinkedIn
                 </a>
+                <a
+                  href="/resume"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary inline-flex items-center gap-2"
+                >
+                  <FileText size={18} /> View Resume
+                </a>
               </div>
             </div>
-            
+
             {/* Photo and Quick Links */}
             <div className="space-y-4">
               {/* Photo */}
@@ -60,9 +68,21 @@ export default function AboutPage() {
                 </div>
               </div>
               
-              <a 
-                href="https://www.linkedin.com/in/denniskl/" 
-                target="_blank" 
+              <a
+                href="/resume"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-4 bg-gray-dark rounded-lg border border-gray-border hover:border-accent/50 transition-colors"
+              >
+                <FileText className="text-accent" size={24} />
+                <div>
+                  <p className="font-medium">Resume</p>
+                  <p className="text-xs text-gray-light">Solutions Architect · AI Platform Engineer</p>
+                </div>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/denniskl/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 bg-gray-dark rounded-lg border border-gray-border hover:border-accent/50 transition-colors"
               >
@@ -217,7 +237,7 @@ export default function AboutPage() {
               <h3 className="text-xl font-semibold mb-2">Long Tail AI Studio</h3>
               <p className="text-sm text-purple mb-3">AI Platform Portfolio</p>
               <p className="text-gray-light text-sm">
-                8 parent platforms, multiple white-label children. Voice AI, business tools, 
+                A portfolio of parent platforms plus white-label children. Voice AI, business tools,
                 generators. Building to $1M ARR, auction for 6-10x, repeat.
               </p>
             </Link>

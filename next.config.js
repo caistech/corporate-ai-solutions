@@ -24,6 +24,11 @@ const nextConfig = {
         destination: '/invest-in-the-future-of-ai',
         permanent: true,
       },
+      {
+        source: '/invest-in-the-future-of-ai',
+        destination: '/studio/invest',
+        permanent: true,
+      },
     ]
   },
   async rewrites() {

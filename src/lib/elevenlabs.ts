@@ -1,4 +1,5 @@
 import { VoiceAgentConfig } from '@/types'
+import { PLATFORMS } from './constants'
 
 // Page to agent mapping
 const PAGE_AGENT_MAP: Record<string, string> = {
@@ -40,8 +41,8 @@ export function getAgentSystemPrompt(agent: VoiceAgentConfig, pathname: string):
   const basePrompt = `You are ${agent.name}, a voice AI assistant for Corporate AI Solutions. 
 Your personality: ${agent.personality}.
 
-Corporate AI Solutions builds AI-powered platforms that solve real business problems. 
-We have 17 platforms available for subscription, and we partner with people to build new solutions.
+Corporate AI Solutions builds AI-powered platforms that solve real business problems.
+We have ${PLATFORMS.length} platforms available for subscription, and we partner with people to build new solutions.
 
 Key information:
 - We have 3 paths for visitors: Subscribe to existing platforms, Partner to build something new, or Join our free Skool community "The Easily Distracted"
@@ -66,8 +67,8 @@ You're on the homepage. Visitors here might be:
 
 Start by understanding their intent. Ask what brought them here today.`,
 
-    '/solutions': `
-You're on the solutions page. The visitor is browsing our 17 platforms.
+    '/marketplace': `
+You're on the marketplace page. The visitor is browsing our ${PLATFORMS.length} platforms.
 Help them find the right solution for their problem. Ask what they're trying to solve.
 If nothing fits, suggest the partnership path or the community.`,
 
@@ -85,7 +86,7 @@ Be consultative and curious. This could be a valuable partnership.`,
 You're on the pricing page. Help them understand the options:
 - Community (Free): Join Skool, share problems, find collaborators
 - Starter ($49/mo): One platform
-- Pro ($199/mo): All 17 platforms
+- Pro ($199/mo): All ${PLATFORMS.length} platforms
 - Partner (Revenue Share): Build something new together
 
 Answer pricing questions and guide them to the right tier.`,

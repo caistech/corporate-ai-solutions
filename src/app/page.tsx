@@ -23,7 +23,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-xl text-gray-light max-w-3xl mb-10 leading-relaxed">
-            38 platforms built in 12 months. One founder. Zero employees.
+            {PLATFORMS.length} platforms built in 12 months. One founder. Zero employees.
             AI collapsed the cost of building software by 100x — we&apos;re the first to exploit that at scale.
           </p>
 
@@ -123,11 +123,11 @@ export default function HomePage() {
                 <p className="text-gray-light mb-4">
                   All of this led to a realization: we&apos;d built a machine for turning problems
                   into platforms. Fast. Cheap. Repeatable. The unicorn isn&apos;t any single product —
-                  it&apos;s the factory that creates them. 38 platforms, compounding into a portfolio
+                  it&apos;s the factory that creates them. {PLATFORMS.length} platforms, compounding into a portfolio
                   targeting $200M+ ARR.
                 </p>
                 <p className="text-white font-medium">
-                  38 platforms built. The factory is running. Now we scale.
+                  {PLATFORMS.length} platforms built. The factory is running. Now we scale.
                 </p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-semibold mb-3">See Our Solutions</h3>
               <p className="text-gray-light mb-6">
-                Browse 8 parent platforms. Voice coaching, business tools, generators. 
+                Browse {parentPlatforms.length} parent platforms. Voice coaching, business tools, generators.
                 Visit the landing pages. Subscribe to what you need.
               </p>
               <ul className="space-y-3 mb-8 text-sm">
@@ -342,7 +342,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-12">
             <div>
               <p className="text-accent font-medium mb-2">Our Platforms</p>
-              <h2>38 Platforms Built. The Factory Never Stops.</h2>
+              <h2>{PLATFORMS.length} Platforms Built. The Factory Never Stops.</h2>
               <p className="text-gray-light mt-2">Each platform is a public landing page you can visit. Generators spin up white-label versions in days.</p>
             </div>
             <Button href="/marketplace" variant="secondary">
@@ -467,7 +467,7 @@ export default function HomePage() {
                 The factory is the unicorn — the portfolio compounds to billion-dollar scale.
               </p>
               <ul className="space-y-2 text-sm text-gray-light mb-6">
-                <li>• 38 platforms built, 200+ planned</li>
+                <li>• {PLATFORMS.length} platforms built, 200+ planned</li>
                 <li>• $5K build cost, 7-day cycle</li>
                 <li>• Portfolio targets $200M+ ARR</li>
                 <li>• Individual exits at 6-10x are bonus liquidity</li>
