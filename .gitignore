@@ -133,3 +133,9 @@ temp/
 *.7z
 
 CLAUDE.local.md
+
+# ===========================================
+# Private working files (drafts, archives, personal notes)
+# Never commit anything in this folder.
+# ===========================================
+docs/dennis cmmahon future files/
