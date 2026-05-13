@@ -21,6 +21,7 @@ export const FOUNDER = {
   calendly: 'https://www.calendly.com/mcmdennis',
   youtube: 'https://www.youtube.com/@globalbuildtech',
   github: 'https://github.com/dennissolver',
+  githubRepos: 'https://github.com/dennissolver?tab=repositories',
   newsletters: {
     goOffsite: {
       name: 'Go Offsite',

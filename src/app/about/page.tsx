@@ -106,7 +106,19 @@ export default function AboutPage() {
                 <Github className="text-white" size={24} />
                 <div>
                   <p className="font-medium">GitHub</p>
-                  <p className="text-xs text-gray-light">@dennissolver &middot; public source</p>
+                  <p className="text-xs text-gray-light">@dennissolver &middot; profile</p>
+                </div>
+              </a>
+              <a
+                href="https://github.com/dennissolver?tab=repositories"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-4 bg-gray-dark rounded-lg border border-gray-border hover:border-accent/50 transition-colors"
+              >
+                <Github className="text-accent" size={24} />
+                <div>
+                  <p className="font-medium">My Repos</p>
+                  <p className="text-xs text-gray-light">All public repositories</p>
                 </div>
               </a>
               <a
