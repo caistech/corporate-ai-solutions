@@ -1,4 +1,4 @@
-import { Platform, PricingTier, NavItem, VoiceAgentConfig } from '@/types'
+import { Platform, NavItem, VoiceAgentConfig } from '@/types'
 
 // Site info
 export const SITE = {
@@ -66,7 +66,7 @@ export const NAV_ITEMS: NavItem[] = [
       { label: 'Industry Solutions', href: '/solutions#industry' },
     ],
   },
-  { label: 'Partner', href: '/partner' },
+  { label: 'Pricing', href: '/pricing' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Community', href: '/community' },
   {
@@ -753,82 +753,6 @@ export const getChildrenOf = (parentId: string) => PLATFORMS.filter(p => p.paren
 export const getLivePlatforms = () => PLATFORMS.filter(p => p.status === 'live')
 export const getFeaturedPlatforms = () => PLATFORMS.filter(p => p.featured)
 export const getVoiceAIPlatforms = () => PLATFORMS.filter(p => p.hasVoiceAI && p.type === 'parent')
-
-// Pricing tiers
-export const PRICING_TIERS: PricingTier[] = [
-  {
-    name: 'Community',
-    price: 'Free',
-    description: 'Join The Easily Distracted. Share problems, find collaborators.',
-    features: [
-      'Skool community access',
-      'Share problems & ideas',
-      'Find potential collaborators',
-      'Learn in public',
-      'No commitment',
-    ],
-    cta: {
-      label: 'Join Free',
-      href: SKOOL.url,
-    },
-    variant: 'default',
-  },
-  {
-    name: 'Starter',
-    price: '$49',
-    period: '/mo',
-    description: 'Access one platform. Perfect for trying out a specific solution.',
-    features: [
-      '1 platform access',
-      'Unlimited usage',
-      'Email support',
-      'All future updates',
-      'Switch platforms monthly',
-    ],
-    cta: {
-      label: 'Get Started',
-      href: '/contact?plan=starter',
-    },
-    variant: 'default',
-  },
-  {
-    name: 'Pro',
-    price: '$199',
-    period: '/mo',
-    description: 'Full access to all platforms. Best value for power users.',
-    features: [
-      'All platforms',
-      'Unlimited usage',
-      'Priority support',
-      'Early access to new platforms',
-      'API access where available',
-      'Custom integrations',
-    ],
-    cta: {
-      label: 'Get Full Access',
-      href: '/contact?plan=pro',
-    },
-    variant: 'featured',
-  },
-  {
-    name: 'Partner',
-    price: 'Rev Share',
-    description: 'Build something new together. You bring the problem, we build the solution.',
-    features: [
-      'Custom solution built for you',
-      'Ongoing revenue share (10-30%)',
-      'Your name on the product',
-      'Direct collaboration',
-      'Built in days, not months',
-      'No upfront cost',
-    ],
-    cta: {
-      label: "Let's Talk",
-      href: '/partner',
-    },
-    variant: 'partner',
-  },
-]
 
 // Voice Agents - IDs populated by setup:elevenlabs script or env vars
 // After running `npm run setup:elevenlabs`, agent IDs will be in env vars or elevenlabs-agents.ts

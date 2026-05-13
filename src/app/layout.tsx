@@ -10,11 +10,11 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 const navItems = [
   { href: '/marketplace', label: 'Marketplace' },
-  { href: '/partner', label: 'Partner' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/studio/partner', label: 'Studio Partner' },
   { href: '/studio', label: 'Studio' },
   { href: '/community', label: 'Community' },
   { href: '/about', label: 'About' },
-  { href: '/pricing', label: 'Pricing' },
   { href: '/contact', label: 'Contact' },
 ]
 
@@ -23,14 +23,14 @@ export const metadata: Metadata = {
     default: 'Corporate AI Solutions | The Factory That Builds AI Companies',
     template: '%s | Corporate AI Solutions',
   },
-  description: '38 AI platforms built by one founder in 12 months. The studio is the product. The portfolio is the moat.',
+  description: '35+ live AI platforms built by one founder. The studio is the product. The portfolio is the moat.',
   openGraph: {
     type: 'website',
     locale: 'en_AU',
     url: 'https://corporateaisolutions.com',
     siteName: 'Corporate AI Solutions',
     title: 'Corporate AI Solutions | The Factory That Builds AI Companies',
-    description: '38 AI platforms. One founder. Zero employees. The unicorn isn\'t the product — it\'s the factory.',
+    description: '35+ live AI platforms. One founder. Zero employees. The unicorn isn\'t the product — it\'s the factory.',
   },
 }
 

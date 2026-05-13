@@ -90,20 +90,6 @@ export interface NavItem {
   children?: NavItem[]
 }
 
-// Pricing types
-export interface PricingTier {
-  name: string
-  price: string
-  period?: string
-  description: string
-  features: string[]
-  cta: {
-    label: string
-    href: string
-  }
-  variant: 'default' | 'featured' | 'partner'
-}
-
 // Form state types
 export interface FormState {
   isSubmitting: boolean

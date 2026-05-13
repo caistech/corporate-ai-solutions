@@ -34,7 +34,7 @@ export default function MarketplacePage() {
             </p>
             <div className="flex gap-4">
               <Button href="/pricing">See Pricing</Button>
-              <Button href="/partner" variant="orange">Want Your Own Version?</Button>
+              <Button href="/studio/partner" variant="orange">Want Your Own Version?</Button>
             </div>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function MarketplacePage() {
             Revenue share model—no upfront cost.
           </p>
           <div className="flex justify-center gap-4">
-            <Button href="/partner" variant="orange">Partner With Us</Button>
+            <Button href="/studio/partner" variant="orange">Partner With Us</Button>
             <Button href="/pricing" variant="secondary">See Pricing</Button>
           </div>
         </div>

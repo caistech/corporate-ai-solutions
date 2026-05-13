@@ -107,9 +107,9 @@ export function VoiceAgent() {
     setIsSpeaking(true)
     setTimeout(() => {
       const responses: Record<string, string> = {
-        'What do you offer?': "We build AI-powered platforms that solve real business problems. We have 17 platforms ready to use, covering everything from investor pitch practice to grant discovery. Or if you have a specific problem, we can partner with you to build a custom solution.",
-        'How does pricing work?': "We have three tiers: Starter at $49/month gets you any 3 platforms, Builder at $99/month gives you 7 platforms, and Scale at $199/month unlocks all 17. There's also a free community option if you're just exploring. What kind of problem are you trying to solve?",
-        'Tell me about partnership': "Partnership is for people with a problem worth solving. You bring the problem, we build the solution together. You stay involved as we build it in days, not months. Then we split the revenue - typically 10-30% depending on your ongoing involvement. What problem are you seeing in your industry?",
+        'What do you offer?': "We build AI-powered platforms that solve real business problems. We have 35+ live platforms covering everything from investor pitch practice to grant discovery to voice AI. We also offer technical advisory retainers from fifteen thousand a month, and fixed-price custom builds. Are you looking to use a platform, or do you have a specific problem you want help solving?",
+        'How does pricing work?': "Three ways to engage. Free community access via Skool. Technical advisory retainer from fifteen thousand a month for ongoing leadership on your stack. Custom platform builds by negotiation, scoped to your problem. What are you trying to solve?",
+        'Tell me about partnership': "Studio partnerships are for domain experts with 15-plus years in their industry who want to co-found a vertical with us. You bring the deep expertise and network; we bring the build capability. Equity-based, selective. If you're looking for paid development without the equity model, that lives under Pricing instead. What's your industry, and what's the gap you see?",
       }
       
       const agentMsg: Message = { 

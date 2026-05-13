@@ -29,6 +29,11 @@ const nextConfig = {
         destination: '/studio/invest',
         permanent: true,
       },
+      {
+        source: '/partner',
+        destination: '/studio/partner',
+        permanent: true,
+      },
     ]
   },
   async rewrites() {

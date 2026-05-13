@@ -13,13 +13,14 @@ export function Header() {
 
   const navItems = [
     { label: 'Marketplace', href: '/marketplace' },
-    { label: 'Partner', href: '/partner' },
+    { label: 'Pricing', href: '/pricing' },
     {
       label: 'Studio',
       href: '/studio',
       children: [
         { label: 'Our Thesis', href: '/studio/thesis' },
         { label: 'Portfolio', href: '/studio/portfolio' },
+        { label: 'Partnerships', href: '/studio/partner' },
         { label: 'Invest', href: '/studio/invest' },
         { label: 'Join Team', href: '/studio/join' },
       ],

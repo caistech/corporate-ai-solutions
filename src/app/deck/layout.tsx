@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { PLATFORMS } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Investor Deck | Long Tail AI Venture Studio',
-  description: 'The factory that builds AI companies at near-zero marginal cost. 38 platforms. One founder. $2B+ at scale.',
+  description: `The factory that builds AI companies at near-zero marginal cost. ${PLATFORMS.length} platforms. One founder. $2B+ at scale.`,
 }
 
 export default function DeckLayout({ children }: { children: React.ReactNode }) {

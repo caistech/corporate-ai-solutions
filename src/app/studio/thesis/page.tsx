@@ -1,12 +1,20 @@
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/Button'
+import { getLivePlatforms } from '@/lib/constants'
+
+const DESCRIPTION =
+  "The unicorn isn't the product — it's the factory. 35+ live AI platforms. Targeting $200M+ portfolio ARR."
 
 export const metadata: Metadata = {
   title: 'Our Thesis',
-  description: 'The unicorn isn\'t the product — it\'s the factory. 38 AI platforms built. Targeting $200M+ portfolio ARR.',
+  description: DESCRIPTION,
+  openGraph: { title: 'Our Thesis | Corporate AI Solutions', description: DESCRIPTION },
+  twitter: { title: 'Our Thesis | Corporate AI Solutions', description: DESCRIPTION },
 }
 
 export default function ThesisPage() {
+  const liveCount = getLivePlatforms().length
+
   return (
     <>
       {/* Hero */}
@@ -178,7 +186,7 @@ export default function ThesisPage() {
           <h2 className="text-3xl font-bold mb-8">The 3-Year Vision</h2>
           <div className="space-y-8">
             {[
-              { year: 'Year 1', title: 'Prove', items: ['50 platforms (38 built)', '$100K MRR target', 'Factory process validated', 'RevAgent GTM operational'] },
+              { year: 'Year 1', title: 'Prove', items: [`50 platforms (${liveCount} built)`, '$100K MRR target', 'Factory process validated', 'RevAgent GTM operational'] },
               { year: 'Year 2', title: 'Scale', items: ['100 platforms', '$500K MRR ($6M ARR)', 'First strategic exits', 'Factory replication playbook'] },
               { year: 'Year 3', title: 'Compound', items: ['200+ platforms', '$2M+ MRR ($24M+ ARR)', 'Portfolio valued at 10-15x ARR', 'Path to $200M ARR visible'] },
             ].map((y) => (
@@ -209,7 +217,7 @@ export default function ThesisPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button href="/marketplace">Use Platforms</Button>
-            <Button href="/partner" variant="orange">Bring a Problem</Button>
+            <Button href="/studio/partner" variant="orange">Bring a Problem</Button>
             <Button href="/studio/invest" variant="secondary">Invest</Button>
             <Button href="/studio/join" variant="secondary">Join Team</Button>
           </div>

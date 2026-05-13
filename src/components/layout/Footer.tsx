@@ -36,7 +36,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li><Link href="/about" className="text-sm text-gray-light hover:text-accent transition-colors">About Dennis</Link></li>
               <li><a href={SKOOL.url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-light hover:text-accent transition-colors">Community</a></li>
-              <li><Link href="/partner" className="text-sm text-gray-light hover:text-accent transition-colors">Partner With Us</Link></li>
+              <li><Link href="/studio/partner" className="text-sm text-gray-light hover:text-accent transition-colors">Studio Partnerships</Link></li>
               <li><Link href="/pricing" className="text-sm text-gray-light hover:text-accent transition-colors">Pricing</Link></li>
             </ul>
           </div>

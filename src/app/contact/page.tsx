@@ -128,7 +128,7 @@ export default function ContactPage() {
                   <Button href="/marketplace" variant="secondary" size="sm" fullWidth>
                     Browse Platforms
                   </Button>
-                  <Button href="/partner" variant="orange" size="sm" fullWidth>
+                  <Button href="/studio/partner" variant="orange" size="sm" fullWidth>
                     Partnership Inquiry
                   </Button>
                   <Button href="/studio/invest" variant="secondary" size="sm" fullWidth>

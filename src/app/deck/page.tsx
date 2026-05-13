@@ -566,7 +566,7 @@ export default function DeckPage() {
               <div className="p-6 border border-white/10 rounded-lg">
                 <div className="text-2xl font-bold text-[#00ff88] mb-2">40%</div>
                 <div className="font-bold mb-1">GTM</div>
-                <div className="text-sm text-gray-400">RevAgent monetisation across all 38 products</div>
+                <div className="text-sm text-gray-400">RevAgent monetisation across all {livePlatforms.length} live products</div>
               </div>
               <div className="p-6 border border-white/10 rounded-lg">
                 <div className="text-2xl font-bold text-[#ff6b35] mb-2">40%</div>

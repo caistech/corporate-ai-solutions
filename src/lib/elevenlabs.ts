@@ -8,7 +8,7 @@ const PAGE_AGENT_MAP: Record<string, string> = {
   '/contact': 'alex',
   '/marketplace': 'scout',
   '/studio/portfolio': 'scout',
-  '/partner': 'morgan',
+  '/studio/partner': 'morgan',
   '/studio/join': 'morgan',
   '/studio/invest': 'victoria',
   '/community': 'alex',
@@ -29,7 +29,7 @@ export function getAgentForPage(pathname: string): string {
   if (pathname.startsWith('/marketplace')) return 'scout'
   if (pathname.startsWith('/studio/portfolio')) return 'scout'
   if (pathname.startsWith('/studio/invest')) return 'victoria'
-  if (pathname.startsWith('/partner')) return 'morgan'
+  if (pathname.startsWith('/studio/partner')) return 'morgan'
   if (pathname.startsWith('/studio/join')) return 'morgan'
 
   // Default to Alex
@@ -72,8 +72,8 @@ You're on the marketplace page. The visitor is browsing our ${PLATFORMS.length} 
 Help them find the right solution for their problem. Ask what they're trying to solve.
 If nothing fits, suggest the partnership path or the community.`,
 
-    '/partner': `
-You're on the partnership page. This visitor is considering bringing us a problem to build.
+    '/studio/partner': `
+You're on the studio partnership page. This visitor is considering co-founding a vertical with us as a Studio partner.
 Your job is to conduct a mini discovery call:
 1. What's the problem they see?
 2. What industry are they in?

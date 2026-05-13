@@ -164,7 +164,7 @@ export default function VoiceAIPage() {
             Let&apos;s talk about whether voice AI actually solves your problem—or just sounds cool.
           </p>
           <div className="flex justify-center gap-4">
-            <Button href="/partner" variant="orange">Partner With Us</Button>
+            <Button href="/studio/partner" variant="orange">Partner With Us</Button>
             <Button href="/marketplace" variant="secondary">Try Voice Platforms</Button>
           </div>
         </div>

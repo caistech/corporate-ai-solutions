@@ -291,7 +291,7 @@ export default function HomePage() {
                   No upfront cost
                 </li>
               </ul>
-              <Button href="/partner" variant="orange" fullWidth>
+              <Button href="/studio/partner" variant="orange" fullWidth>
                 Partner With Us
                 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>

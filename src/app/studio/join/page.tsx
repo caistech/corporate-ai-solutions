@@ -67,7 +67,7 @@ export default function JoinPage() {
               <div>
                 <h4 className="font-bold mb-3">What you&apos;ll do:</h4>
                 <ul className="space-y-2 text-sm text-gray-light">
-                  <li>• Harden and scale existing 17 platforms</li>
+                  <li>• Harden and scale the existing portfolio of 35+ live platforms</li>
                   <li>• Build new platforms from validated problems (3-7 day cycles)</li>
                   <li>• Own infrastructure: Vercel, Supabase, ElevenLabs, Claude AI</li>
                   <li>• Improve build velocity of the studio</li>

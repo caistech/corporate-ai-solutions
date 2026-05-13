@@ -129,7 +129,7 @@ export default function PortfolioPage() {
             Bring us a problem. If it passes validation, we&apos;ll build it together.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <Button href="/partner" variant="orange">Partner With Us</Button>
+            <Button href="/studio/partner" variant="orange">Partner With Us</Button>
             <Button href="/studio/invest" variant="secondary">Invest in the Studio</Button>
           </div>
         </div>
