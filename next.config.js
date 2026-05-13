@@ -26,6 +26,14 @@ const nextConfig = {
       },
     ]
   },
+  async rewrites() {
+    return [
+      {
+        source: '/resume',
+        destination: '/resume.html',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
