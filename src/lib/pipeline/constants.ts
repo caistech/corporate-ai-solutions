@@ -8,6 +8,8 @@ export const SOURCES = [
   'youtube',
   'podcast',
   'other',
+  'connexions_platform_trust_sprint',
+  'voice_intake',
 ] as const
 
 export const SOURCE_LABELS: Record<(typeof SOURCES)[number], string> = {
@@ -20,6 +22,8 @@ export const SOURCE_LABELS: Record<(typeof SOURCES)[number], string> = {
   youtube: 'YouTube',
   podcast: 'Podcast',
   other: 'Other',
+  connexions_platform_trust_sprint: 'Connexions — Platform Trust Sprint',
+  voice_intake: 'Voice intake (Connexions)',
 }
 
 export const STATUSES = [
@@ -62,6 +66,7 @@ export const EVENT_TYPES = [
   'note',
   'task_done',
   'status_change',
+  'connexions_intake_completed',
 ] as const
 
 export const EVENT_TYPE_LABELS: Record<(typeof EVENT_TYPES)[number], string> = {
@@ -74,6 +79,7 @@ export const EVENT_TYPE_LABELS: Record<(typeof EVENT_TYPES)[number], string> = {
   note: 'Note',
   task_done: 'Task done',
   status_change: 'Status change',
+  connexions_intake_completed: 'Connexions intake completed',
 }
 
 export const PRIORITIES = [1, 2, 3] as const
