@@ -28,7 +28,7 @@ const IntakeSchema = z.object({
   // Optional scoring/extraction block — accepted but not required.
   // Connexions can send it once analyze-interview is panel-aware; for now
   // Tracker stores whatever lands.
-  extras: z.record(z.unknown()).optional().nullable(),
+  extras: z.record(z.string(), z.unknown()).optional().nullable(),
 })
 
 type IntakePayload = z.infer<typeof IntakeSchema>
