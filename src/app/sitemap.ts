@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     '',
     '/marketplace',
+    '/marketplace/cqr',
     '/pricing',
     '/community',
     '/contact',
@@ -14,9 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/studio',
     '/studio/thesis',
     '/studio/portfolio',
-    '/studio/partner',
-    '/studio/invest',
     '/studio/join',
+    '/engagement',
   ]
 
   const staticRoutes = staticPages.map((route) => ({

@@ -212,14 +212,13 @@ export default function ThesisPage() {
       {/* CTA */}
       <section className="section">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="mb-4">Join the Long Tail</h2>
+          <h2 className="mb-4">Get Involved</h2>
           <p className="text-xl text-gray-light mb-8">
-            Whether you want to use, build, invest, or join—there&apos;s a path for you.
+            Use the BYOK-first products, bring us a problem to install the factory in your dev shop, or join the team.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button href="/marketplace">Use Platforms</Button>
-            <Button href="/studio/partner" variant="orange">Bring a Problem</Button>
-            <Button href="/studio/invest" variant="secondary">Invest</Button>
+            <Button href="/engagement" variant="orange">Studio in Residence</Button>
             <Button href="/studio/join" variant="secondary">Join Team</Button>
           </div>
         </div>

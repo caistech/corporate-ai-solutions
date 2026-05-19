@@ -65,7 +65,7 @@ export default function AboutPage() {
               <div className="relative">
                 <img 
                   src="/dennis_web_image.jpg" 
-                  alt="Dennis McMahon - Founder of Long Tail AI Studio"
+                  alt="Dennis McMahon - Founder of Corporate AI Solutions"
                   className="w-full aspect-square object-cover rounded-lg border-2 border-accent/30"
                 />
                 <div className="absolute -bottom-2 -right-2 bg-accent text-black text-xs font-bold px-3 py-1 rounded">
@@ -256,10 +256,10 @@ export default function AboutPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">AI Platform Builder</h3>
                 <p className="text-gray-light mb-3">
-                  Started using AI coding support to solve my own business problems. 
-                  Then voice AI to improve customer experience. Then platforms for others. 
-                  Now running Long Tail AI Studio—a portfolio of AI platforms each solving 
-                  real problems.
+                  Started using AI coding support to solve my own business problems.
+                  Then voice AI to improve customer experience. Then platforms for others.
+                  Now running Corporate AI Solutions—a portfolio of BYOK-first AI platforms,
+                  each solving real problems.
                 </p>
                 <Link 
                   href="/marketplace"
@@ -323,11 +323,11 @@ export default function AboutPage() {
                 <span className="text-3xl">🚀</span>
                 <ArrowRight className="text-gray-light group-hover:text-purple transition-colors" size={20} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Long Tail AI Studio</h3>
-              <p className="text-sm text-purple mb-3">AI Platform Portfolio</p>
+              <h3 className="text-xl font-semibold mb-2">Corporate AI Solutions</h3>
+              <p className="text-sm text-purple mb-3">BYOK Factory · AI Platform Portfolio</p>
               <p className="text-gray-light text-sm">
-                A portfolio of parent platforms plus white-label children. Voice AI, business tools,
-                generators. Building to $1M ARR, auction for 6-10x, repeat.
+                A portfolio of BYOK-first parent platforms plus white-label children. Voice AI, business tools,
+                generators. Methodology installed inside dev shops as studio-in-residence engagements.
               </p>
             </Link>
 
@@ -451,7 +451,7 @@ export default function AboutPage() {
             </blockquote>
 
             <p className="text-gray-light">
-              Every platform in the Long Tail portfolio started as a problem I had—or a problem 
+              Every platform in the portfolio started as a problem I had—or a problem
               someone brought to me. I don&apos;t build features. I solve problems.
             </p>
 
