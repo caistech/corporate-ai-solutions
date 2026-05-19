@@ -98,19 +98,25 @@ CQR card and CQR page ship in the **same PR** (Wave 2). No `marketplaceVisible` 
 
 ---
 
-### Task 4 (P1 per user 2026-05-20) — Retag existing 35 platforms with `releaseMode`
+### Task 4 (Wave 2 — P1) — Retag every entry in `PLATFORMS` with `releaseMode`
 
-**Why:** the schema is in place; existing platforms have `releaseMode: undefined`. Once Task 3 renders by mode, every existing card defaults to "no badge / no special CTA" — confusing.
+**Why:** the schema is in place; existing platforms have `releaseMode: undefined`. Once Wave 3 renders by mode, every existing card would default to "no badge / no special CTA" — confusing. Retag now, render later.
 
-**Acceptance criteria:**
-- Every entry in `PLATFORMS` array in `constants.ts` has an explicit `releaseMode` value.
-- Suggested initial tagging (USER TO CONFIRM before applying):
-  - **`paid-client`** — MMC Build / Checkpoint (only this is a true external-client deliverable per user clarification 2026-05-20).
-  - **`in-migration`** — F2K-Checkpoint, F2K-Fund-Tokenisation, NDISSDA Automate, R&D Tax, Disaster Support, Connexions, RaiseReady Template, mova, HairStylistAI, and any other Dennis-owned-entity product that's slated for BYOK migration per the integrated migration matrix in `MONETISATION_STATE.md`.
-  - **`commercial`** — Kira, Rehearsals AI, UniversalLingo, and any other product currently sold as a hosted service that's not on the BYOK migration list.
-  - **`placeholder`** — Platform Trust, PubGuard, and anything that's actually shared infrastructure / not a customer-facing product (consider whether these belong on the marketplace at all — they're more "consumed via @caistech imports" per Rule 9 than "deployable products").
+**Tagging convention — LOCKED 2026-05-20 (user decision):**
 
-**Sequencing note:** the integrated migration matrix in `MONETISATION_STATE.md` is the authoritative source for which products are migration candidates vs commercial vs paid-client. Read it before retagging. If the matrix has open questions (cohort selection, sequencing), surface those to the user during the session — do not silently default. The suggested initial tagging above is a starting point, not a final decision.
+Apply this convention mechanically. Do not re-deliberate per row. The entire portfolio is being repositioned to BYOK, so `in-migration` is the **default**; exceptions are explicit and short.
+
+| Tag | Applies to |
+|---|---|
+| `paid-client` | **MMC Build / Checkpoint only.** True external-client deliverable per user clarification 2026-05-20. |
+| `placeholder` | **Platform Trust, PubGuard, and any other entry that's shared infrastructure** (consumed via `@caistech/*` imports per Rule 9, not a deployable customer-facing product). Consider whether these belong on the public marketplace at all — surface to user during retag if any are visible-but-shouldn't-be. |
+| `byok-free` | **CQR only at present** (first public BYOK release; already tagged). |
+| `in-migration` | **Everything else.** Every other parent entry — including those currently sold as hosted services (Kira, Rehearsals AI, UniversalLingo, etc.). The `commercial` tag is effectively retired in the new direction; the pivot is portfolio-wide, just sequenced over months. |
+| **Children inherit parent's `releaseMode`** | A generator's children (e.g. `universal-interviews` under Connexions, UniversalLingo's industry verticals, RaiseReady's `raiseready-impact`) take the parent's tag unless the user explicitly overrides during retag. Do not stop and ask per child — apply the parent's tag and move on. |
+
+**Sequencing:** retag must complete before any Wave 3 hero copy that quotes a platform count. Read `MONETISATION_STATE.md` once at session start for any **specific overrides** the user has flagged since this convention was locked, but otherwise the table above is the authoritative rule.
+
+**Sanity check after retag:** count entries per tag and report the breakdown to the user before opening the PR. Expected shape: ~1 `byok-free` + 2 `paid-client` + 2–3 `placeholder` + everything else `in-migration`. If the breakdown looks different (e.g. a flood of `placeholder` because too many entries got read as shared infra), pause and resurface.
 
 ---
 
@@ -165,11 +171,11 @@ Apply this hierarchy consistently — everyday surfaces use *BYOK Factory*, form
 ## Open decisions surfaced for the user
 
 1. **Dedicated CQR page route:** `/marketplace/cqr` (current `url` value) or `/products/cqr` or other? Whatever pattern existing product pages use, follow it.
-2. **`marketplaceVisible` flag — should it be added?** Or trust that Task 1 ships in the same deploy as the constants.ts entry?
-3. **Hide `paid-client` mode entries from public marketplace?** MMC Build / Checkpoint shouldn't be public-marketable. Filter at render time, or remove from the marketplace category entirely.
-4. **Vercel Deploy button URL for CQR** — depends on the CQR repo being public + a GitHub template. Currently both are pending. Task 1 ships with a placeholder; Task 3 needs the real URL.
-5. ~~`/studio/partner` — RETIRE or REPURPOSE?~~ **DECIDED 2026-05-20: REPURPOSE as `/engagement`.** See updated entry in site review below.
-6. **Voice agent reconciliation** — keep 4 ElevenLabs agents (Alex/Scout/Morgan/Victoria) with declared roles + apply canonical opening/signature, OR consolidate to one canonical agent? Depends on `cais-shared-services/voice-config.json` being created per `MONETISATION_EXECUTION_PLAN.md` Step 0.4.
+2. ~~`marketplaceVisible` flag~~ **DECIDED 2026-05-20: Option A — CQR card + page ship in the same Wave 2 PR. No flag added.** See Task 2.
+3. **Hide `paid-client` mode entries from public marketplace?** MMC Build / Checkpoint shouldn't be public-marketable. Filter at render time, or remove from the marketplace category entirely. (Wave 3 — marketplace card UI work.)
+4. **Vercel Deploy button URL for CQR** — depends on the CQR repo being public + a GitHub template. Currently both are pending. Wave 2 ships with explicit `deployUrl: undefined` + TODO comment; Wave 3 marketplace card UI needs the real URL.
+5. ~~`/studio/partner` — RETIRE or REPURPOSE?~~ **DECIDED 2026-05-20: REPURPOSE as `/engagement`.** Wave 2 ships route stub + redirect; Wave 3 ships full content.
+6. **Voice agent reconciliation** — keep 4 ElevenLabs agents (Alex/Scout/Morgan/Victoria) with declared roles + apply canonical opening/signature, OR consolidate to one canonical agent? Depends on `cais-shared-services/voice-config.json` being created per `MONETISATION_EXECUTION_PLAN.md` Step 0.4. **Resolve at start of Wave 3, not Wave 2.**
 
 ### Engagement terminology — UNIFIED 2026-05-20
 
@@ -322,41 +328,51 @@ Per user instruction: *"corporate-ai site gets reviewed for inconsistency with t
 
 ### Summary table for the next session
 
-| Route | Action | Priority | Depends on |
+| Route | Action | Wave | Depends on |
 |---|---|---|---|
-| `/` | UPDATE | P1 | Brand decisions locked ✓; Open Decision #5 (partner-page direction) |
-| `/marketplace` | UPDATE | P1 | Task 3 (card UI honours releaseMode); Task 4 (retag constants) |
-| `/marketplace/cqr` | CREATE | P1 | Task 1 (build the page) |
-| `/pricing` | UPDATE | P1 | Brand decisions locked ✓ |
-| `/solutions` | UPDATE | P2 | Task 4 (retag constants) |
-| `/voice-ai` | UPDATE | P2 | Open Decision #6 (voice persona) |
-| `/studio/portfolio` | UPDATE (light) | P2 | Brand decisions locked ✓ |
-| `/studio/thesis` | UPDATE | P2 | Reference design doc |
-| `/studio/invest` | UPDATE or DELETE | P3 | LP-conversation timing decision |
-| `/studio/partner` → `/engagement` | REPURPOSE | P1 | DECIDED 2026-05-20 — full content spec in section above |
-| `/about` | UPDATE (now P1) | P1 | DECIDED 2026-05-20 — explicit studio-in-residence invitation |
-| `/studio/join` | UPDATE (light) | P3 | Brand decisions locked ✓ |
-| `/deck` | UPDATE or DELETE | P3 | LP-conversation timing decision |
-| `/launchstack` | UPDATE or DELETE | P2 | Investigate current state |
-| `/community` | KEEP | P3 | Light brand application only |
-| `/invest-in-the-future-of-ai` | Mirrors `/studio/invest` decision | P3 | LP-conversation timing |
-| Nav items | UPDATE | P1 | Open Decision #5 (which menu items survive) |
-| Footer | UPDATE (light) | P2 | Brand decisions locked ✓ |
-| 4 voice agents | UPDATE | P2 | Open Decision #6 |
+| `/marketplace/cqr` | CREATE | **Wave 2** | Task 1 (build the page) |
+| `PLATFORMS` retag in `constants.ts` | UPDATE | **Wave 2** | Task 4 (every entry gets explicit `releaseMode`) |
+| `NAV_ITEMS` duplicate `Pricing` removal | UPDATE | **Wave 2** | `constants.ts` lines 71–72 — surgical edit |
+| `/studio/partner` → `/engagement` 301 redirect + stub page | CREATE | **Wave 2** | Route + redirect only; content is Wave 3 |
+| `/` (homepage hero rewrite) | UPDATE | Wave 3 | Wave 2 retag must land first (honest platform count) |
+| `/pricing` | UPDATE | Wave 3 | Wave 2 |
+| `/about` | UPDATE | Wave 3 | Wave 2 |
+| `/engagement` (content rewrite, replacing stub) | UPDATE | Wave 3 | Wave 2 stub |
+| `/marketplace` (card UI honours `releaseMode`) | UPDATE | Wave 3 | Task 3; CQR `deployUrl` populated |
+| `/solutions` | UPDATE | Wave 3 | Wave 2 retag |
+| `/voice-ai` | UPDATE | Wave 3 | Open Decision #6 (voice persona) |
+| `/studio/portfolio` | UPDATE (light) | Wave 3 | Brand decisions locked ✓ |
+| `/studio/thesis` | UPDATE | Wave 3 | Reference design doc |
+| `/studio/join` | UPDATE (light) | Wave 3 | Brand decisions locked ✓ |
+| `/community` | KEEP | Wave 3 | Light brand application only |
+| Footer | UPDATE (light) | Wave 3 | Brand decisions locked ✓ |
+| 4 voice agents | UPDATE | Wave 3 | Open Decision #6 |
+| `/studio/invest` | UPDATE or DELETE | Backlog | LP-conversation timing decision |
+| `/deck` | UPDATE or DELETE | Backlog | LP-conversation timing decision |
+| `/launchstack` | UPDATE or DELETE | Backlog | Investigate current state |
+| `/invest-in-the-future-of-ai` | Mirrors `/studio/invest` decision | Backlog | LP-conversation timing |
 
-**Hard blocker for hero rewrite:** Open Decision #5 (`/studio/partner` — retire or repurpose). Cannot finalise the homepage three-CTA structure without this. Surface to user FIRST at the start of the next session.
+**Hard blocker for Wave 3 (hero/voice unification):** Open Decision #6 (voice persona — keep 4 ElevenLabs agents with role-specialisations, or consolidate to one canonical). This decision feeds the hero (single voice surface vs. 4) and the `/voice-ai` page rewrite. Surface to user at the **start of Wave 3**, not the start of Wave 2 — Wave 2 doesn't touch the voice layer.
 
 ---
 
-## What success looks like at end of the next session (full BYOK pivot)
+## What success looks like at end of the next session (Wave 2)
 
-Per user instruction 2026-05-20, the next session's scope is the full BYOK pivot — Tasks 1, 4, and 5 are all P1.
+Per the 2026-05-20 retightening, the next session's scope is **Wave 2 — the plumbing layer**. Hero/pricing/About rewrites move to Wave 3 as a separate PR.
 
-**End-state acceptance:**
+**Wave 2 end-state acceptance (one PR):**
 - `/marketplace/cqr` dedicated product page live, compliant with VOICE AI / responsive / explanatory header / explanatory copy rules.
-- Every entry in `PLATFORMS` array in `constants.ts` has an explicit `releaseMode` value. `paid-client` entries filtered or badged appropriately on the public marketplace.
-- Hero copy + pricing page reflect the free-with-BYOK + studio-in-residence direction. The `$49/mo marketplace entry` framing is either retired or repositioned as "hosted version for teams that don't want to self-deploy."
+- Every entry in `PLATFORMS` array in `constants.ts` has an explicit `releaseMode` value. (No public render change yet — that's Wave 3.)
+- Duplicate `Pricing` entry in `NAV_ITEMS` removed (`constants.ts` lines 71–72).
+- `/engagement` route stub exists; `/studio/partner` → `/engagement` 301 redirect in place. Stub page: one-line holding copy + Dennis contact. No marketing rewrite yet.
+- CQR entry in `constants.ts` carries explicit `deployUrl: undefined` with `// TODO: real URL after CQR repo is public` comment.
+
+**Wave 3 end-state acceptance (separate PR after Wave 2 lands):**
+- Hero copy + pricing page reflect the free-with-BYOK + studio-in-residence direction. The `$49/mo marketplace entry` framing is either retired or repositioned as "hosted version for teams that don't want to self-deploy." **Hero quotes the actual post-retag platform count**, not a guessed number.
+- About page rewritten with explicit studio-in-residence invitation.
+- `/engagement` stub replaced with full content per the spec in the inconsistency review.
 - Marketplace card UI honours `releaseMode` — different CTAs per mode (e.g. "Deploy Your Own" for `byok-free`, no CTA for `paid-client`).
+- Open Decision #6 (voice persona) resolved.
 - All open decisions resolved or explicitly logged as pending with a tripwire (e.g. "methodology name still TBD; using working name `<X>` until Phase 0.2 of execution plan locks it").
 
 **Coordination with the broader plan:**

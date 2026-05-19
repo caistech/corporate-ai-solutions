@@ -237,6 +237,7 @@ export const PLATFORMS: Platform[] = [
     type: 'parent',
     releaseMode: 'byok-free',
     githubUrl: 'https://github.com/dennissolver/community-question-responder',
+    deployUrl: undefined, // TODO: real URL after CQR repo is public (Vercel Deploy button — Phase 3 of MONETISATION_EXECUTION_PLAN.md)
     deploymentModes: ['customer-self-serve', 'vendor-self-deploy'],
     requiredCredentials: [
       'ANTHROPIC_API_KEY (or OPENROUTER_API_KEY)',
