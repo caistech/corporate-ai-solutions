@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — nested workflow page; entry-point header lives on the parent surface
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
