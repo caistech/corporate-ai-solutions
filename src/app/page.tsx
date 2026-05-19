@@ -305,17 +305,13 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-semibold mb-3">Join the Journey</h3>
               <p className="text-gray-light mb-6">
-                Help us build the Long Tail. We&apos;re looking for GTM experts, investors, 
-                and DevOps to harden our builds.
+                Help us build the portfolio. We&apos;re looking for GTM experts and DevOps engineers
+                to harden the BYOK Factory across more verticals.
               </p>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-purple" />
                   <strong className="text-white">GTM/Growth:</strong> Scale to $1M ARR
-                </li>
-                <li className="flex items-center gap-2 text-gray-light">
-                  <ChevronRight size={16} className="text-purple" />
-                  <strong className="text-white">Investors:</strong> Back the portfolio
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-purple" />
@@ -327,7 +323,7 @@ export default function HomePage() {
                 </li>
               </ul>
               <Button href="/studio/join" variant="purple" fullWidth>
-                Join Long Tail
+                Join the Team
                 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               <p className="text-center text-sm text-gray-light mt-4">Equity + upside</p>
@@ -429,50 +425,6 @@ export default function HomePage() {
                 </div>
                 <p className="text-xs text-gray-light mt-4 italic">+ more being built</p>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* The Two Sides */}
-      <section className="section bg-gray-dark">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-accent font-medium mb-4">Two Sides of the Same Coin</p>
-            <h2>Corporate AI Solutions + Long Tail Venture Studio</h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Corporate AI Solutions */}
-            <div className="p-8 rounded-lg border border-accent/30 bg-accent/5">
-              <h3 className="text-2xl font-semibold mb-4 text-accent">Corporate AI Solutions</h3>
-              <p className="text-gray-light mb-6">
-                The business solutions arm. We build AI voice agents that improve how businesses 
-                interact with customers. Better UX. Lower costs. Happier customers.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-light mb-6">
-                <li>• Voice AI for customer support</li>
-                <li>• Interview and feedback agents</li>
-                <li>• Sales qualification bots</li>
-                <li>• Custom white-label solutions</li>
-              </ul>
-              <Button href="/marketplace">Explore Solutions →</Button>
-            </div>
-
-            {/* Long Tail Venture Studio */}
-            <div className="p-8 rounded-lg border border-orange/30 bg-orange/5">
-              <h3 className="text-2xl font-semibold mb-4 text-orange">Long Tail Venture Studio</h3>
-              <p className="text-gray-light mb-6">
-                The venture arm. A platform that manufactures AI companies at near-zero marginal cost.
-                The factory is the unicorn — the portfolio compounds to billion-dollar scale.
-              </p>
-              <ul className="space-y-2 text-sm text-gray-light mb-6">
-                <li>• {PLATFORMS.length} platforms built, 200+ planned</li>
-                <li>• $5K build cost, 7-day cycle</li>
-                <li>• Portfolio targets $200M+ ARR</li>
-                <li>• Individual exits at 6-10x are bonus liquidity</li>
-              </ul>
-              <Button href="/studio/thesis" variant="orange">Read the Thesis →</Button>
             </div>
           </div>
         </div>

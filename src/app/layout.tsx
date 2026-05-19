@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const navItems = [
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/studio/partner', label: 'Studio Partner' },
+  { href: '/engagement', label: 'Engagement' },
   { href: '/studio', label: 'Studio' },
   { href: '/community', label: 'Community' },
   { href: '/about', label: 'About' },

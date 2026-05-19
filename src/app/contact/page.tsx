@@ -128,11 +128,8 @@ export default function ContactPage() {
                   <Button href="/marketplace" variant="secondary" size="sm" fullWidth>
                     Browse Platforms
                   </Button>
-                  <Button href="/studio/partner" variant="orange" size="sm" fullWidth>
-                    Partnership Inquiry
-                  </Button>
-                  <Button href="/studio/invest" variant="secondary" size="sm" fullWidth>
-                    Investor Inquiry
+                  <Button href="/engagement" variant="orange" size="sm" fullWidth>
+                    Studio-in-Residence Inquiry
                   </Button>
                 </div>
               </div>

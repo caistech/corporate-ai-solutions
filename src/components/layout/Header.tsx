@@ -20,8 +20,7 @@ export function Header() {
       children: [
         { label: 'Our Thesis', href: '/studio/thesis' },
         { label: 'Portfolio', href: '/studio/portfolio' },
-        { label: 'Partnerships', href: '/studio/partner' },
-        { label: 'Invest', href: '/studio/invest' },
+        { label: 'Engagement', href: '/engagement' },
         { label: 'Join Team', href: '/studio/join' },
       ],
     },
@@ -33,7 +32,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-gray-border">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="font-mono font-bold text-accent text-sm tracking-tight">
-          LONG TAIL AI STUDIO
+          CORPORATE AI SOLUTIONS
         </Link>
 
         <ul className="hidden lg:flex items-center gap-8">
