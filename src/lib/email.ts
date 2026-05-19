@@ -1,10 +1,15 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 const NOTIFY_EMAIL = 'dennis@corporateaisolutions.com'
 
 export async function notifySubmission(subject: string, fields: Record<string, string | undefined | null>) {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    console.warn('RESEND_API_KEY not set — skipping email notification')
+    return
+  }
+  const resend = new Resend(apiKey)
+
   const rows = Object.entries(fields)
     .filter(([, v]) => v)
     .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;font-weight:600;vertical-align:top">${k}</td><td style="padding:4px 0">${v}</td></tr>`)
