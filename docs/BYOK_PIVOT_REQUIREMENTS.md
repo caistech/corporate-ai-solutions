@@ -23,6 +23,136 @@ These were open questions at Wave 2 close; user locked them before Wave 3 starts
 
 ---
 
+## `/engagement` page spec — locked 2026-05-19
+
+Content blueprint for the Wave 3 `/engagement` content rewrite. Replaces the Wave 2 holding stub. Programmatic structure: a host (VC / studio / accelerator) reading the page should be able to answer three questions in order, the same shape every time.
+
+### Capacity + windows (lead with scarcity)
+
+```
+2 × 3-month engagements per year   OR   1 × 6-month engagement per year (max)
+Windows:  January–March  and  July–September
+Pipeline: opens 3 months before each window
+By application
+```
+
+Front-of-page framing: scarcity-priced expertise; signals seriousness; justifies the rate; creates a natural qualification loop.
+
+### A. What the studio-in-residence brings
+
+```
+- {n_platforms} live portfolio platforms as receipts
+- {n_caistech_packages} reusable @caistech/* modules covering
+  {capability_bundle_for_this_cohort}
+- Methodology install: auth pattern, bootstrap automation, CLAUDE.md,
+  voice agent standard, BYOK substrate
+- Client engagement proof: MMC Build (Stages 0-5 in 5 weeks vs 14-week plan),
+  PreLabz + LingoPure CTO advisory positions
+- Domain bench: construction, NDIS/SDA, fund tokenisation, voice coaching,
+  language tech, property intelligence, B2B SaaS
+```
+
+Per-host customization: `capability_bundle` curated from the 30 `@caistech` packages to match the host's cohort industries.
+
+### B. What gets delivered while the studio-in-residence is there
+
+```
+Studio-level (institution outcomes):
+  Week 1:        Discovery + substrate install (CLAUDE.md customised,
+                 .npmrc/@caistech registry, auth pattern, bootstrap scripts,
+                 voice agent standard)
+  Leave behind:  Deployable factory the studio's team operates after the gig
+
+Cohort-level ({4-6} portfolio companies during a 3-mo engagement;
+              {8-12} during a 6-mo engagement):
+  Week 2-3:      Pick 1 anchor company → ship v0.1 BYOK-first
+  Week 4 →:      Scale to remaining cohort, each with working product on their keys
+  Per company:   Vercel-deployable repo, voice agent provisioned, env wired
+
+Public artifact:
+  Factory Floor essay documenting what shipped (consent-clause mandatory)
+  Joint case study used by host to recruit next cohort
+```
+
+### C. What the stay looks like
+
+```
+Engagement shape:
+  Duration:     3 months (default) OR 6 months (deeper transformation)
+  Cadence:      1-2 days/week onsite, remote daily with async standup
+  Phases:       W1     Discovery + substrate install
+                W2-3   Anchor company v0.1 ship
+                W4-N-2 Cohort scale-up
+                W{N-1}-W{N} Handoff + case study + factory hardening
+
+Cost (three deal shapes; host picks):
+  Shape A — Studio Pays:
+    Studio: $65k/mo retainer + 1-3% equity in host
+    Total cash (3-mo stint): $195k; (6-mo): $390k
+
+  Shape B — Hybrid (shared with cohort fractional CTOs):
+    Studio: $35-40k/mo + 1-3% equity in host
+    Each cohort company opting in: $7-10k/mo + 0.25-1% equity in that company
+    Total cash flows roughly the same as Shape A but distributed across
+    multiple counterparties
+
+  Shape C — Modular:
+    Base: $30k/mo to studio + per-cohort add-ons
+    Host dials engagement depth based on how many cohort cos opt in
+
+Kill criteria (built into every contract):
+  - {2-3 measurable triggers — host-specific, e.g., cohort Series A graduation
+     rate <X% over prior cohort, substrate not deployable by week N, etc.}
+  - Either party can exit at month {N/2} if criteria miss
+
+Exit state:
+  - Studio's team running the factory without me
+  - Case study published (consent-clause)
+  - Open invitation for follow-on engagement at year+1
+```
+
+### Equity caps — Rule 7 clarification
+
+`MONETISATION_RULES.md` Rule 7 reads "equity ≤3% per engagement". For hybrid (Shape B) deals where there are multiple counterparties in the same stint, the cap applies **per counterparty**, not aggregate per stint:
+
+```
+Host (studio/VC/accelerator):  ≤3% (target 1-3%, mid 2%)
+Each cohort company opted in:  ≤3% (target 0.25-1%, mid 0.5%)
+```
+
+This needs a small edit to `MONETISATION_RULES.md` Rule 7 to make the per-counterparty reading explicit.
+
+### Inquiry capture (form fields)
+
+A host hitting `/engagement`'s inquiry form should be asked for:
+- Host name + role
+- Type: VC fund / studio / accelerator / dev shop
+- AUM or annual program revenue (qualification gate)
+- Cohort size + industries (informs `capability_bundle`)
+- Target window (Jan-Mar / Jul-Sep / either)
+- Engagement length preference (3-mo / 6-mo / flexible)
+- Deal shape preference (A / B / C / open to discussion)
+- Past cohort outcomes URL or summary (for Shape-B qualification — see kill-criteria)
+
+Form action: send to Dennis via Resend per the email infrastructure rule. Calendly link as immediate secondary CTA.
+
+### Page tone
+
+- Builder-to-builder; no consulting copy
+- Numbers up front (capacity, rate, equity bands) — no "let's chat about your needs"
+- The kill criteria are visible — that's the credibility signal
+- Voice agent surface present per VOICE AI rule (Wave 3 voice persona = consolidated canonical)
+
+### Wave 3 implementation notes
+
+- Page replaces the Wave 2 holding stub at `src/app/engagement/page.tsx`
+- New page gets the hand-built dark-theme three-question structure
+- Add `// @explanatory-header-exempt` comment with a Wave 3 reason (custom hero covers R3 intent)
+- Inquiry form posts to a new `/api/engagement` route (mirrors `/api/leads` pattern)
+- Add `ENGAGEMENT` capture in Supabase (table `engagement_inquiries`) — schema mirrors `lead` shape + the new fields above
+
+---
+
 **Read first (in order):**
 1. `C:\Users\denni\.gstack\projects\denni\denni-unknown-design-20260520-014844.md` — APPROVED design doc (the strategy)
 2. `C:\Users\denni\MONETISATION_STATE.md` — current state of the monetisation operation (weekly cadence)
