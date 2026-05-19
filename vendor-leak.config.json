@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/caistech/cais-shared-services/main/packages/portfolio-gate/schemas/vendor-leak.config.schema.json",
+  "_comment": [
+    "Corporate-AI-Solutions IS Dennis's consultancy site. The operator's",
+    "identity is the product — his name, contact, calendar, and resume are",
+    "intentional content, not leaks. R11 (white-label rule) applies to",
+    "PRODUCT repos, not to the agency's own marketing site. Broad allowlist."
+  ],
+  "allowlist": [
+    "README.md",
+    "src/",
+    "public/",
+    "docs/"
+  ]
+}
