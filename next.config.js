@@ -31,7 +31,12 @@ const nextConfig = {
       },
       {
         source: '/partner',
-        destination: '/studio/partner',
+        destination: '/engagement',
+        permanent: true,
+      },
+      {
+        source: '/studio/partner',
+        destination: '/engagement',
         permanent: true,
       },
     ]
