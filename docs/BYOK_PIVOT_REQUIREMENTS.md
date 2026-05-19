@@ -1,7 +1,27 @@
 # BYOK Pivot — Requirements for the next session
 
 **Created:** 2026-05-20
+**Wave 2 status (as of 2026-05-19):** SHIPPED — plumbing layer landed (CQR page, PLATFORMS retag, nav dedupe, /engagement stub + 301). See main branch.
+**Wave 3 prep (as of 2026-05-19):** IN-FLIGHT on `feat/wave3-prep` branch — Long Tail Venture Studio retired; /launchstack, /studio/invest, /deck deleted; lucide-react bumped past peer-dep conflict; locked Wave 3 decisions captured below.
 **Source:** /office-hours session at `C:\Users\denni\` that produced the methodology monetisation plan. This file is the handoff brief for the next Claude session opened against this repo.
+
+---
+
+## Wave 3 — decisions locked 2026-05-19
+
+These were open questions at Wave 2 close; user locked them before Wave 3 starts.
+
+1. **Voice persona — CONSOLIDATE** to one canonical persona. The 4-agent layout (Alex/Scout/Morgan/Victoria) collapses; Wave 3 picks one canonical voice + opening + signature for every surface. Victoria already removed in Wave 3 prep (she qualified for /studio/invest which is gone). Kira's `/launchstack` system prompt also removed.
+2. **Property Services in marketplace** — render with a **"shared infrastructure"** badge (not filter out). It's `releaseMode: 'placeholder'` because it's consumed via `@caistech/property-services-sdk`, but the marketplace acknowledges its existence rather than hiding it.
+3. **paid-client visibility on marketplace** — Checkpoint **stays visible** with a "Private deployment / by introduction only" badge. **MMC Build is removed** from the marketplace and moves to a new `/clients` (or `/projects`) page along with the LingoPure CTO Advisor and PreLabz CTO Advisor entries currently on `/about`.
+4. **New `/clients` page** — Wave 3 deliverable. Hosts MMC Build + LingoPure + PreLabz (current "Live Commercial Contract" content from `/about`). Bare facts, evidence-style: contract shape, scope, dates, tech stack, link out. No marketing language.
+5. **Long Tail Venture Studio retired** — for now. Re-introduce after enough studio-in-residence engagements ship that an own-venture-studio narrative is credible (~Phase 2 of `MONETISATION_EXECUTION_PLAN.md`). All `/studio/invest`, `/deck`, `/invest-in-the-future-of-ai` routes deleted in Wave 3 prep; they now 301 to `/about`. Brand text "LONG TAIL AI STUDIO" replaced with "CORPORATE AI SOLUTIONS" across header. Homepage Long Tail Venture Studio section removed.
+6. **/launchstack retired** — deleted in Wave 3 prep. Now 301s to `/marketplace`. LaunchStack-specific Kira voice agent prompt removed.
+7. **CQR public-ship dependency** — agreed. `/marketplace/cqr` "Deploy Your Own" CTA stays disabled until CQR's sibling session reports the GitHub template URL + Vercel Deploy button URL; then `deployUrl` populates and `status` flips from `'building'` → `'live'` in `constants.ts`.
+8. **`layout.tsx` hard-coded nav** — Wave 3 prep removed `/studio/partner` reference and added `/engagement`. Wave 3 should reconcile to a single source of truth (currently `NAV_ITEMS` in `constants.ts`, `Header.tsx` `navItems`, and `layout.tsx` `navItems` all carry parallel arrays).
+9. **13 explanatory-header exemptions** — leave as pending. Replace exemptions with proper `<ExplanatoryHeader/>` (or hand-built dark-theme heroes) when the page itself is rewritten in Wave 3 / housekeeping. Don't do it as a separate pass.
+
+---
 
 **Read first (in order):**
 1. `C:\Users\denni\.gstack\projects\denni\denni-unknown-design-20260520-014844.md` — APPROVED design doc (the strategy)
