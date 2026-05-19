@@ -1,36 +1,16 @@
 {
-  "baseUrl": "https://longtail-ai-studio.vercel.app",
+  "baseUrl": "https://corporate-ai-solutions.vercel.app",
+  "_comment": "Marketing + marketplace site. No user auth — see gate.yml for the auth-smoke skip rationale.",
   "routes": [
-    {
-      "path": "/"
-    },
-    {
-      "path": "/pricing"
-    },
-    {
-      "path": "/about"
-    },
-    {
-      "path": "/contact"
-    },
-    {
-      "path": "/login"
-    },
-    {
-      "path": "/signup"
-    },
-    {
-      "path": "/forgot-password"
-    },
-    {
-      "path": "/privacy"
-    },
-    {
-      "path": "/terms"
-    },
-    {
-      "path": "/api/health",
-      "expectedStatus": 200
-    }
+    { "path": "/" },
+    { "path": "/pricing" },
+    { "path": "/about" },
+    { "path": "/contact" },
+    { "path": "/community" },
+    { "path": "/marketplace" },
+    { "path": "/marketplace/cqr" },
+    { "path": "/engagement" },
+    { "path": "/studio/partner", "expectedStatus": 308 },
+    { "path": "/partner", "expectedStatus": 308 }
   ]
 }

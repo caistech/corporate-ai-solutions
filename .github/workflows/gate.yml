@@ -105,8 +105,9 @@ jobs:
             --config routes.config.json \
             --base-url "$PORTFOLIO_GATE_PREVIEW_URL"
 
-      - name: Auth smoke test (Portfolio Standard R1/R4)
-        run: |
-          npx --no-install portfolio-gate-smoke-auth \
-            --config auth.config.json \
-            --base-url "$PORTFOLIO_GATE_PREVIEW_URL"
+      # Auth smoke (R1/R4) is intentionally OMITTED on this repo.
+      # corporate-ai-solutions is a marketing + marketplace site with no
+      # user-facing auth flow (no /login, /signup, /forgot-password). The
+      # AUTH PAGE PATTERN rule in CLAUDE.md applies to apps that ship
+      # authentication; this site only collects lead submissions via
+      # public API routes. Restore the step if/when auth pages are added.
