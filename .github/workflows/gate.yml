@@ -24,6 +24,12 @@ jobs:
 
     env:
       PORTFOLIO_GATE_PREVIEW_URL: ${{ vars.PORTFOLIO_GATE_PREVIEW_URL }}
+      # Supabase env required by next build's page-data collection on routes
+      # that instantiate a Supabase client at module-load (e.g. /api/investors).
+      # Without these, the Build step fails before audits/smoke run.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
     steps:
       - name: Checkout
