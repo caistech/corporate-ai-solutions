@@ -69,7 +69,6 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Pricing', href: '/pricing' },
   { label: 'Community', href: '/community' },
   {
     label: 'About',
@@ -97,6 +96,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'platform-trust',
+    releaseMode: 'placeholder',
     name: 'Platform Trust',
     slug: 'platform-trust',
     tagline: 'Universal trust, security, and observability for AI platforms',
@@ -111,6 +111,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'pubguard',
+    releaseMode: 'placeholder',
     name: 'PubGuard',
     slug: 'pubguard',
     tagline: 'Automated vulnerability scanning and OWASP compliance for AI platforms',
@@ -130,6 +131,7 @@ export const PLATFORMS: Platform[] = [
   // Voice Coaching Suite
   {
     id: 'rehearsals-ai',
+    releaseMode: 'in-migration',
     name: 'Rehearsals AI',
     slug: 'rehearsals-ai',
     tagline: 'The suite of AI voice coaching verticals',
@@ -145,6 +147,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'raiseready-template',
+    releaseMode: 'in-migration',
     name: 'RaiseReady Template',
     slug: 'raiseready-template',
     tagline: 'White-label founder/investor platform generator',
@@ -161,6 +164,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'connexions',
+    releaseMode: 'in-migration',
     name: 'Connexions',
     slug: 'connexions',
     tagline: 'AI-powered survey and interview analysis',
@@ -178,6 +182,7 @@ export const PLATFORMS: Platform[] = [
   // UniversalLingo - Real-time Translation Generator
   {
     id: 'universallingo',
+    releaseMode: 'in-migration',
     name: 'UniversalLingo',
     slug: 'universallingo',
     tagline: 'Break language barriers in real-time',
@@ -199,6 +204,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'kira',
+    releaseMode: 'in-migration',
     name: 'Kira',
     slug: 'kira',
     tagline: 'Your personalized AI thinking partner',
@@ -251,6 +257,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'launchready',
+    releaseMode: 'in-migration',
     name: 'LaunchReady',
     slug: 'launchready',
     tagline: 'Voice-guided IP protection for founders',
@@ -265,6 +272,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'dealfindrs',
+    releaseMode: 'in-migration',
     name: 'DealFindrs',
     slug: 'dealfindrs',
     tagline: 'AI-powered property deal assessment',
@@ -279,6 +287,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'tenderwatch',
+    releaseMode: 'in-migration',
     name: 'TenderWatch',
     slug: 'tenderwatch',
     tagline: 'Government tender monitoring made easy',
@@ -292,6 +301,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'checkpoint',
+    releaseMode: 'paid-client',
     name: 'Checkpoint',
     slug: 'checkpoint',
     tagline: 'Modular industry project management',
@@ -305,6 +315,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'cleanclose',
+    releaseMode: 'in-migration',
     name: 'CleanClose',
     slug: 'cleanclose',
     tagline: 'Help businesses close down cleanly',
@@ -318,6 +329,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'f2k-fund-tokenisation',
+    releaseMode: 'in-migration',
     name: 'F2K Fund Tokenisation',
     slug: 'f2k-fund-tokenisation',
     tagline: 'Tokenised Australian housing fund on Ethereum',
@@ -332,6 +344,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'storyverse',
+    releaseMode: 'in-migration',
     name: 'StoryVerse',
     slug: 'storyverse',
     tagline: 'AI-powered personalised children\'s books',
@@ -346,6 +359,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'outreachready',
+    releaseMode: 'in-migration',
     name: 'OutreachReady',
     slug: 'outreachready',
     tagline: 'AI-powered strategic outreach with voice coaching',
@@ -359,6 +373,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'easyopenclaw',
+    releaseMode: 'in-migration',
     name: 'EasyOpenClaw',
     slug: 'easyopenclaw',
     tagline: 'Autonomous AI agent wrapper',
@@ -372,6 +387,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'rnd-tax-tracker',
+    releaseMode: 'in-migration',
     name: 'R&D Tax Tracker',
     slug: 'rnd-tax-tracker',
     tagline: 'R&D tax eligibility work recording',
@@ -385,6 +401,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'ndis-sda-automate',
+    releaseMode: 'in-migration',
     name: 'NDIS SDA Automate',
     slug: 'ndis-sda-automate',
     tagline: 'NDIS & SDA compliance automation',
@@ -398,6 +415,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'longtail-ai-venture-studio',
+    releaseMode: 'in-migration',
     name: 'Long Tail AI Venture Studio',
     slug: 'longtail-ai-venture-studio',
     tagline: 'AI venture portfolio dashboard',
@@ -411,6 +429,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'smartboard',
+    releaseMode: 'in-migration',
     name: 'SmartBoard',
     slug: 'smartboard',
     tagline: 'Intelligent airline boarding management',
@@ -424,6 +443,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'storefront-mcp',
+    releaseMode: 'in-migration',
     name: 'Storefront MCP',
     slug: 'storefront-mcp',
     tagline: 'Agent marketplace via MCP protocol',
@@ -437,6 +457,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'easy-claude-code',
+    releaseMode: 'in-migration',
     name: 'Easy Claude Code',
     slug: 'easy-claude-code',
     tagline: 'Browser dashboard for Claude Code sessions',
@@ -451,6 +472,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'disaster-support',
+    releaseMode: 'in-migration',
     name: 'Disaster Support',
     slug: 'disaster-support',
     tagline: 'Emergency aid and disaster response coordination',
@@ -464,6 +486,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'partner-pilot',
+    releaseMode: 'in-migration',
     name: 'PartnerPilot',
     slug: 'partner-pilot',
     tagline: 'AI-powered channel partner discovery',
@@ -477,6 +500,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'investor-pilot',
+    releaseMode: 'in-migration',
     name: 'InvestorPilot',
     slug: 'investor-pilot',
     tagline: 'AI-powered investor relations and deal flow',
@@ -490,6 +514,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'property-services',
+    releaseMode: 'placeholder',
     name: 'Property Services',
     slug: 'property-services',
     tagline: 'Shared property intelligence platform',
@@ -503,6 +528,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'mmcbuild',
+    releaseMode: 'paid-client',
     name: 'MMC Build',
     slug: 'mmcbuild',
     tagline: 'Modern methods of construction compliance & management',
@@ -516,6 +542,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'mova',
+    releaseMode: 'in-migration',
     name: 'Mova',
     slug: 'mova',
     tagline: 'Voice-powered multilingual mobility',
@@ -529,6 +556,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'lingopure-ai',
+    releaseMode: 'in-migration',
     name: 'LingoPure AI',
     slug: 'lingopure-ai',
     tagline: 'AI-first business English platform',
@@ -542,6 +570,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'hairstylist-ai',
+    releaseMode: 'in-migration',
     name: 'HairStylist AI',
     slug: 'hairstylist-ai',
     tagline: 'In-chair AI consultation for stylists',
@@ -555,6 +584,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'f2k-offshore-modular',
+    releaseMode: 'in-migration',
     name: 'F2K Offshore Modular',
     slug: 'f2k-offshore-modular',
     tagline: 'Pre-vetted offshore modular manufacturer marketplace',
@@ -568,6 +598,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'f2k-projects',
+    releaseMode: 'in-migration',
     name: 'Factory2Key Projects',
     slug: 'f2k-projects',
     tagline: 'Public registration of interest for Factory2Key residential developments',
@@ -581,6 +612,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'leadspark',
+    releaseMode: 'in-migration',
     name: 'LeadSpark',
     slug: 'leadspark',
     tagline: 'Embeddable AI lead-capture chat widget',
@@ -594,6 +626,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'omq-outreach',
+    releaseMode: 'in-migration',
     name: 'OMQ Outreach',
     slug: 'omq-outreach',
     tagline: 'AI-powered procurement contact discovery and outreach',
@@ -607,6 +640,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'aiftis',
+    releaseMode: 'in-migration',
     name: 'AIFTIS Recognition Rail',
     slug: 'aiftis',
     tagline: 'Cross-border professional credential infrastructure for ASEAN MRA signatories',
@@ -629,6 +663,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'raiseready-impact',
+    releaseMode: 'in-migration',
     name: 'RaiseReady Impact',
     slug: 'raiseready-impact',
     tagline: 'AI pitch coaching for impact founders',
@@ -648,6 +683,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'universal-interviews',
+    releaseMode: 'in-migration',
     name: 'Universal Interviews',
     slug: 'universal-interviews',
     tagline: 'AI-powered interview panels',
@@ -667,6 +703,7 @@ export const PLATFORMS: Platform[] = [
 
   {
     id: 'tourlingo',
+    releaseMode: 'in-migration',
     name: 'TourLingo',
     slug: 'tourlingo',
     tagline: 'Real-time translation for tour groups',
@@ -681,6 +718,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'govlingo',
+    releaseMode: 'in-migration',
     name: 'GovLingo',
     slug: 'govlingo',
     tagline: 'Multilingual government service access',
@@ -695,6 +733,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'censuslingo',
+    releaseMode: 'in-migration',
     name: 'CensusLingo',
     slug: 'censuslingo',
     tagline: 'Multilingual census operations support',
@@ -709,6 +748,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'videolingo',
+    releaseMode: 'in-migration',
     name: 'VideoLingo',
     slug: 'videolingo',
     tagline: 'Real-time translation for video calls',
@@ -723,6 +763,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'hotellingo',
+    releaseMode: 'in-migration',
     name: 'HotelLingo',
     slug: 'hotellingo',
     tagline: 'Guest communication for hospitality',
@@ -737,6 +778,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'doctorlingo',
+    releaseMode: 'in-migration',
     name: 'DoctorLingo',
     slug: 'doctorlingo',
     tagline: 'Medical interpretation made accessible',
@@ -751,6 +793,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'edulingo',
+    releaseMode: 'in-migration',
     name: 'EduLingo',
     slug: 'edulingo',
     tagline: 'Classroom translation for inclusive education',
@@ -765,6 +808,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'personallingo',
+    releaseMode: 'in-migration',
     name: 'PersonalLingo',
     slug: 'personallingo',
     tagline: 'Your personal interpreter',
