@@ -217,6 +217,37 @@ export const PLATFORMS: Platform[] = [
   // BUSINESS TOOLS
   // ----------------------------------------
 
+  // FIRST BYOK-FREE RELEASE — Phase 1c of methodology monetisation plan.
+  // CQR ships as a public template repo on GitHub with a Vercel Deploy button.
+  // Two deployment modes (customer-self-serve / vendor-self-deploy) — one codebase.
+  // Sibling: ~/MONETISATION_EXECUTION_PLAN.md, ~/MONETISATION_RULES.md (Rules 9-11),
+  // memory: project_cqr_byok_distribution.
+  {
+    id: 'cqr',
+    name: 'Community Question Responder',
+    slug: 'cqr',
+    tagline: 'Thoughtful drafted replies for community channels. Free, BYOK, your infrastructure.',
+    problem: 'Vendor community queues sit unanswered for days; meanwhile, third-party answers get moderated out. Both sides need a tool the channel admin can run themselves.',
+    description: 'Polls a community Slack or Discord, classifies incoming questions, retrieves from a vendor-specific knowledge base, drafts a high-quality reply in the operator\'s voice, holds it for one-click approval, posts on approval. Two deployment modes: customer-self-serve (point it at any vendor\'s public surfaces, drafts for you without posting) or vendor-self-deploy (run it in your own community channel, your team approves drafts). One codebase. Same architecture. BYOK across every key — Anthropic, Supabase, Slack, ElevenLabs, OpenAI, Resend. No CAS-owned fallback.',
+    url: '/marketplace/cqr',
+    status: 'building',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    featured: true,
+    type: 'parent',
+    releaseMode: 'byok-free',
+    githubUrl: 'https://github.com/dennissolver/community-question-responder',
+    deploymentModes: ['customer-self-serve', 'vendor-self-deploy'],
+    requiredCredentials: [
+      'ANTHROPIC_API_KEY (or OPENROUTER_API_KEY)',
+      'OPENAI_API_KEY (embeddings)',
+      'SUPABASE (URL + anon + service-role)',
+      'SLACK_BOT_TOKEN + SLACK_SIGNING_SECRET',
+      'RESEND_API_KEY',
+      'ELEVENLABS_API_KEY (voice agent — auto-provisions agent_id)',
+    ],
+  },
+
   {
     id: 'launchready',
     name: 'LaunchReady',

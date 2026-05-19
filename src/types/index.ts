@@ -15,6 +15,14 @@ export interface Platform {
   parentId?: string // For child platforms
   children?: string[] // IDs of child platforms for parents
   isGenerator?: boolean // Can generate white-label versions
+
+  // BYOK / methodology monetisation fields (Phase 1c — added 2026-05-20).
+  // All optional; existing entries remain valid without these.
+  releaseMode?: 'commercial' | 'byok-free' | 'paid-client' | 'in-migration' | 'placeholder'
+  githubUrl?: string // Public repo for byok-free releases
+  deployUrl?: string // Vercel Deploy button URL for one-click adoption
+  deploymentModes?: Array<'customer-self-serve' | 'vendor-self-deploy'> // CQR-shaped products with multiple deploy modes
+  requiredCredentials?: string[] // Services the user must BYOK (Anthropic, Supabase, etc.) — high-level list for the marketplace card
 }
 
 // Lead types
