@@ -23,7 +23,10 @@
   body {
     @apply bg-black text-white antialiased;
     font-family: var(--font-sans);
-    overflow-x: hidden; /* Defensive: prevents 2px scrollbar overflow flagged by R-responsive audit */
+    /* `clip` (not `hidden`) so scrollWidth reflects the clipped width
+       — `hidden` clips visually but leaves the overflowing content
+       contributing to scrollWidth, which fails the responsive audit. */
+    overflow-x: clip;
   }
 
   /* Grain overlay */
