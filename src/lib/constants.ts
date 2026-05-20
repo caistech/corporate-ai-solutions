@@ -171,6 +171,11 @@ export const PLATFORMS: Platform[] = [
     tagline: 'AI-powered survey and interview analysis',
     problem: 'Qualitative research is time-consuming and insights get lost',
     description: 'Generator platform for white-label AI voice interviewers with enhanced AI analysis. Conduct customer research, user feedback, exit interviews, and compliance audits - then let AI extract themes, sentiment, and actionable insights from your surveys and research interviews automatically.',
+    // HIJACKED 2026-05-20: connexions-silk.vercel.app now returns "f27 survey"
+    // (likely a spawned cx-* child project). Team-canonical
+    // connexions-corporate-ai-solutions.vercel.app is 401 deployment-protected.
+    // Resolution gated on custom domain (connexions.corporateaisolutions.com)
+    // or disabling deployment protection. See scripts/probe-portfolio-aliases.mjs.
     url: 'https://connexions-silk.vercel.app',
     status: 'live',
     category: 'generators',
@@ -380,6 +385,8 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Autonomous AI agent wrapper',
     problem: 'AI agents are powerful but hard to deploy and manage',
     description: 'User-friendly wrapper around the OpenClaw autonomous AI agent. Simple API interface for invoking AI functions, listing capabilities, querying past invocations, and monitoring agent health.',
+    // BROKEN 2026-05-20: gbta-openclaw.vercel.app returns empty <title>
+    // (deploy live but rendering issue). Investigate the deploy state.
     url: 'https://gbta-openclaw.vercel.app',
     status: 'live',
     category: 'business-tools',
@@ -408,6 +415,10 @@ export const PLATFORMS: Platform[] = [
     tagline: 'NDIS & SDA compliance automation',
     problem: 'NDIS providers drown in compliance paperwork',
     description: 'Automation platform for NDIS and SDA compliance. Streamline participant documentation, service agreements, reporting requirements, and audit preparation for disability service providers.',
+    // HIJACKED 2026-05-20: ndissda-automate.vercel.app now returns
+    // "PF Platform — Property Friends" (external Vercel user). The bare slug
+    // is no longer owned by this team. Team-canonical URL is 401-protected.
+    // Resolution gated on custom domain or auth-protection change.
     url: 'https://ndissda-automate.vercel.app',
     status: 'live',
     category: 'business-tools',
@@ -479,6 +490,9 @@ export const PLATFORMS: Platform[] = [
     tagline: 'AI-powered channel partner discovery',
     problem: 'Finding the right channel partners is time-consuming and hit-or-miss',
     description: 'Helps founders find channel partners, enrich contacts, draft outreach, send emails, and track replies. Five-stage hybrid pipeline with Brave Search, Hunter.io email lookup, Claude AI drafting, and email tracking.',
+    // NOT-OWNED 2026-05-20: partner-pilot.vercel.app returns 404 — bare slug
+    // not owned by this team and no team-owned deployment alias active.
+    // Resolution gated on custom domain or re-deploy.
     url: 'https://partner-pilot.vercel.app',
     status: 'live',
     category: 'business-tools',
@@ -522,6 +536,9 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Modern methods of construction compliance & management',
     problem: 'MMC projects are buried in compliance, drawings, and document chaos',
     description: 'Property compliance and construction management platform for modern methods of construction. 3D visualization, document processing, and project workflows tailored to modular and prefab builds.',
+    // HIJACKED 2026-05-20: mmcbuild.vercel.app returns "MMC Minting dApp"
+    // (external crypto project). Bare slug not owned by this team.
+    // Team-canonical URL is 401-protected. Resolution gated on custom domain.
     url: 'https://mmcbuild.vercel.app',
     status: 'live',
     category: 'business-tools',
@@ -536,6 +553,8 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Voice-powered multilingual mobility',
     problem: 'Transport providers struggle to serve non-English-speaking riders',
     description: 'AI-powered multi-language mobility and transportation platform. Voice agent handles bookings, navigation, and rider communication in any language — with maps integration and real-time coordination.',
+    // HIJACKED 2026-05-20: mova.vercel.app returns "Self Tutor" (external).
+    // Bare slug not owned by this team. Resolution gated on custom domain.
     url: 'https://mova.vercel.app',
     status: 'live',
     category: 'business-tools',
@@ -606,6 +625,8 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Embeddable AI lead-capture chat widget',
     problem: 'Static contact forms convert poorly and waste warm visitor intent',
     description: 'Multi-tenant lead-capture platform with an embeddable chat widget, voice-enabled qualification, knowledge-base-aware responses, and a tenant portal for lead triage. Drop the widget on any site, capture qualified leads, and route them to your CRM.',
+    // NOT-OWNED 2026-05-20: leadspark-tenant.vercel.app returns 404. No
+    // team-owned alias active. Resolution gated on re-deploy or custom domain.
     url: 'https://leadspark-tenant.vercel.app',
     status: 'live',
     category: 'business-tools',
@@ -620,6 +641,9 @@ export const PLATFORMS: Platform[] = [
     tagline: 'AI-powered procurement contact discovery and outreach',
     problem: 'Reaching named procurement decision-makers at scale is slow, manual, and brittle',
     description: 'Procurement-focused outreach pipeline: discover named contacts at target organisations via Brave Search and Claude scoring, enrich verified emails through Hunter.io, draft personalised email and LinkedIn copy, send via Resend, and triage replies into a managed cohort queue. Purpose-built for the F2K Offshore Modular Qualified Australian Market Validation campaign.',
+    // BROKEN 2026-05-20: omq-outreach.vercel.app returns default
+    // "Create Next App" title — project deployed but never customized.
+    // Either complete the deploy or remove this entry from PLATFORMS.
     url: 'https://omq-outreach.vercel.app',
     status: 'live',
     category: 'business-tools',
