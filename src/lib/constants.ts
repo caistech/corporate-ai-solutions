@@ -171,12 +171,7 @@ export const PLATFORMS: Platform[] = [
     tagline: 'AI-powered survey and interview analysis',
     problem: 'Qualitative research is time-consuming and insights get lost',
     description: 'Generator platform for white-label AI voice interviewers with enhanced AI analysis. Conduct customer research, user feedback, exit interviews, and compliance audits - then let AI extract themes, sentiment, and actionable insights from your surveys and research interviews automatically.',
-    // HIJACKED 2026-05-20: connexions-silk.vercel.app now returns "f27 survey"
-    // (likely a spawned cx-* child project). Team-canonical
-    // connexions-corporate-ai-solutions.vercel.app is 401 deployment-protected.
-    // Resolution gated on custom domain (connexions.corporateaisolutions.com)
-    // or disabling deployment protection. See scripts/probe-portfolio-aliases.mjs.
-    url: 'https://connexions-silk.vercel.app',
+    url: 'https://connexions-corporate-ai-solutions.vercel.app',
     status: 'live',
     category: 'generators',
     hasVoiceAI: true,
