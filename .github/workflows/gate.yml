@@ -120,7 +120,7 @@ jobs:
           npx --no-install portfolio-gate-audit-sample-artefact   --config sample.config.json --base-url "$PORTFOLIO_GATE_PREVIEW_URL" || FAIL=1
           npx --no-install portfolio-gate-audit-explanatory-header                                       || FAIL=1
           npx --no-install portfolio-gate-audit-trust-panel                                              || FAIL=1
-          npx --no-install portfolio-gate-audit-responsive        --base-url "$PORTFOLIO_GATE_PREVIEW_URL" || FAIL=1
+          npx --no-install portfolio-gate-audit-responsive        --config responsive.config.json --base-url "$PORTFOLIO_GATE_PREVIEW_URL" || FAIL=1
           exit $FAIL
 
       - name: Route smoke test (Portfolio Standard R13)

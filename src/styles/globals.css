@@ -23,6 +23,7 @@
   body {
     @apply bg-black text-white antialiased;
     font-family: var(--font-sans);
+    overflow-x: hidden; /* Defensive: prevents 2px scrollbar overflow flagged by R-responsive audit */
   }
 
   /* Grain overlay */
