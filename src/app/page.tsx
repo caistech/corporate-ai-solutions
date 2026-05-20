@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { PLATFORMS, SKOOL, FOUNDER, getParentPlatforms, getChildrenOf } from '@/lib/constants'
 
 export default function HomePage() {
-  const parentPlatforms = getParentPlatforms().filter(p => p.status === 'live')
+  const parentPlatforms = getParentPlatforms().filter(p => p.status === 'live' && !p.marketplaceHidden)
   const generators = parentPlatforms.filter(p => p.isGenerator)
 
   return (

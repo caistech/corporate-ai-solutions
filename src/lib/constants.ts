@@ -56,29 +56,30 @@ export const SKOOL = {
   description: 'A community for late-night thinkers, chaos navigators, and real-world fixers who can\'t ignore a problem once they see it.',
 }
 
-// Navigation
+// Navigation — single source of truth for the rendered nav (consumed by
+// `app/layout.tsx` via the @caistech/corporate-components <CorporateHeader />).
+// Flat shape because CorporateHeader does not support dropdowns; secondary
+// pages live in FOOTER_LINKS below.
 export const NAV_ITEMS: NavItem[] = [
-  {
-    label: 'Solutions',
-    href: '/solutions',
-    children: [
-      { label: 'All Solutions', href: '/solutions' },
-      { label: 'High-Stakes Performance', href: '/solutions#performance' },
-      { label: 'Business Intelligence', href: '/solutions#intelligence' },
-      { label: 'Industry Solutions', href: '/solutions#industry' },
-    ],
-  },
+  { label: 'Marketplace', href: '/marketplace' },
+  { label: 'Engagement', href: '/engagement' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Studio', href: '/studio' },
   { label: 'Community', href: '/community' },
-  {
-    label: 'About',
-    href: '/about',
-    children: [
-      { label: 'Our Story', href: '/about' },
-      { label: 'Clients', href: '/clients' },
-      { label: 'Voice AI Approach', href: '/voice-ai' },
-    ],
-  },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+]
+
+// Secondary navigation — rendered in the footer via CorporateFooter's `extraLinks`.
+// Pages that are real but don't need to compete for primary-nav real-estate.
+export const FOOTER_LINKS: NavItem[] = [
+  { label: 'Clients', href: '/clients' },
+  { label: 'CQR', href: '/marketplace/cqr' },
+  { label: 'Voice AI', href: '/voice-ai' },
+  { label: 'Solutions', href: '/solutions' },
+  { label: 'Studio Thesis', href: '/studio/thesis' },
+  { label: 'Studio Portfolio', href: '/studio/portfolio' },
+  { label: 'Join the Team', href: '/studio/join' },
 ]
 
 // All platforms - Parent/Child Structure
@@ -515,6 +516,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'mmcbuild',
     releaseMode: 'paid-client',
+    marketplaceHidden: true, // Lives on /clients (Live Commercial Contract); not for public marketplace
     name: 'MMC Build',
     slug: 'mmcbuild',
     tagline: 'Modern methods of construction compliance & management',
@@ -818,59 +820,31 @@ export const getLivePlatforms = () => PLATFORMS.filter(p => p.status === 'live')
 export const getFeaturedPlatforms = () => PLATFORMS.filter(p => p.featured)
 export const getVoiceAIPlatforms = () => PLATFORMS.filter(p => p.hasVoiceAI && p.type === 'parent')
 
-// Voice Agents - IDs populated by setup:elevenlabs script or env vars
-// After running `npm run setup:elevenlabs`, agent IDs will be in env vars or elevenlabs-agents.ts
-
+// Voice Agents — canonical persona is Morgan (consolidated 2026-05-19 per Wave 3 decision).
+// One voice across the whole site so a visitor moving between marketplace, pricing,
+// engagement, and studio surfaces experiences the same operator voice.
+// IDs populated by setup:elevenlabs script or env vars.
 
 export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
-  alex: {
-    agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ALEX || '',
-    name: 'Alex',
-    personality: 'Warm and approachable, direct and efficient',
-    greeting: `Hey! I'm Alex from Corporate AI Solutions. We ship BYOK-first AI products you can run on your own infrastructure — ${PLATFORMS.length} platforms and counting. Are you looking at our existing tools, or do you have a problem you'd like us to solve?`,
-    pageContext: 'homepage',
-    gender: 'male',
-    canRoute: {
-      solutions: true,
-      partner: true,
-      community: true,
-      pricing: true,
-    },
-  },
-  scout: {
-    agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_SCOUT || '',
-    name: 'Scout',
-    personality: 'Curious and helpful, knowledgeable about platforms',
-    greeting: `Hi, I'm Scout! I help people find the right AI platform for their needs. We've got ${PLATFORMS.length} to choose from. What kind of problem are you trying to solve?`,
-    pageContext: 'marketplace',
-    gender: 'female',
-    avatar: '/female_avatar.jpeg',
-    canRoute: {
-      solutions: true,
-      partner: true,
-      community: false,
-      pricing: true,
-    },
-  },
   morgan: {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_MORGAN || '',
     name: 'Morgan',
-    personality: 'Professional and consultative, deal-savvy',
-    greeting: "Hello, I'm Morgan. I handle studio-in-residence engagements and team opportunities for Corporate AI Solutions. Which of these brings you here today?",
-    pageContext: 'business',
+    personality: 'Direct, builder-to-builder, no consulting-copy energy',
+    greeting: `Hi, I'm Morgan — the voice agent for Corporate AI Solutions. ${PLATFORMS.length} BYOK-first AI products live in the marketplace, free to clone on your own keys. We also run studio-in-residence engagements and technical advisory retainers. What brought you here?`,
+    pageContext: 'canonical',
     gender: 'female',
     avatar: '/female_avatar.jpeg',
     canRoute: {
-      solutions: false,
+      solutions: true,
       partner: true,
       community: true,
-      pricing: false,
+      pricing: true,
     },
   },
 }
 
 // Default agent when specific agent isn't available
-export const DEFAULT_AGENT = 'alex'
+export const DEFAULT_AGENT = 'morgan'
 
 // Stats for homepage
 export const STATS = [

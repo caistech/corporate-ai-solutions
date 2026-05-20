@@ -20,9 +20,15 @@ export default function VoiceAIPage() {
           <h1 className="mb-6">
             Voice AI Where It <span className="text-gradient-accent">Matters</span>
           </h1>
-          <p className="text-2xl text-gray-light">
+          <p className="text-2xl text-gray-light mb-4">
             We don&apos;t add voice agents because we can.
             We add them when they solve the actual problem.
+          </p>
+          <p className="text-base text-gray-light">
+            One canonical voice persona &mdash; <strong className="text-white">Morgan</strong> &mdash;
+            across every surface in the portfolio. Same voice on marketplace,
+            engagement, and pricing pages so the operator voice you hear here is the same
+            one your team will hear when the factory is installed in-house.
           </p>
         </div>
       </section>
@@ -89,22 +95,26 @@ export default function VoiceAIPage() {
       {/* Our Voice Stack */}
       <section className="section">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold mb-8 text-center">Our Voice Stack</h2>
+          <h2 className="text-2xl font-bold mb-2 text-center">Our Voice Stack</h2>
+          <p className="text-sm text-gray-light text-center mb-8">
+            Every BYOK-first product ships with the voice agent surface pre-wired.
+            Operator&apos;s ElevenLabs key, operator&apos;s agent.
+          </p>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="card text-center">
               <div className="text-3xl mb-3">🎙️</div>
-              <h3 className="font-bold mb-2">ElevenLabs</h3>
-              <p className="text-sm text-gray-light">Voice synthesis & conversational AI</p>
+              <h3 className="font-bold mb-2">@caistech/elevenlabs-convai</h3>
+              <p className="text-sm text-gray-light">Hub package wrapping ElevenLabs Conversational AI &mdash; agent provisioning, webhooks, persistent memory</p>
             </div>
             <div className="card text-center">
               <div className="text-3xl mb-3">🧠</div>
-              <h3 className="font-bold mb-2">Claude AI</h3>
-              <p className="text-sm text-gray-light">Conversation intelligence & context</p>
+              <h3 className="font-bold mb-2">Anthropic Claude</h3>
+              <p className="text-sm text-gray-light">Conversation intelligence on the operator&apos;s API key</p>
             </div>
             <div className="card text-center">
               <div className="text-3xl mb-3">⚡</div>
               <h3 className="font-bold mb-2">Vercel Edge</h3>
-              <p className="text-sm text-gray-light">Low-latency global deployment</p>
+              <p className="text-sm text-gray-light">Low-latency global deployment on the operator&apos;s account</p>
             </div>
           </div>
         </div>
@@ -161,11 +171,13 @@ export default function VoiceAIPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="mb-4">Got a Problem That Needs Voice?</h2>
           <p className="text-gray-light mb-8">
-            Let&apos;s talk about whether voice AI actually solves your problem—or just sounds cool.
+            Let&apos;s talk about whether voice AI actually solves your problem &mdash;
+            or just sounds cool. Bring it to a studio-in-residence engagement
+            or pick up a voice-enabled product from the marketplace.
           </p>
           <div className="flex justify-center gap-4">
-            <Button href="/studio/partner" variant="orange">Partner With Us</Button>
-            <Button href="/marketplace" variant="secondary">Try Voice Platforms</Button>
+            <Button href="/engagement" variant="orange">Studio in Residence</Button>
+            <Button href="/marketplace" variant="secondary">Voice-Enabled Marketplace</Button>
           </div>
         </div>
       </section>

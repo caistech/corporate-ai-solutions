@@ -1,10 +1,10 @@
 // @explanatory-header-exempt — nested workflow page; entry-point header lives on the parent surface
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/Button'
-import { getLivePlatforms } from '@/lib/constants'
+import { getLivePlatforms, PLATFORMS } from '@/lib/constants'
 
 const DESCRIPTION =
-  "The unicorn isn't the product — it's the factory. 35+ live AI platforms. Targeting $200M+ portfolio ARR."
+  'The factory is the methodology. BYOK-first products free to the world, studio-in-residence engagements install the factory inside the next dev shop. Phase 2 is the Studio Fund.'
 
 export const metadata: Metadata = {
   title: 'Our Thesis',
@@ -22,10 +22,12 @@ export default function ThesisPage() {
       <section className="section bg-grid min-h-[60vh] flex items-center">
         <div className="max-w-4xl mx-auto">
           <div className="tag mb-4">Our Thesis</div>
-          <h1 className="mb-6">The Unicorn Is the Factory</h1>
+          <h1 className="mb-6">The factory <span className="text-gradient-accent">is</span> the methodology</h1>
           <p className="text-2xl text-gray-light">
-            AI collapsed the cost of building software by 100x. We built a machine that exploits that —
-            manufacturing AI companies at near-zero marginal cost. The portfolio compounds to billion-dollar scale.
+            AI collapsed the cost of building software by 100x. The unlock isn&apos;t any single
+            product &mdash; it&apos;s the repeatable factory that ships AI products on the user&apos;s
+            own keys, infrastructure, and control. Give the products away free with BYOK; sell the
+            factory itself as a studio-in-residence engagement.
           </p>
         </div>
       </section>
@@ -36,110 +38,108 @@ export default function ThesisPage() {
           <h2 className="text-3xl font-bold mb-8">The Insight</h2>
           <div className="prose prose-lg text-gray-light space-y-6">
             <p>
-              Before AI, software was expensive. A single product cost $500K+ and 18 months to build.
-              You needed massive scale to justify the investment. VCs needed 100x returns.
-              Most ideas never got built.
+              Before AI, software was expensive. $500K+ and 18 months per product. You needed
+              massive scale to justify the investment. Most ideas never got built.
             </p>
             <p className="text-white font-bold text-xl">AI changed the economics:</p>
             <div className="grid md:grid-cols-3 gap-6 my-8">
               <div className="card text-center">
                 <div className="font-mono text-sm text-accent mb-2">BUILD COST</div>
-                <div className="text-2xl font-bold">$500K → $5K</div>
+                <div className="text-2xl font-bold">$500K &rarr; $5K</div>
                 <div className="text-sm text-gray-light">100x reduction</div>
               </div>
               <div className="card text-center">
                 <div className="font-mono text-sm text-accent mb-2">TIME TO MARKET</div>
-                <div className="text-2xl font-bold">18mo → 7 days</div>
+                <div className="text-2xl font-bold">18mo &rarr; 7 days</div>
                 <div className="text-sm text-gray-light">75x faster</div>
               </div>
               <div className="card text-center">
                 <div className="font-mono text-sm text-accent mb-2">INFRASTRUCTURE</div>
-                <div className="text-2xl font-bold">Millions → $0</div>
-                <div className="text-sm text-gray-light">Serverless</div>
+                <div className="text-2xl font-bold">Millions &rarr; $0</div>
+                <div className="text-sm text-gray-light">Serverless &middot; BYOK</div>
               </div>
             </div>
             <p>
-              This is the same shift that enabled Amazon&apos;s long tail.
-              Suddenly, every book was worth stocking.
-              <strong className="text-white"> Now, every valid problem is worth solving — and every solution is worth building.</strong>
+              This is the same shift that enabled Amazon&apos;s long tail. Suddenly every book was worth stocking.
+              <strong className="text-white"> Now every valid problem is worth solving &mdash; and the methodology that ships those solutions repeatably is itself the durable asset.</strong>
             </p>
           </div>
         </div>
       </section>
 
-      {/* The Model */}
+      {/* The Model — old vs new */}
       <section className="section">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-8">The Model</h2>
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             <div className="p-6 border border-red-500/30 bg-red-500/5">
-              <h3 className="text-lg font-bold mb-4 text-red-400">❌ Old Model: Hunt One Unicorn</h3>
+              <h3 className="text-lg font-bold mb-4 text-red-400">&times; Old Model: Subscription Marketplace</h3>
               <ul className="space-y-3 text-gray-light">
-                <li>• Bet $500K+ per company, pray for 100x</li>
-                <li>• 90% complete failures</li>
-                <li>• 7-10 year liquidity wait</li>
-                <li>• Binary outcomes: moonshot or bust</li>
-                <li>• One product, one team, one shot</li>
+                <li>&middot; Hosted SaaS at $49&ndash;$199/mo per product</li>
+                <li>&middot; Operator owns the keys, the data, the support load</li>
+                <li>&middot; Crowded category, race to the bottom on price</li>
+                <li>&middot; Vendor-lock-in is the moat &mdash; users hate it</li>
+                <li>&middot; Cash flow taps a tiny crowd of paying users</li>
               </ul>
             </div>
             <div className="p-6 border-2 border-accent bg-accent/5">
-              <h3 className="text-lg font-bold mb-4 text-accent">✓ New Model: Build the Factory</h3>
+              <h3 className="text-lg font-bold mb-4 text-accent">&check; New Model: BYOK Factory + Studio in Residence</h3>
               <ul className="space-y-3 text-gray-light">
-                <li>• $5K per product, manufactured in 7 days</li>
-                <li>• Portfolio diversification across 200+ products</li>
-                <li>• Cash flow in months, exits as bonus liquidity</li>
-                <li>• The factory scales — each product is near-zero marginal cost</li>
-                <li>• 200 products × $1M ARR = $200M ARR portfolio</li>
+                <li>&middot; Products free with BYOK &mdash; user runs them on their own keys</li>
+                <li>&middot; No managed-for-you secret; no vendor-lock-in</li>
+                <li>&middot; Paid wedge is the factory itself, installed via studio-in-residence engagements ($65k/mo &times; 3&ndash;6 months)</li>
+                <li>&middot; Each engagement produces a public case study + Factory Floor essay; the methodology compounds in credibility</li>
+                <li>&middot; Phase 2: Studio Fund picks up the venture-studio thesis once 2+ public case studies exist</li>
               </ul>
             </div>
           </div>
+
           <div className="card p-8">
-            <h3 className="text-xl font-bold mb-4">The Math</h3>
+            <h3 className="text-xl font-bold mb-4">The Math (Phase 1)</h3>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <p className="text-gray-light mb-4">Per platform:</p>
+                <p className="text-gray-light mb-4">Per studio-in-residence engagement:</p>
                 <ul className="space-y-2 text-sm">
-                  <li className="flex justify-between"><span>Build + GTM:</span> <span className="font-mono">$10,000</span></li>
-                  <li className="flex justify-between"><span>Break-even:</span> <span className="font-mono">50 × $50 = $2,500 MRR</span></li>
-                  <li className="flex justify-between"><span>Payback:</span> <span className="font-mono">4 months</span></li>
+                  <li className="flex justify-between"><span>Cash retainer:</span> <span className="font-mono">$65k &times; 3&ndash;6 mo = $195k&ndash;$390k</span></li>
+                  <li className="flex justify-between"><span>Host equity:</span> <span className="font-mono">1&ndash;3% per Rule 7</span></li>
+                  <li className="flex justify-between"><span>Cohort equity (Shape B):</span> <span className="font-mono">0.25&ndash;1% per company</span></li>
+                  <li className="flex justify-between"><span>Public artifact:</span> <span className="font-mono">case study + essay</span></li>
                 </ul>
               </div>
               <div>
-                <p className="text-gray-light mb-4">Portfolio of 100 platforms:</p>
+                <p className="text-gray-light mb-4">Annual at full utilisation (2 engagements/yr):</p>
                 <ul className="space-y-2 text-sm">
-                  <li className="flex justify-between"><span>20% fail:</span> <span className="font-mono text-red-400">-$200K</span></li>
-                  <li className="flex justify-between"><span>50% break even:</span> <span className="font-mono">$0</span></li>
-                  <li className="flex justify-between"><span>25% steady ($10K MRR):</span> <span className="font-mono text-accent">$250K MRR</span></li>
-                  <li className="flex justify-between"><span>5% breakout ($50K+ MRR):</span> <span className="font-mono text-accent">$250K+ MRR</span></li>
+                  <li className="flex justify-between"><span>Cash from stints:</span> <span className="font-mono text-accent">$390k+</span></li>
+                  <li className="flex justify-between"><span>Equity exposure:</span> <span className="font-mono text-accent">~6 host positions over 3 yrs</span></li>
+                  <li className="flex justify-between"><span>+ cohort tickets:</span> <span className="font-mono text-accent">24 over 3 yrs</span></li>
+                  <li className="flex justify-between"><span>Power-law upside:</span> <span className="font-mono text-accent">~21% prob of unicorn tail</span></li>
                 </ul>
               </div>
             </div>
             <div className="mt-6 pt-6 border-t border-gray-border text-center">
-              <p className="text-2xl font-bold text-accent">$500K+ MRR = $6M+ ARR at 100 platforms</p>
-              <p className="text-gray-light mb-2">Before any exits. And this is just phase one.</p>
-              <p className="text-lg text-white font-semibold">At 200 platforms: $200M+ ARR. At 10-15x: $2B+ valuation.</p>
-              <p className="text-gray-light">The unicorn isn&apos;t the product. It&apos;s the factory.</p>
+              <p className="text-lg text-white font-semibold mb-2">Phase 1 funds the factory. Phase 2 is the Studio Fund.</p>
+              <p className="text-gray-light">Cash from in-residence engagements pays for the methodology development. Case studies earn the right to raise the Phase 2 vehicle.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* The Exit Playbook */}
+      {/* The Engagement Playbook */}
       <section className="section bg-gray-dark">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8">The Exit Playbook</h2>
+          <h2 className="text-3xl font-bold mb-8">The Engagement Playbook</h2>
           <p className="text-xl text-gray-light mb-8">
-            We don&apos;t build to hold forever. We build to exit.
+            Two engagements per year, by application. Windows: Jan&ndash;Mar and Jul&ndash;Sep.
           </p>
           <div className="grid md:grid-cols-4 gap-4 mb-8">
             {[
-              { stage: 'BUILD', cost: '$5-10K', time: '7 days', color: 'accent' },
-              { stage: 'VALIDATE', cost: '50 subs', time: '6 months', color: 'accent' },
-              { stage: 'GROW', cost: '$1M ARR', time: '18-24 mo', color: 'orange' },
-              { stage: 'EXIT', cost: '6-10x', time: 'Auction', color: 'purple' },
+              { stage: 'INSTALL', cost: 'Week 1', time: 'substrate', color: 'accent' },
+              { stage: 'ANCHOR', cost: 'Week 2-3', time: 'v0.1 ship', color: 'accent' },
+              { stage: 'SCALE', cost: 'Week 4-N', time: 'cohort', color: 'orange' },
+              { stage: 'EXIT', cost: 'Final week', time: 'case study', color: 'purple' },
             ].map((item, i) => (
               <div key={item.stage} className="card text-center">
-                <div className="font-mono text-xs text-gray-light mb-2">STAGE {i + 1}</div>
+                <div className="font-mono text-xs text-gray-light mb-2">PHASE {i + 1}</div>
                 <div className="font-bold mb-2">{item.stage}</div>
                 <div className={`text-2xl font-bold text-${item.color}`}>{item.cost}</div>
                 <div className="text-xs text-gray-light">{item.time}</div>
@@ -147,30 +147,31 @@ export default function ThesisPage() {
             ))}
           </div>
           <div className="card-orange p-8 text-center">
-            <p className="text-xl font-bold mb-2">Individual exits at $6-10M are optional liquidity events</p>
+            <p className="text-xl font-bold mb-2">The exit state: your team running the factory without me.</p>
             <p className="text-gray-light">
-              The real play is the compounding portfolio. Individual product exits are bonus cash flow, not the endgame.
+              Every engagement ends with the host studio operating the BYOK Factory autonomously
+              plus a published case study they use to recruit their next cohort.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Why Voice AI */}
+      {/* Why BYOK */}
       <section className="section">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8">Why Voice AI?</h2>
+          <h2 className="text-3xl font-bold mb-8">Why BYOK</h2>
           <p className="text-xl text-gray-light mb-8">
-            Not every platform needs voice. But voice AI is our edge.
+            Operators want to own the substrate. We give it to them.
           </p>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              { title: 'Differentiation', desc: "Competitors can copy features, not conversations" },
-              { title: 'Stickiness', desc: "Voice creates habits, habits create retention" },
-              { title: 'Data Moat', desc: "Every conversation improves the product" },
-              { title: 'Premium Positioning', desc: "Voice commands premium pricing" },
+              { title: 'Trust', desc: 'No managed-for-you secret; no vendor-controlled fallback. Every key is the operator&apos;s.' },
+              { title: 'Sovereignty', desc: 'Data stays on the operator&apos;s infrastructure. No data exfiltration to a hosted vendor.' },
+              { title: 'Cost control', desc: 'Operator pays AI providers directly. No middleman markup on inference.' },
+              { title: 'Compound credibility', desc: 'Open template + public case studies earn distribution that paid marketing cannot buy.' },
             ].map((item) => (
               <div key={item.title} className="flex gap-4">
-                <span className="text-accent text-xl">✓</span>
+                <span className="text-accent text-xl">&check;</span>
                 <div>
                   <h3 className="font-bold">{item.title}</h3>
                   <p className="text-sm text-gray-light">{item.desc}</p>
@@ -187,9 +188,36 @@ export default function ThesisPage() {
           <h2 className="text-3xl font-bold mb-8">The 3-Year Vision</h2>
           <div className="space-y-8">
             {[
-              { year: 'Year 1', title: 'Prove', items: [`50 platforms (${liveCount} built)`, '$100K MRR target', 'Factory process validated', 'RevAgent GTM operational'] },
-              { year: 'Year 2', title: 'Scale', items: ['100 platforms', '$500K MRR ($6M ARR)', 'First strategic exits', 'Factory replication playbook'] },
-              { year: 'Year 3', title: 'Compound', items: ['200+ platforms', '$2M+ MRR ($24M+ ARR)', 'Portfolio valued at 10-15x ARR', 'Path to $200M ARR visible'] },
+              {
+                year: 'Year 1 (now)',
+                title: 'Prove',
+                items: [
+                  `${liveCount} products live (${PLATFORMS.length} in the portfolio)`,
+                  'First BYOK release shipped (CQR)',
+                  '2 studio-in-residence engagements completed',
+                  '2 public case studies + Factory Floor essays',
+                ],
+              },
+              {
+                year: 'Year 2',
+                title: 'Codify',
+                items: [
+                  '4&ndash;6 more BYOK-first releases in marketplace',
+                  '3&ndash;4 more in-residence engagements completed',
+                  'BYOK Factory installable in &lt;1 week by a junior operator',
+                  'Studio Fund LP conversations open',
+                ],
+              },
+              {
+                year: 'Year 3',
+                title: 'Compound',
+                items: [
+                  'Studio Fund raised (Phase 2)',
+                  '~10 case studies; the methodology is the credential',
+                  'Factory operators across multiple host studios shipping autonomously',
+                  'Portfolio equity positions compounding; first power-law tail outcomes',
+                ],
+              },
             ].map((y) => (
               <div key={y.year} className="card p-6">
                 <div className="flex items-center gap-4 mb-4">
@@ -199,7 +227,8 @@ export default function ThesisPage() {
                 <ul className="grid md:grid-cols-2 gap-2">
                   {y.items.map((item) => (
                     <li key={item} className="text-gray-light text-sm flex items-center gap-2">
-                      <span className="text-accent">•</span> {item}
+                      <span className="text-accent">&middot;</span>
+                      <span dangerouslySetInnerHTML={{ __html: item }} />
                     </li>
                   ))}
                 </ul>
@@ -214,7 +243,8 @@ export default function ThesisPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="mb-4">Get Involved</h2>
           <p className="text-xl text-gray-light mb-8">
-            Use the BYOK-first products, bring us a problem to install the factory in your dev shop, or join the team.
+            Use the BYOK-first products, bring the factory into your studio, or join the team
+            building the methodology.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button href="/marketplace">Use Platforms</Button>

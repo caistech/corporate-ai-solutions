@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { Mic, MicOff, X, MessageCircle } from 'lucide-react'
 import { getAgentForPage, generateSessionId } from '@/lib/elevenlabs'
-import { VOICE_AGENTS, DEFAULT_AGENT } from '@/lib/constants'
+import { VOICE_AGENTS, DEFAULT_AGENT, PLATFORMS } from '@/lib/constants'
 
 interface Message {
   role: 'user' | 'agent'
@@ -107,14 +107,14 @@ export function VoiceAgent() {
     setIsSpeaking(true)
     setTimeout(() => {
       const responses: Record<string, string> = {
-        'What do you offer?': "We build AI-powered platforms that solve real business problems. We have 35+ live platforms covering everything from investor pitch practice to grant discovery to voice AI. We also offer technical advisory retainers from fifteen thousand a month, and fixed-price custom builds. Are you looking to use a platform, or do you have a specific problem you want help solving?",
-        'How does pricing work?': "Three ways to engage. Free community access via Skool. Technical advisory retainer from fifteen thousand a month for ongoing leadership on your stack. Custom platform builds by negotiation, scoped to your problem. What are you trying to solve?",
-        'Tell me about partnership': "Studio partnerships are for domain experts with 15-plus years in their industry who want to co-found a vertical with us. You bring the deep expertise and network; we bring the build capability. Equity-based, selective. If you're looking for paid development without the equity model, that lives under Pricing instead. What's your industry, and what's the gap you see?",
+        'What do you offer?': `We ship BYOK-first AI products you run on your own keys. ${PLATFORMS.length} of them in the marketplace, all free with BYOK. We also do studio-in-residence engagements at sixty-five thousand a month for studios and accelerators, technical advisory from fifteen thousand a month, and custom platform builds by negotiation. Which one are you here for?`,
+        'How does pricing work?': "Four shapes. Marketplace is free with BYOK. Studio-in-residence is sixty-five thousand a month, three or six months, for studios and accelerators. Technical advisory starts at fifteen thousand a month. Custom platform builds by negotiation. What sounds like your shape?",
+        'Tell me about studio in residence': "Studio-in-residence brings the BYOK Factory into your studio or accelerator for one cohort. I install the substrate, ship a version-zero-one for each cohort company on their own keys, leave a case study and a team running the factory. Two engagements a year, by application. Windows are January through March and July through September. What does your cohort look like?",
       }
-      
-      const agentMsg: Message = { 
-        role: 'agent', 
-        content: responses[content] || "That's a great question. Could you tell me a bit more about what you're looking for? Are you exploring our existing platforms, or do you have a specific problem you'd like us to help solve?",
+
+      const agentMsg: Message = {
+        role: 'agent',
+        content: responses[content] || "That's a great question. Could you tell me a bit more about what you're looking for? Are you exploring the BYOK marketplace, considering studio-in-residence for your studio or accelerator, or thinking about advisory?",
         timestamp: Date.now()
       }
       setTranscript(prev => [...prev, agentMsg])
@@ -232,7 +232,7 @@ export function VoiceAgent() {
           <div className="p-4 border-t border-gray-border bg-black/10">
             <p className="text-xs text-gray-light mb-2">Quick questions:</p>
             <div className="flex flex-wrap gap-2">
-              {['What do you offer?', 'How does pricing work?', 'Tell me about partnership'].map((q) => (
+              {['What do you offer?', 'How does pricing work?', 'Tell me about studio in residence'].map((q) => (
                 <button
                   key={q}
                   onClick={() => addUserMessage(q)}
