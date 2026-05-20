@@ -15,21 +15,30 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-6 py-24 relative z-10">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 px-4 py-2 rounded-full mb-8">
             <Sparkles size={16} className="text-accent" />
-            <span className="text-sm text-accent">AI Venture Studio</span>
+            <span className="text-sm text-accent">BYOK Factory · {PLATFORMS.length} live AI products</span>
           </div>
 
           <h1 className="mb-6">
-            The factory that builds AI companies.
+            The factory that ships AI products on your keys, your infra, your control.
           </h1>
 
-          <p className="text-xl text-gray-light max-w-3xl mb-10 leading-relaxed">
-            {PLATFORMS.length} platforms built in 12 months. One founder. Zero employees.
-            AI collapsed the cost of building software by 100x — we&apos;re the first to exploit that at scale.
+          <p className="text-xl text-gray-light max-w-3xl mb-6 leading-relaxed">
+            BYOK first. One operator. {PLATFORMS.length} AI products that ship with your keys, your
+            infrastructure, your control. Studio-in-residence engagements when your team wants the
+            factory installed in-house.
+          </p>
+
+          <p className="text-base text-gray-light max-w-3xl mb-10 leading-relaxed">
+            AI collapsed the cost of building software by 100x. We&apos;re the first to exploit that
+            at scale &mdash; and to give every product back to the operator who runs it.
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <Button href="#solutions" size="lg">
-              See What We&apos;ve Built <ArrowRight size={20} />
+            <Button href="/marketplace" size="lg">
+              Browse the Marketplace <ArrowRight size={20} />
+            </Button>
+            <Button href="/engagement" variant="orange" size="lg">
+              Studio in Residence
             </Button>
             <Button href="#journey" variant="secondary" size="lg">
               How We Got Here
@@ -228,74 +237,75 @@ export default function HomePage() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Path 1: See Solutions */}
+            {/* Path 1: Use the Products BYOK-Free */}
             <div className="bg-black p-8 rounded-lg border-2 border-accent/50 hover:border-accent transition-colors group">
               <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center mb-6">
                 <Layers className="text-accent" size={24} />
               </div>
-              <h3 className="text-2xl font-semibold mb-3">See Our Solutions</h3>
+              <h3 className="text-2xl font-semibold mb-3">Use the Products BYOK-Free</h3>
               <p className="text-gray-light mb-6">
-                Browse {parentPlatforms.length} parent platforms. Voice coaching, business tools, generators.
-                Visit the landing pages. Subscribe to what you need.
+                Browse {parentPlatforms.length} parent platforms. Clone the repo, deploy to your own
+                Vercel with your own keys, walk the setup wizard. No subscription. Your infrastructure.
               </p>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-accent" />
-                  Rehearsals AI – Voice coaching suite
+                  CQR &ndash; Community Question Responder (first BYOK release)
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-accent" />
-                  Connexions – AI interviewer panels
+                  Rehearsals AI &ndash; Voice coaching suite
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-accent" />
-                  DealFindrs – Property deal assessment
+                  Connexions &ndash; AI interviewer panels
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-accent" />
-                  + 5 more platforms
+                  + {parentPlatforms.length - 3} more parent platforms
                 </li>
               </ul>
               <Button href="/marketplace" fullWidth>
                 Browse Marketplace
                 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <p className="text-center text-sm text-gray-light mt-4">From $49/month</p>
+              <p className="text-center text-sm text-gray-light mt-4">Free with BYOK</p>
             </div>
 
-            {/* Path 2: Build With Us */}
+            {/* Path 2: Install the Factory In-House */}
             <div className="bg-black p-8 rounded-lg border-2 border-orange/50 hover:border-orange transition-colors group">
               <div className="w-12 h-12 bg-orange/20 rounded-lg flex items-center justify-center mb-6">
                 <Users className="text-orange" size={24} />
               </div>
-              <h3 className="text-2xl font-semibold mb-3">Build Your Solution</h3>
+              <h3 className="text-2xl font-semibold mb-3">Install the Factory In-House</h3>
               <p className="text-gray-light mb-6">
-                Don&apos;t see your problem? Bring it to us. 
-                We&apos;ll build it together and share the revenue.
+                Bring the BYOK Factory inside your studio or accelerator for one cohort. Substrate
+                installed, anchor company shipped, cohort scaled, case study published. Your team
+                runs it after I leave.
               </p>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  You bring the problem & expertise
+                  3 or 6 month engagement
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  We build in days, not months
+                  $65k/mo + 1&ndash;3% equity
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  Revenue share: 10-30% yours
+                  Hybrid shape available
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  No upfront cost
+                  2 engagements/year, by application
                 </li>
               </ul>
-              <Button href="/studio/partner" variant="orange" fullWidth>
-                Partner With Us
+              <Button href="/engagement" variant="orange" fullWidth>
+                Studio in Residence
                 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <p className="text-center text-sm text-gray-light mt-4">Revenue share model</p>
+              <p className="text-center text-sm text-gray-light mt-4">Jan&ndash;Mar &middot; Jul&ndash;Sep</p>
             </div>
 
             {/* Path 3: Join the Journey */}
