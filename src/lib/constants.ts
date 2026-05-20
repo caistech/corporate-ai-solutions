@@ -536,10 +536,10 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Modern methods of construction compliance & management',
     problem: 'MMC projects are buried in compliance, drawings, and document chaos',
     description: 'Property compliance and construction management platform for modern methods of construction. 3D visualization, document processing, and project workflows tailored to modular and prefab builds.',
-    // HIJACKED 2026-05-20: mmcbuild.vercel.app returns "MMC Minting dApp"
-    // (external crypto project). Bare slug not owned by this team.
-    // Team-canonical URL is 401-protected. Resolution gated on custom domain.
-    url: 'https://mmcbuild.vercel.app',
+    // Scrubbed 2026-05-20: was mmcbuild.vercel.app, which now returns "MMC
+    // Minting dApp" (external crypto project). mmcbuild-webapp.vercel.app
+    // is the team-owned alias that still serves the right content publicly.
+    url: 'https://mmcbuild-webapp.vercel.app',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
@@ -553,9 +553,10 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Voice-powered multilingual mobility',
     problem: 'Transport providers struggle to serve non-English-speaking riders',
     description: 'AI-powered multi-language mobility and transportation platform. Voice agent handles bookings, navigation, and rider communication in any language — with maps integration and real-time coordination.',
-    // HIJACKED 2026-05-20: mova.vercel.app returns "Self Tutor" (external).
-    // Bare slug not owned by this team. Resolution gated on custom domain.
-    url: 'https://mova.vercel.app',
+    // Scrubbed 2026-05-20: was mova.vercel.app, which returns "Self Tutor"
+    // (external). mova-pi.vercel.app is the team-owned disambiguated alias
+    // that still serves the right content publicly.
+    url: 'https://mova-pi.vercel.app',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: true,
@@ -641,10 +642,10 @@ export const PLATFORMS: Platform[] = [
     tagline: 'AI-powered procurement contact discovery and outreach',
     problem: 'Reaching named procurement decision-makers at scale is slow, manual, and brittle',
     description: 'Procurement-focused outreach pipeline: discover named contacts at target organisations via Brave Search and Claude scoring, enrich verified emails through Hunter.io, draft personalised email and LinkedIn copy, send via Resend, and triage replies into a managed cohort queue. Purpose-built for the F2K Offshore Modular Qualified Australian Market Validation campaign.',
-    // BROKEN 2026-05-20: omq-outreach.vercel.app returns default
-    // "Create Next App" title — project deployed but never customized.
-    // Either complete the deploy or remove this entry from PLATFORMS.
-    url: 'https://omq-outreach.vercel.app',
+    // Scrubbed 2026-05-20: was omq-outreach.vercel.app, which returns the
+    // default "Create Next App" template. omq.vercel.app is the team-owned
+    // alias that serves the right content publicly.
+    url: 'https://omq.vercel.app',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
