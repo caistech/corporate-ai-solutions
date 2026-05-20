@@ -4,19 +4,10 @@ import Link from 'next/link'
 import { CorporateHeader } from '@/components/corporate/CorporateHeader'
 import { CorporateFooter } from '@/components/corporate/CorporateFooter'
 import { VoiceAgent } from '@/components/voice/VoiceAgent'
+import { NAV_ITEMS, FOOTER_LINKS } from '@/lib/constants'
 import '@/styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-
-const navItems = [
-  { href: '/marketplace', label: 'Marketplace' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/engagement', label: 'Engagement' },
-  { href: '/studio', label: 'Studio' },
-  { href: '/community', label: 'Community' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-]
 
 export const metadata: Metadata = {
   title: {
@@ -41,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CorporateHeader
           productName="Corporate AI Solutions"
           productAcronym="CA"
-          navItems={navItems}
+          navItems={NAV_ITEMS}
           theme="dark"
           LinkComponent={Link}
         />
@@ -49,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CorporateFooter
           productName="Corporate AI Solutions"
           theme="dark"
+          extraLinks={FOOTER_LINKS}
         />
         <VoiceAgent />
       </body>

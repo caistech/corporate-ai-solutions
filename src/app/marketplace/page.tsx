@@ -1,17 +1,18 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink, Shield } from 'lucide-react'
+import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink, Shield, Github, Rocket, ShieldCheck, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PLATFORMS, getParentPlatforms, getChildrenOf } from '@/lib/constants'
 import { Platform } from '@/types'
 
 export const metadata: Metadata = {
   title: 'Marketplace',
-  description: 'Parent platforms, generators, and white-label solutions. Visit the landing pages.',
+  description: 'Parent platforms, generators, and white-label solutions. Free with BYOK.',
 }
 
 export default function MarketplacePage() {
-  const parentPlatforms = getParentPlatforms()
+  // Filter out paid-client engagements that live on /clients instead of the public marketplace.
+  const parentPlatforms = getParentPlatforms().filter(p => !p.marketplaceHidden)
   const generators = parentPlatforms.filter(p => p.isGenerator)
   const voiceCoaching = parentPlatforms.filter(p => p.category === 'voice-coaching')
   const businessTools = parentPlatforms.filter(p => p.category === 'business-tools')
@@ -19,6 +20,7 @@ export default function MarketplacePage() {
   const infrastructure = parentPlatforms.filter(p => p.category === 'infrastructure')
   const childPlatforms = PLATFORMS.filter(p => p.type === 'child')
   const voiceAIParents = parentPlatforms.filter(p => p.hasVoiceAI)
+  const byokFreeCount = parentPlatforms.filter(p => p.releaseMode === 'byok-free').length
 
   return (
     <>
@@ -27,14 +29,15 @@ export default function MarketplacePage() {
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="text-accent font-medium mb-4">The Marketplace</p>
-            <h1 className="mb-6">{parentPlatforms.length} Parent Platforms.<br />Infinite White-Label Potential.</h1>
+            <h1 className="mb-6">{parentPlatforms.length} BYOK-First AI Products.<br />Your keys. Your infra. Your control.</h1>
             <p className="text-xl text-gray-light mb-8">
-              Each platform below has its own public landing page. Visit to learn more.
-              Our generators can spin up customized versions for your business in days.
+              Every product below is free with BYOK &mdash; clone the repo, deploy to your own
+              infrastructure with your own keys, walk the setup wizard. No subscription, no
+              managed-for-you secret. Generators spin up white-label versions in days.
             </p>
             <div className="flex gap-4">
-              <Button href="/pricing">See Pricing</Button>
-              <Button href="/studio/partner" variant="orange">Want Your Own Version?</Button>
+              <Button href="/marketplace/cqr">See CQR &mdash; the first BYOK release</Button>
+              <Button href="/engagement" variant="orange">Studio in Residence</Button>
             </div>
           </div>
         </div>
@@ -48,7 +51,11 @@ export default function MarketplacePage() {
             <div className="text-sm text-gray-light">Parent Platforms</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-orange">{generators.length}</div>
+            <div className="text-3xl font-bold text-orange">{byokFreeCount}</div>
+            <div className="text-sm text-gray-light">BYOK-Free Releases</div>
+          </div>
+          <div>
+            <div className="text-3xl font-bold text-purple">{generators.length}</div>
             <div className="text-sm text-gray-light">Generators</div>
           </div>
           <div>
@@ -56,7 +63,7 @@ export default function MarketplacePage() {
             <div className="text-sm text-gray-light">White-Label Examples</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-purple">{voiceAIParents.length}</div>
+            <div className="text-3xl font-bold text-accent">{voiceAIParents.length}</div>
             <div className="text-sm text-gray-light">With Voice AI</div>
           </div>
         </div>
@@ -204,13 +211,13 @@ export default function MarketplacePage() {
       {/* CTA */}
       <section className="section bg-gray-dark">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="mb-4">Want Your Own White-Label Version?</h2>
+          <h2 className="mb-4">Want the factory installed in your studio?</h2>
           <p className="text-xl text-gray-light mb-8">
-            Our generators can spin up a customized platform for your business in days, not months.
-            Revenue share model—no upfront cost.
+            Studio-in-residence engagements bring the BYOK Factory inside your team for one cohort.
+            Substrate installed, products shipped, case study published, team trained.
           </p>
           <div className="flex justify-center gap-4">
-            <Button href="/studio/partner" variant="orange">Partner With Us</Button>
+            <Button href="/engagement" variant="orange">Studio in Residence</Button>
             <Button href="/pricing" variant="secondary">See Pricing</Button>
           </div>
         </div>
@@ -219,11 +226,126 @@ export default function MarketplacePage() {
   )
 }
 
+function ReleaseModeBadge({ platform }: { platform: Platform }) {
+  switch (platform.releaseMode) {
+    case 'byok-free':
+      return (
+        <span className="flex items-center gap-1 text-xs bg-orange/20 text-orange px-2 py-1 rounded font-medium">
+          <Rocket size={12} /> Free &middot; BYOK
+        </span>
+      )
+    case 'placeholder':
+      return (
+        <span className="flex items-center gap-1 text-xs bg-accent/20 text-accent px-2 py-1 rounded font-medium">
+          <ShieldCheck size={12} /> Shared infrastructure
+        </span>
+      )
+    case 'paid-client':
+      return (
+        <span className="flex items-center gap-1 text-xs bg-gray-mid text-gray-light px-2 py-1 rounded font-medium">
+          <Lock size={12} /> Private deployment
+        </span>
+      )
+    case 'in-migration':
+      return (
+        <span className="flex items-center gap-1 text-xs bg-purple/20 text-purple px-2 py-1 rounded font-medium">
+          BYOK release planned
+        </span>
+      )
+    default:
+      return null
+  }
+}
+
+function PlatformCardCTA({ platform }: { platform: Platform }) {
+  // BYOK-free: lead with Deploy + GitHub if URLs are populated; otherwise the in-repo product page.
+  if (platform.releaseMode === 'byok-free') {
+    return (
+      <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
+        {platform.deployUrl ? (
+          <a
+            href={platform.deployUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-orange hover:text-white transition-colors"
+          >
+            <Rocket size={14} /> Deploy Your Own
+          </a>
+        ) : (
+          <Link
+            href={platform.url}
+            className="inline-flex items-center gap-1 text-orange hover:text-white transition-colors"
+          >
+            <Rocket size={14} /> View Details
+          </Link>
+        )}
+        {platform.githubUrl && (
+          <a
+            href={platform.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-gray-light hover:text-white transition-colors"
+          >
+            <Github size={14} /> GitHub
+          </a>
+        )}
+      </div>
+    )
+  }
+
+  // Paid-client: no public CTA — these are private engagements that live on /clients.
+  if (platform.releaseMode === 'paid-client') {
+    return (
+      <Link
+        href="/clients"
+        className="inline-flex items-center gap-2 text-sm text-gray-light hover:text-white transition-colors font-medium"
+      >
+        By introduction only &middot; see clients <ArrowRight size={14} />
+      </Link>
+    )
+  }
+
+  // In-migration: hosted product still exists; visit it (Wave 3+ may swap to "Coming soon" once
+  // the hosted platforms are explicitly retired in favour of the BYOK template).
+  if (platform.releaseMode === 'in-migration' && platform.status === 'live') {
+    return (
+      <a
+        href={platform.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 text-sm text-accent hover:text-white transition-colors font-medium"
+      >
+        Visit Platform <ExternalLink size={14} />
+      </a>
+    )
+  }
+
+  // Placeholder + commercial + default: existing Visit Platform / Join Waitlist behavior.
+  return platform.status === 'live' ? (
+    <a
+      href={platform.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 text-sm text-accent hover:text-white transition-colors font-medium"
+    >
+      Visit Platform <ExternalLink size={14} />
+    </a>
+  ) : (
+    <Link
+      href={platform.url}
+      className="inline-flex items-center gap-2 text-sm text-orange hover:text-white transition-colors font-medium"
+    >
+      Join Waitlist <ArrowRight size={14} />
+    </Link>
+  )
+}
+
 function ParentPlatformCard({ platform }: { platform: Platform }) {
   return (
     <div className="card hover:border-accent/50 transition-colors">
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-2 flex-wrap">
+          <ReleaseModeBadge platform={platform} />
           {platform.hasVoiceAI && (
             <span className="flex items-center gap-1 text-xs bg-accent/20 text-accent px-2 py-1 rounded">
               <Mic size={12} /> Voice AI
@@ -246,23 +368,7 @@ function ParentPlatformCard({ platform }: { platform: Platform }) {
       <p className="text-sm text-gray-light mb-1 font-medium">{platform.problem}</p>
       <p className="text-sm text-gray-light mb-6">{platform.description}</p>
 
-      {platform.status === 'live' ? (
-        <a
-          href={platform.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-accent hover:text-white transition-colors font-medium"
-        >
-          Visit Platform <ExternalLink size={14} />
-        </a>
-      ) : (
-        <Link
-          href={platform.url}
-          className="inline-flex items-center gap-2 text-sm text-orange hover:text-white transition-colors font-medium"
-        >
-          Join Waitlist <ArrowRight size={14} />
-        </Link>
-      )}
+      <PlatformCardCTA platform={platform} />
     </div>
   )
 }

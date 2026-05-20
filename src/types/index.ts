@@ -23,6 +23,7 @@ export interface Platform {
   deployUrl?: string // Vercel Deploy button URL for one-click adoption
   deploymentModes?: Array<'customer-self-serve' | 'vendor-self-deploy'> // CQR-shaped products with multiple deploy modes
   requiredCredentials?: string[] // Services the user must BYOK (Anthropic, Supabase, etc.) — high-level list for the marketplace card
+  marketplaceHidden?: boolean // Hide from public marketplace render (e.g. paid-client engagements that live on /clients instead)
 }
 
 // Lead types
