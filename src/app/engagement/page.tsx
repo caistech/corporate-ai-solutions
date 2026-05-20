@@ -1,7 +1,8 @@
-// @explanatory-header-exempt — Wave 2/3 transitional surface; hand-built dark-theme hero covers R3 intent. Full inquiry form ships in Wave 3.
+// @explanatory-header-exempt — Wave 3 final surface; hand-built dark-theme hero covers R3 intent (what / what to do / why it matters).
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { FOUNDER, SITE } from '@/lib/constants'
+import { EngagementInquiryForm } from '@/components/engagement/EngagementInquiryForm'
 
 const DESCRIPTION =
   'Studio-in-residence engagements. The BYOK Factory installed inside your studio or accelerator for one cohort. 2 engagements per year. By application.'
@@ -71,36 +72,40 @@ export default function EngagementPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="section bg-gray-dark py-12">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="mb-4">Inquiries</h2>
-          <p className="text-base text-gray-light mb-8">
-            By application. Brief me on your cohort &mdash; size, industries, target window, deal shape preference &mdash;
-            and I&apos;ll respond inside 48 hours.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a
-              href={mailto}
-              className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-white text-black font-semibold hover:bg-gray-light transition"
-            >
-              Email {FOUNDER.name.split(' ')[0]}
-            </a>
-            <a
-              href={FOUNDER.calendly}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-white/20 text-white hover:bg-white/5 transition"
-            >
-              Book a 30-min call
-            </a>
-            <Link
-              href="/about"
-              className="text-gray-light hover:text-white underline underline-offset-4"
-            >
-              About the founder
-            </Link>
+      {/* Inquiry form */}
+      <section id="inquiry" className="section bg-gray-dark py-12">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="mb-4">Inquiries</h2>
+            <p className="text-base text-gray-light">
+              By application. Brief me on your cohort below and I&apos;ll respond inside 48 hours.
+              Or skip the form &mdash; the email and Calendly links work too.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center mt-6 text-sm">
+              <a
+                href={mailto}
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/5 transition"
+              >
+                Email {FOUNDER.name.split(' ')[0]}
+              </a>
+              <a
+                href={FOUNDER.calendly}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/5 transition"
+              >
+                Book a 30-min call
+              </a>
+              <Link
+                href="/about"
+                className="inline-flex items-center justify-center px-4 py-2 text-gray-light hover:text-white underline underline-offset-4"
+              >
+                About the founder
+              </Link>
+            </div>
           </div>
+
+          <EngagementInquiryForm />
         </div>
       </section>
     </>
