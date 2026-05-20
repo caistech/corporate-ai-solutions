@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/caistech/cais-shared-services/main/packages/portfolio-gate/schemas/sample.config.schema.json",
+  "_comment": [
+    "Portfolio Standard R14 — sample artefact presence check.",
+    "Corporate-AI-Solutions ships the BYOK Factory; CQR is the canonical sample artefact (first BYOK-free release, full product page with Deploy CTA + deployment-modes + required-credentials). Pointing the audit at /marketplace/cqr.",
+    "Project also uses Next.js `src/app/` layout, so the default `app/` candidates would never match anyway."
+  ],
+  "candidatePaths": [
+    "src/app/marketplace/cqr/page.tsx"
+  ],
+  "homepageFile": "src/app/page.tsx",
+  "sampleUrl": "/marketplace/cqr"
+}

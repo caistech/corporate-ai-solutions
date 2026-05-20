@@ -93,15 +93,28 @@ jobs:
           fi
           echo "Preview URL: $PORTFOLIO_GATE_PREVIEW_URL"
 
-      # TEMPORARY (2026-05-19 — portfolio migration in progress):
-      # static audits emit warnings but DO NOT block the gate. Revert to
-      # blocking by removing the `|| ...` wrapper once the R3 explanatory-header
-      # + R14 sample-artefact backfill is done across the portfolio.
-      - name: Static audits (R3 / R9 / R11 / R14 / R15 — warning-only)
+      # Playwright chromium for the responsive audit. `playwright` lands in
+      # node_modules as a transitive dep; this step downloads the browser
+      # binary it needs to launch.
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      # Static audits — BLOCKING.
+      # `portfolio-gate-audit-all` ignores per-audit config files (passes
+      # configPath: null to each runner), so invoking each audit individually
+      # is the only way to honor vendor-leak.config.json and sample.config.json.
+      # Aggregating exit codes so all findings surface even if one fails.
+      - name: Static audits (R3 / R9 / R11 / R14 / R15 / responsive)
         run: |
-          npx --no-install portfolio-gate-audit-all \
-            --base-url "$PORTFOLIO_GATE_PREVIEW_URL" \
-            || echo "::warning::Portfolio Standard audits found violations — see step output. Migration in progress; not blocking deploy. Revert this step to blocking once R3 + R14 backfill is complete."
+          FAIL=0
+          npx --no-install portfolio-gate-audit-rls                                                       || FAIL=1
+          npx --no-install portfolio-gate-audit-vendor-leak       --config vendor-leak.config.json       || FAIL=1
+          npx --no-install portfolio-gate-audit-unauth-endpoints  --base-url "$PORTFOLIO_GATE_PREVIEW_URL" || FAIL=1
+          npx --no-install portfolio-gate-audit-sample-artefact   --config sample.config.json --base-url "$PORTFOLIO_GATE_PREVIEW_URL" || FAIL=1
+          npx --no-install portfolio-gate-audit-explanatory-header                                       || FAIL=1
+          npx --no-install portfolio-gate-audit-trust-panel                                              || FAIL=1
+          npx --no-install portfolio-gate-audit-responsive        --base-url "$PORTFOLIO_GATE_PREVIEW_URL" || FAIL=1
+          exit $FAIL
 
       - name: Route smoke test (Portfolio Standard R13)
         run: |

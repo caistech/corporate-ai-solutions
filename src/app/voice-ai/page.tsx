@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — hand-built dark-theme hero opens with what/what-to-do/why (Voice AI approach + Morgan canonical persona); full <ExplanatoryHeader/> would clash with the theme
 import { Metadata } from 'next'
 import { Mic, MicOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
