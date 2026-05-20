@@ -138,61 +138,64 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Current Engagements */}
+      {/* Current Engagements — moved to /clients */}
       <section className="section">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="mb-2">Current Engagements</h2>
-          <p className="text-gray-light mb-8">May 2026 &mdash; three concurrent engagements.</p>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="mb-2">Current engagements</h2>
+          <p className="text-gray-light mb-8">
+            Three concurrent commercial engagements as of 2026: one fixed-price build contract
+            (MMC Build) and two Chief Technology Advisor positions (LingoPure, PreLabz).
+            Full scope, stack and dates on the clients page.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/clients"
+              className="btn btn-primary inline-flex items-center gap-2"
+            >
+              See client engagements <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="p-6 bg-gray-dark rounded-lg border-l-4 border-accent">
-              <p className="text-xs uppercase tracking-wider text-accent mb-2 font-mono">Live Commercial Contract</p>
-              <h3 className="text-lg font-semibold mb-2">MMC Build</h3>
-              <p className="text-sm text-gray-light mb-2">
-                Sole developer on a fixed-price contract delivering a multi-tenant AI platform
-                for Australian modular construction. Stages 0&ndash;5 shipped in 5 weeks against
-                a 14-week schedule.
-              </p>
-              <p className="text-xs text-gray-light/70">
-                Anthropic + OpenAI + HuggingFace · agentic compliance + cost estimation ·
-                RAG · Stripe per-module billing.
-              </p>
-            </div>
-
+      {/* Studio in Residence invitation */}
+      <section className="section bg-gradient-to-b from-black to-gray-dark border-y border-orange/20">
+        <div className="max-w-4xl mx-auto">
+          <div className="tag mb-4" style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#fb923c' }}>Studio in Residence</div>
+          <h2 className="mb-6">Looking for studio-in-residence engagements</h2>
+          <p className="text-lg text-gray-light mb-4">
+            The factory shape that produced 46 BYOK-first products is now offered as an in-residence
+            engagement at studios, accelerators, and dev shops that want the substrate installed
+            in-house. Two engagements per year. By application.
+          </p>
+          <p className="text-gray-light mb-4">
+            <strong className="text-white">What gets installed:</strong> the auth pattern (forgot-password,
+            visibility toggle, magic link), bootstrap automation (env sync, SMTP wiring, project
+            scaffolding), CLAUDE.md customised to your stack, the first 3 <code>@caistech/*</code>
+            packages wired in, voice agent surface per the portfolio standard.
+          </p>
+          <p className="text-gray-light mb-4">
+            <strong className="text-white">Who it fits:</strong> engineering leaders and dev-shop
+            owners running 5&ndash;20 person teams who want their next cohort of portfolio companies
+            shipping BYOK-first within weeks &mdash; with the factory operational long after I leave.
+          </p>
+          <p className="text-gray-light mb-8">
+            <strong className="text-white">The model:</strong> $65k/month retainer (3 or 6 months) +
+            1&ndash;3% equity in the host. Hybrid shape available where individual cohort companies
+            cover a fractional CTO retainer on top of a lower studio base. Kill criteria built into
+            every contract &mdash; either party exits at the halfway mark if the criteria miss.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/engagement" className="btn btn-orange inline-flex items-center gap-2">
+              Studio in Residence details <ArrowRight size={16} />
+            </Link>
             <a
-              href="https://lingopure.com"
+              href="https://www.calendly.com/mcmdennis"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-6 bg-gray-dark rounded-lg border-l-4 border-blue-400 hover:bg-gray-dark/70 transition-colors group"
+              className="btn btn-secondary inline-flex items-center gap-2"
             >
-              <p className="text-xs uppercase tracking-wider text-blue-400 mb-2 font-mono inline-flex items-center gap-2">
-                Chief Technology Advisor
-                <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-              </p>
-              <h3 className="text-lg font-semibold mb-2">LingoPure</h3>
-              <p className="text-sm text-gray-light mb-2">
-                AI voice tutoring platform. Architecture, AI stack design, and technical execution
-                guidance.
-              </p>
-              <p className="text-xs text-blue-400/70">lingopure.com</p>
-            </a>
-
-            <a
-              href="https://prelabz.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-6 bg-gray-dark rounded-lg border-l-4 border-orange hover:bg-gray-dark/70 transition-colors group"
-            >
-              <p className="text-xs uppercase tracking-wider text-orange mb-2 font-mono inline-flex items-center gap-2">
-                Chief Technology Advisor
-                <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-              </p>
-              <h3 className="text-lg font-semibold mb-2">PreLabz</h3>
-              <p className="text-sm text-gray-light mb-2">
-                Venture studio for pre-seed through Series A investor readiness. Technical
-                evaluation and architecture review across portfolio ventures.
-              </p>
-              <p className="text-xs text-orange/70">prelabz.com</p>
+              <Calendar size={18} /> Book a 30-min call
             </a>
           </div>
         </div>
