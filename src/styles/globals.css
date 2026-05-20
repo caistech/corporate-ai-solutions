@@ -18,14 +18,15 @@
 
   html {
     scroll-behavior: smooth;
+    /* The responsive audit measures document.documentElement.scrollWidth
+       (i.e. <html>, not <body>) — so the clip has to live here, not on body,
+       to constrain horizontal overflow without breaking sticky elements. */
+    overflow-x: clip;
   }
 
   body {
     @apply bg-black text-white antialiased;
     font-family: var(--font-sans);
-    /* `clip` (not `hidden`) so scrollWidth reflects the clipped width
-       — `hidden` clips visually but leaves the overflowing content
-       contributing to scrollWidth, which fails the responsive audit. */
     overflow-x: clip;
   }
 
