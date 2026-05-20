@@ -380,7 +380,7 @@ export const PLATFORMS: Platform[] = [
     tagline: 'R&D tax eligibility work recording',
     problem: 'Businesses miss R&D tax credits because they don\'t track eligible work',
     description: 'Platform for recording and tracking work eligible for R&D tax credits. Capture activities, link to eligible categories, and generate compliance-ready documentation for your tax agent.',
-    url: 'https://r-and-d-tax-eligibility-work-record.vercel.app',
+    url: 'https://r-and-d-tax-eligibility-work-recording-corporate-ai-solutions.vercel.app',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
@@ -469,10 +469,7 @@ export const PLATFORMS: Platform[] = [
     tagline: 'AI-powered channel partner discovery',
     problem: 'Finding the right channel partners is time-consuming and hit-or-miss',
     description: 'Helps founders find channel partners, enrich contacts, draft outreach, send emails, and track replies. Five-stage hybrid pipeline with Brave Search, Hunter.io email lookup, Claude AI drafting, and email tracking.',
-    // NOT-OWNED 2026-05-20: partner-pilot.vercel.app returns 404 — bare slug
-    // not owned by this team and no team-owned deployment alias active.
-    // Resolution gated on custom domain or re-deploy.
-    url: 'https://partner-pilot.vercel.app',
+    url: 'https://partner-pilot-corporate-ai-solutions.vercel.app',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
