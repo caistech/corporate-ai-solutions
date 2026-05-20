@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/caistech/cais-shared-services/main/packages/portfolio-gate/schemas/responsive.config.schema.json",
+  "_comment": [
+    "Portfolio Standard responsive-design rule. Default audit paths include /login, /signup, /privacy which don't exist on this marketing site. Replacing with the real public surfaces (the 404 page for non-existent routes inherits the same layout and would re-test the same chrome).",
+    "Both mobile (375x812) and laptop (1280x800) viewports are checked. Audit catches horizontal scroll (FAIL) and small tap targets (WARN — informational only)."
+  ],
+  "paths": [
+    "/",
+    "/marketplace",
+    "/marketplace/cqr",
+    "/pricing",
+    "/about",
+    "/clients",
+    "/community",
+    "/contact",
+    "/engagement",
+    "/solutions",
+    "/voice-ai",
+    "/studio/thesis",
+    "/studio/portfolio",
+    "/studio/join"
+  ]
+}
