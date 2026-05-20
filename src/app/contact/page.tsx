@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — hand-built dark-theme hero opens with what/what-to-do/why; full <ExplanatoryHeader/> would clash with the theme
 'use client'
 
 import { useState } from 'react'

@@ -1,5 +1,6 @@
 // app/pubguard/page.tsx
 // PubGuard Landing Page - BRANDED with Corporate AI Solutions / Kira AI
+// @explanatory-header-exempt — hand-built dark-theme hero opens with what/what-to-do/why for the PubGuard product surface
 
 'use client';
 

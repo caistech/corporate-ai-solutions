@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — hand-built dark-theme hero opens with what/what-to-do/why; full <ExplanatoryHeader/> would clash with the theme
 import Link from 'next/link'
 import { ArrowRight, Mic, Users, Layers, Rocket, ChevronRight, Sparkles, Linkedin, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'

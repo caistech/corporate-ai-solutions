@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — hand-built dark-theme hero opens with what/what-to-do/why; full <ExplanatoryHeader/> would clash with the theme
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink, Shield, Github, Rocket, ShieldCheck, Lock } from 'lucide-react'

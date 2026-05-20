@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — nested workflow page (client review submission form); entry-point header lives on the parent surface
 'use client'
 
 import { useState } from 'react'
