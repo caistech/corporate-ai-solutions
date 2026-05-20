@@ -75,6 +75,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/about',
     children: [
       { label: 'Our Story', href: '/about' },
+      { label: 'Clients', href: '/clients' },
       { label: 'Voice AI Approach', href: '/voice-ai' },
     ],
   },

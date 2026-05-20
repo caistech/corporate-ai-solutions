@@ -35,8 +35,9 @@ export function Footer() {
             <h4 className="font-mono text-xs text-accent uppercase tracking-wider mb-4">Company</h4>
             <ul className="space-y-3">
               <li><Link href="/about" className="text-sm text-gray-light hover:text-accent transition-colors">About Dennis</Link></li>
+              <li><Link href="/clients" className="text-sm text-gray-light hover:text-accent transition-colors">Clients</Link></li>
               <li><a href={SKOOL.url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-light hover:text-accent transition-colors">Community</a></li>
-              <li><Link href="/studio/partner" className="text-sm text-gray-light hover:text-accent transition-colors">Studio Partnerships</Link></li>
+              <li><Link href="/engagement" className="text-sm text-gray-light hover:text-accent transition-colors">Studio in Residence</Link></li>
               <li><Link href="/pricing" className="text-sm text-gray-light hover:text-accent transition-colors">Pricing</Link></li>
             </ul>
           </div>
