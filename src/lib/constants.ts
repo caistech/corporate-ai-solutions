@@ -373,22 +373,6 @@ export const PLATFORMS: Platform[] = [
     type: 'parent',
   },
   {
-    id: 'easyopenclaw',
-    releaseMode: 'in-migration',
-    name: 'EasyOpenClaw',
-    slug: 'easyopenclaw',
-    tagline: 'Autonomous AI agent wrapper',
-    problem: 'AI agents are powerful but hard to deploy and manage',
-    description: 'User-friendly wrapper around the OpenClaw autonomous AI agent. Simple API interface for invoking AI functions, listing capabilities, querying past invocations, and monitoring agent health.',
-    // BROKEN 2026-05-20: gbta-openclaw.vercel.app returns empty <title>
-    // (deploy live but rendering issue). Investigate the deploy state.
-    url: 'https://gbta-openclaw.vercel.app',
-    status: 'live',
-    category: 'business-tools',
-    hasVoiceAI: false,
-    type: 'parent',
-  },
-  {
     id: 'rnd-tax-tracker',
     releaseMode: 'in-migration',
     name: 'R&D Tax Tracker',
