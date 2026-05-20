@@ -237,14 +237,20 @@ export const PLATFORMS: Platform[] = [
     problem: 'Vendor community queues sit unanswered for days; meanwhile, third-party answers get moderated out. Both sides need a tool the channel admin can run themselves.',
     description: 'Polls a community Slack or Discord, classifies incoming questions, retrieves from a vendor-specific knowledge base, drafts a high-quality reply in the operator\'s voice, holds it for one-click approval, posts on approval. Two deployment modes: customer-self-serve (point it at any vendor\'s public surfaces, drafts for you without posting) or vendor-self-deploy (run it in your own community channel, your team approves drafts). One codebase. Same architecture. BYOK across every key — Anthropic, Supabase, Slack, ElevenLabs, OpenAI, Resend. No CAS-owned fallback.',
     url: '/marketplace/cqr',
-    status: 'building',
+    status: 'live',
     category: 'business-tools',
     hasVoiceAI: true,
     featured: true,
     type: 'parent',
     releaseMode: 'byok-free',
     githubUrl: 'https://github.com/dennissolver/community-question-responder',
-    deployUrl: undefined, // TODO: real URL after CQR repo is public (Vercel Deploy button — Phase 3 of MONETISATION_EXECUTION_PLAN.md)
+    deployUrl:
+      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fcommunity-question-responder' +
+      '&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,' +
+      'ANTHROPIC_API_KEY,OPENAI_API_KEY,RESEND_API_KEY,RESEND_FROM_EMAIL,ELEVENLABS_API_KEY,' +
+      'CRON_SECRET,NEXT_PUBLIC_APP_URL' +
+      '&envDescription=Required+credentials+%E2%80%94+all+BYOK%2C+see+README+for+links' +
+      '&envLink=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fcommunity-question-responder%23required-credentials',
     deploymentModes: ['customer-self-serve', 'vendor-self-deploy'],
     requiredCredentials: [
       'ANTHROPIC_API_KEY (or OPENROUTER_API_KEY)',
