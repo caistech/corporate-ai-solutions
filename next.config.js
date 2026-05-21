@@ -29,6 +29,11 @@ const nextConfig = {
         destination: '/engagement',
         permanent: true,
       },
+      {
+        source: '/studio-partner',
+        destination: '/engagement',
+        permanent: true,
+      },
       // Long Tail Venture Studio LP surfaces retired 2026-05-19 — see
       // docs/BYOK_PIVOT_REQUIREMENTS.md. SEO equity from these URLs lands
       // on /about (the founder narrative) rather than 404-ing.
