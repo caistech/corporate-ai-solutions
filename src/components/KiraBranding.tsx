@@ -12,7 +12,7 @@ import { Calendar, ExternalLink, Sparkles } from 'lucide-react';
 
 export const CORPORATE_AI_SOLUTIONS = {
   name: 'Corporate AI Solutions',
-  website: 'https://corporateaisolutions.com',
+  website: 'https://corporate-ai-solutions.vercel.app',
   booking: 'https://calendly.com/mcmdennis',
   email: 'dennis@corporateaisolutions.com',
 };

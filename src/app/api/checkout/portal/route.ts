@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing customerId' }, { status: 400 })
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://corporateaisolutions.com'
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://corporate-ai-solutions.vercel.app'
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,

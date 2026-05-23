@@ -28,6 +28,7 @@ export interface Platform {
     | 'drafting-firm-self-host' // Preflight: firm runs one deployment across parallel projects
   > // BYOK-free products with multiple deploy audiences
   requiredCredentials?: string[] // Services the user must BYOK (Anthropic, Supabase, etc.) — high-level list for the marketplace card
+  requiredStack?: string[] // Platforms the BYOK deploy is opinionated to — e.g. ['GitHub','Vercel','Supabase']. Surfaced on the marketplace card so users know the stack is fixed by design.
   marketplaceHidden?: boolean // Hide from public marketplace render (e.g. paid-client engagements that live on /clients instead)
 }
 

@@ -46,7 +46,7 @@ export function CorporateFooter({ productName, extraLinks = [], theme = 'light' 
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-              <a href="https://www.corporateaisolutions.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors">corporateaisolutions.com</a>
+              <a href="https://corporate-ai-solutions.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors">corporate-ai-solutions.vercel.app</a>
               {VENDOR.calendly && (
                 <>
                   <span className="hidden sm:inline opacity-30">|</span>

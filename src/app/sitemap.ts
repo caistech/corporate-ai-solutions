@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { PLATFORMS } from '@/lib/constants'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://corporateaisolutions.com'
+  const baseUrl = 'https://corporate-ai-solutions.vercel.app'
   
   const staticPages = [
     '',

@@ -4,7 +4,7 @@ import { Platform, NavItem, VoiceAgentConfig } from '@/types'
 export const SITE = {
   name: 'Corporate AI Solutions',
   tagline: "The factory that builds AI companies. One founder. Zero employees.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://corporateaisolutions.com',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://corporate-ai-solutions.vercel.app',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@corporateaisolutions.com',
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+61402612471',
   phoneFormatted: '+61 402 612 471',
@@ -252,6 +252,7 @@ export const PLATFORMS: Platform[] = [
       '&envDescription=Required+credentials+%E2%80%94+all+BYOK%2C+see+README+for+links' +
       '&envLink=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fcommunity-question-responder%23required-credentials',
     deploymentModes: ['customer-self-serve', 'vendor-self-deploy'],
+    requiredStack: ['GitHub', 'Vercel', 'Supabase'],
     requiredCredentials: [
       'ANTHROPIC_API_KEY (or OPENROUTER_API_KEY)',
       'OPENAI_API_KEY (embeddings)',
@@ -285,6 +286,7 @@ export const PLATFORMS: Platform[] = [
       '&envDescription=Required+credentials+%E2%80%94+all+BYOK%2C+see+README+for+links' +
       '&envLink=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fpreflight%23required-credentials',
     deploymentModes: ['project-owner-self-host', 'drafting-firm-self-host'],
+    requiredStack: ['GitHub', 'Vercel', 'Supabase'],
     requiredCredentials: [
       'ANTHROPIC_API_KEY (or OPENROUTER_API_KEY)',
       'OPENAI_API_KEY (embeddings)',

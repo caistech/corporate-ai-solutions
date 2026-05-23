@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_AU',
-    url: 'https://corporateaisolutions.com',
+    url: 'https://corporate-ai-solutions.vercel.app',
     siteName: 'Corporate AI Solutions',
     title: 'Corporate AI Solutions | The Factory That Builds AI Companies',
     description: '35+ live AI platforms. One founder. Zero employees. The unicorn isn\'t the product — it\'s the factory.',
