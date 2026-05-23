@@ -2,63 +2,99 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import crypto from 'node:crypto'
 import { supabaseAdmin } from '@/lib/supabase'
-import { classifyResponse } from '@/lib/methodology/classify'
+import { classifyResponse, type ClassificationSignal } from '@/lib/methodology/classify'
 import { rollupHypothesisRows } from '@/lib/methodology/rollup'
 
 /**
  * POST /api/methodology/sync
  *
- * Webhook target from InvestorPilot (Session 3 wiring) — also accepts manual
- * mock posts in dev for testing the classification loop without real outreach.
+ * Webhook target accepting TWO payload shapes:
  *
- * Auth:
+ *   1. Mock / channel-direct shape (Session 2; also useable as a debug
+ *      injection path). Carries raw response text; CAS classifies it.
+ *   2. Connexions methodology-intake shape (Session 3). Carries the
+ *      transcript + Connexions' per-question signal extraction (when
+ *      Anthropic succeeded on the Connexions side); CAS persists the
+ *      extraction directly and falls back to its own classifier only
+ *      if extraction is null.
+ *
+ * Auth (both shapes):
  *   - If CAS_METHODOLOGY_WEBHOOK_SECRET is set: requires HMAC-SHA256 in
- *     X-Methodology-Signature header (hex-encoded; computed over raw body).
- *   - If env var unset: dev mode — accepts any payload (logs a warning).
+ *     X-Methodology-Signature header (hex with optional 'sha256=' prefix).
+ *   - If unset: dev mode — accepts unsigned (logs a warning).
  *
- * Body shape (per response):
- *   {
- *     ip_campaign_id: "uuid",         // IP-side campaign ID
- *     ip_partner_id?: "string",       // optional IP-side prospect ID
- *     prospect_name?: "string",
- *     prospect_role?: "string",
- *     prospect_org?: "string",
- *     response_received_at?: "iso8601",
- *     response_raw_text: "string",
- *     response_channel?: "linkedin" | "email"
- *   }
- *
- * Flow:
- *   1. Find the CAS methodology_campaigns row matching ip_campaign_id
- *   2. Load its parent Hypothesis Card + questions
- *   3. LLM-classify the response against the questions + hypothesis rows
- *   4. Upsert methodology_responses (idempotent on (campaign_id, ip_partner_id))
- *   5. Reload all responses for this campaign + roll up the card's hypothesis_rows
- *   6. Persist updated card
- *   7. Return summary
+ * Discriminator: presence of `event === 'methodology.intake.completed'`
+ * routes the request through the Connexions path. Otherwise the mock path.
  */
 
-const SyncPayloadSchema = z.object({
+// ─── Schemas ─────────────────────────────────────────────────────────
+
+const MockPayloadSchema = z.object({
   ip_campaign_id: z.string().uuid(),
   ip_partner_id: z.string().max(200).optional(),
   prospect_name: z.string().max(300).optional(),
   prospect_role: z.string().max(300).optional(),
   prospect_org: z.string().max(300).optional(),
   response_received_at: z.string().datetime().optional(),
-  response_raw_text: z.string().min(1).max(20000),
+  response_raw_text: z.string().min(1).max(20_000),
   response_channel: z.enum(['linkedin', 'email']).optional(),
 })
 
+const SignalEnum = z.enum([
+  'confirms',
+  'contradicts',
+  'refines',
+  'off-topic',
+  'wants-more-info',
+])
+
+const ConnexionsPayloadSchema = z.object({
+  event: z.literal('methodology.intake.completed'),
+  intake_id: z.string(),
+  connexions_agent_slug: z.string().optional(),
+  cas_card_id: z.string().uuid().optional(),
+  cas_product_slug: z.string().optional(),
+  ip_campaign_id: z.string().uuid(),
+  campaign_type: z.enum(['target-user', 'distributor-candidate']).optional(),
+  completed_at: z.string().optional(),
+  duration_seconds: z.number().nullable().optional(),
+  ref: z.string().nullable().optional(),
+  src: z.string().nullable().optional(),
+  prospect: z
+    .object({
+      name: z.string().nullable().optional(),
+      email: z.string().nullable().optional(),
+      company: z.string().nullable().optional(),
+      role: z.string().nullable().optional(),
+      linkedin_url: z.string().nullable().optional(),
+    })
+    .optional(),
+  questions: z.array(z.string()).optional(),
+  transcript_excerpt: z.string().min(1).max(20_000),
+  extraction: z
+    .object({
+      per_question_signal: z.record(z.string(), SignalEnum),
+      overall_classification: SignalEnum,
+      summary: z.string(),
+    })
+    .nullable()
+    .optional(),
+})
+
+// ─── HMAC ────────────────────────────────────────────────────────────
+
 function verifySignature(rawBody: string, headerSig: string | null, secret: string): boolean {
   if (!headerSig) return false
-  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
-  // constant-time compare
-  if (headerSig.length !== expected.length) return false
-  return crypto.timingSafeEqual(Buffer.from(headerSig), Buffer.from(expected))
+  // Accept both `sha256=<hex>` (Connexions / GitHub convention) and raw hex.
+  const sigHex = headerSig.startsWith('sha256=') ? headerSig.slice(7) : headerSig
+  const expectedHex = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
+  if (sigHex.length !== expectedHex.length) return false
+  return crypto.timingSafeEqual(Buffer.from(sigHex), Buffer.from(expectedHex))
 }
 
+// ─── Handler ─────────────────────────────────────────────────────────
+
 export async function POST(request: NextRequest) {
-  // Read raw body once (need it both for HMAC verification + JSON parse)
   let rawBody: string
   try {
     rawBody = await request.text()
@@ -85,85 +121,147 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const parsed = SyncPayloadSchema.safeParse(parsedBody)
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Invalid payload', issues: parsed.error.issues },
-      { status: 400 }
-    )
+  const isConnexions =
+    typeof parsedBody === 'object' &&
+    parsedBody !== null &&
+    (parsedBody as { event?: unknown }).event === 'methodology.intake.completed'
+
+  // Normalise to a common internal shape: { ip_campaign_id, response_raw_text,
+  // response_channel, prospect_*, classification?, classification_reasoning?,
+  // per_question_signal? }
+  interface NormalisedResponse {
+    ip_campaign_id: string
+    ip_partner_id: string | null
+    prospect_name: string | null
+    prospect_role: string | null
+    prospect_org: string | null
+    response_received_at: string
+    response_raw_text: string
+    response_channel: 'linkedin' | 'email' | 'voice' | null
+    classification: ClassificationSignal | null
+    classification_reasoning: string | null
+    per_question_signal: Record<string, ClassificationSignal> | null
+  }
+
+  let normalised: NormalisedResponse
+  let questionsOverride: string[] | null = null
+
+  if (isConnexions) {
+    const parsed = ConnexionsPayloadSchema.safeParse(parsedBody)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid Connexions payload', issues: parsed.error.issues },
+        { status: 400 }
+      )
+    }
+    const prospect = parsed.data.prospect ?? {}
+    normalised = {
+      ip_campaign_id: parsed.data.ip_campaign_id,
+      ip_partner_id: parsed.data.intake_id, // Connexions interview id stands in
+      prospect_name: prospect.name ?? null,
+      prospect_role: prospect.role ?? null,
+      prospect_org: prospect.company ?? null,
+      response_received_at: parsed.data.completed_at ?? new Date().toISOString(),
+      response_raw_text: parsed.data.transcript_excerpt,
+      response_channel: 'voice',
+      classification: parsed.data.extraction?.overall_classification ?? null,
+      classification_reasoning: parsed.data.extraction?.summary ?? null,
+      per_question_signal: parsed.data.extraction?.per_question_signal ?? null,
+    }
+    questionsOverride = parsed.data.questions ?? null
+  } else {
+    const parsed = MockPayloadSchema.safeParse(parsedBody)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid payload', issues: parsed.error.issues },
+        { status: 400 }
+      )
+    }
+    normalised = {
+      ip_campaign_id: parsed.data.ip_campaign_id,
+      ip_partner_id: parsed.data.ip_partner_id ?? null,
+      prospect_name: parsed.data.prospect_name ?? null,
+      prospect_role: parsed.data.prospect_role ?? null,
+      prospect_org: parsed.data.prospect_org ?? null,
+      response_received_at: parsed.data.response_received_at ?? new Date().toISOString(),
+      response_raw_text: parsed.data.response_raw_text,
+      response_channel: parsed.data.response_channel ?? null,
+      classification: null,
+      classification_reasoning: null,
+      per_question_signal: null,
+    }
   }
 
   const supabase = supabaseAdmin()
 
-  // 1. Find the CAS campaign row for this IP campaign id
+  // Look up CAS campaign by ip_campaign_id
   const { data: campaign, error: campaignErr } = await supabase
     .from('methodology_campaigns')
     .select('id, card_id, questions')
-    .eq('ip_campaign_id', parsed.data.ip_campaign_id)
+    .eq('ip_campaign_id', normalised.ip_campaign_id)
     .maybeSingle()
 
   if (campaignErr) {
     console.error('[/api/methodology/sync] campaign lookup failed:', campaignErr)
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
-
   if (!campaign) {
     return NextResponse.json(
-      { error: `No CAS campaign mirrored for ip_campaign_id ${parsed.data.ip_campaign_id}` },
+      { error: `No CAS campaign mirrored for ip_campaign_id ${normalised.ip_campaign_id}` },
       { status: 404 }
     )
   }
 
-  // 2. Load the parent Hypothesis Card
+  // Load parent card
   const { data: card, error: cardErr } = await supabase
     .from('methodology_hypothesis_cards')
     .select('id, product_slug, hypothesis_rows')
     .eq('id', campaign.card_id)
     .maybeSingle()
-
   if (cardErr || !card) {
     console.error('[/api/methodology/sync] card lookup failed:', cardErr)
     return NextResponse.json({ error: 'Parent card not found' }, { status: 500 })
   }
 
-  const questions = Array.isArray(campaign.questions) ? (campaign.questions as string[]) : []
+  const questions = questionsOverride
+    ?? (Array.isArray(campaign.questions) ? (campaign.questions as string[]) : [])
   const hypothesisRows = Array.isArray(card.hypothesis_rows)
     ? (card.hypothesis_rows as Array<{ field: string; hypothesis_text: string; [k: string]: unknown }>)
     : []
 
-  // 3. Classify
-  let classification
-  try {
-    classification = await classifyResponse({
-      response_text: parsed.data.response_raw_text,
-      questions,
-      hypothesis_rows: hypothesisRows,
-    })
-  } catch (e) {
-    console.error('[/api/methodology/sync] classification failed:', e)
-    // Persist the raw response anyway — classification is best-effort
-    classification = null
+  // Classify on CAS if we don't already have extraction from Connexions
+  if (!normalised.classification && normalised.response_raw_text && questions.length > 0) {
+    try {
+      const c = await classifyResponse({
+        response_text: normalised.response_raw_text,
+        questions,
+        hypothesis_rows: hypothesisRows,
+      })
+      normalised.classification = c.overall_classification
+      normalised.classification_reasoning = c.reasoning
+      normalised.per_question_signal = c.per_question_signal
+    } catch (e) {
+      console.error('[/api/methodology/sync] CAS classification fallback failed:', e)
+    }
   }
 
-  // 4. Upsert response (idempotent on (campaign_id, ip_partner_id) when partner id present)
-  const responseRow = {
-    campaign_id: campaign.id,
-    ip_partner_id: parsed.data.ip_partner_id ?? null,
-    prospect_name: parsed.data.prospect_name ?? null,
-    prospect_role: parsed.data.prospect_role ?? null,
-    prospect_org: parsed.data.prospect_org ?? null,
-    response_received_at: parsed.data.response_received_at ?? new Date().toISOString(),
-    response_raw_text: parsed.data.response_raw_text,
-    response_channel: parsed.data.response_channel ?? null,
-    classification: classification?.overall_classification ?? null,
-    classification_reasoning: classification?.reasoning ?? null,
-    per_question_signal: classification?.per_question_signal ?? null,
-    classified_at: classification ? new Date().toISOString() : null,
-  }
-
+  // Insert response row
   const { data: insertedResponse, error: insertErr } = await supabase
     .from('methodology_responses')
-    .insert(responseRow)
+    .insert({
+      campaign_id: campaign.id,
+      ip_partner_id: normalised.ip_partner_id,
+      prospect_name: normalised.prospect_name,
+      prospect_role: normalised.prospect_role,
+      prospect_org: normalised.prospect_org,
+      response_received_at: normalised.response_received_at,
+      response_raw_text: normalised.response_raw_text,
+      response_channel: normalised.response_channel,
+      classification: normalised.classification,
+      classification_reasoning: normalised.classification_reasoning,
+      per_question_signal: normalised.per_question_signal,
+      classified_at: normalised.classification ? new Date().toISOString() : null,
+    })
     .select('id')
     .single()
 
@@ -172,7 +270,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to persist response' }, { status: 500 })
   }
 
-  // 5. Reload all responses for this campaign + roll up
+  // Roll up across all responses for this campaign
   const { data: allResponses, error: respFetchErr } = await supabase
     .from('methodology_responses')
     .select('per_question_signal')
@@ -188,13 +286,14 @@ export async function POST(request: NextRequest) {
 
   const updatedRows = rollupHypothesisRows(
     hypothesisRows,
-    (allResponses ?? []) as Array<{ per_question_signal: Record<string, never> | null }>
+    (allResponses ?? []) as Array<{ per_question_signal: Record<string, ClassificationSignal> | null }>
   )
 
-  // 6. Persist updated card
-  const cardStatus = updatedRows.every((r) => r.validation_status === 'confirmed' ||
-                                              r.validation_status === 'contradicted' ||
-                                              r.validation_status === 'refined')
+  const cardStatus = updatedRows.every((r) =>
+    r.validation_status === 'confirmed' ||
+    r.validation_status === 'contradicted' ||
+    r.validation_status === 'refined'
+  )
     ? 'validated'
     : 'validation-in-flight'
 
@@ -209,8 +308,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(
     {
+      source: isConnexions ? 'connexions' : 'mock',
       response_id: insertedResponse.id,
-      classification: classification?.overall_classification ?? null,
+      classification: normalised.classification,
       card_status: cardStatus,
       rolled_up_rows: updatedRows.length,
     },

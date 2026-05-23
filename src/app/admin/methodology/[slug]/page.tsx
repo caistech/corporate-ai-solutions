@@ -41,6 +41,8 @@ interface Campaign {
   expected_response_count: number
   status: string
   ip_campaign_id: string | null
+  connexions_panel_slug: string | null
+  connexions_panel_url: string | null
 }
 
 interface Response {
@@ -246,6 +248,24 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
                     )}
                   </div>
                   <p className="text-sm text-gray-light mb-3">{campaign.icp_description}</p>
+                  {campaign.connexions_panel_url && (
+                    <div className="mb-3 rounded border border-accent/30 bg-accent/5 p-3">
+                      <p className="text-xs uppercase tracking-wider text-accent font-medium mb-2">
+                        Connexions intake panel
+                      </p>
+                      <a
+                        href={campaign.connexions_panel_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-accent hover:underline break-all"
+                      >
+                        {campaign.connexions_panel_url}
+                      </a>
+                      <p className="mt-2 text-xs text-gray-light/70">
+                        Voice research interview. Append <code>?ref=&lt;prospect_id&gt;&amp;src=linkedin|email</code> for attribution per prospect.
+                      </p>
+                    </div>
+                  )}
                   {Array.isArray(campaign.questions) && campaign.questions.length > 0 && (
                     <ol className="list-decimal ml-5 text-sm text-gray-light/80 space-y-1 mb-3">
                       {campaign.questions.map((q, i) => (

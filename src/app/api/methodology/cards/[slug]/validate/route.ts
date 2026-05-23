@@ -158,12 +158,88 @@ export async function POST(
     )
   }
 
-  // Also bump card status from 'dialogue-complete' to 'validation-in-flight'
+  // 4. Create the Connexions panel (voice intake) for this campaign + mirror
+  //    the URL onto the CAS campaign row. Connexions does the structured-Q&A
+  //    extraction on its side; CAS sync ingests the analysed payload.
+  //    Soft failure — the panel is the validation rail, but if Connexions is
+  //    unavailable we still return the campaign so the operator can retry.
+  const connexionsBase = process.env.CONNEXIONS_BASE_URL
+  const connexionsSecret = process.env.CAS_METHODOLOGY_WEBHOOK_SECRET
+  let connexionsPanelSlug: string | null = null
+  let connexionsPanelUrl: string | null = null
+  let connexionsWarn: string | null = null
+
+  if (!connexionsBase) {
+    connexionsWarn = 'CONNEXIONS_BASE_URL not set; panel creation skipped'
+  } else if (!connexionsSecret) {
+    connexionsWarn = 'CAS_METHODOLOGY_WEBHOOK_SECRET not set; panel creation skipped (without secret, inbound webhook auth fails)'
+  } else {
+    try {
+      const cxPayload = {
+        cas_card_id: card.id,
+        cas_product_slug: params.slug,
+        ip_campaign_id: ipCampaignId,
+        campaign_type: parsed.data.campaign_type,
+        icp_description: parsed.data.icp_description,
+        questions: parsed.data.questions,
+        sync_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://corporate-ai-solutions.vercel.app'}/api/methodology/sync`,
+        sync_secret: connexionsSecret,
+      }
+      const cxRes = await fetch(`${connexionsBase}/api/methodology/panels`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${ipKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cxPayload),
+        signal: AbortSignal.timeout(30_000),
+      })
+      if (!cxRes.ok) {
+        const text = await cxRes.text()
+        connexionsWarn = `Connexions panel create returned ${cxRes.status}: ${text.slice(0, 300)}`
+        console.warn('[validate]', connexionsWarn)
+      } else {
+        const cxJson = (await cxRes.json()) as {
+          panel?: { slug?: string; public_url?: string }
+        }
+        connexionsPanelSlug = cxJson.panel?.slug ?? null
+        const path = cxJson.panel?.public_url ?? (connexionsPanelSlug ? `/p/${connexionsPanelSlug}` : null)
+        if (path) {
+          connexionsPanelUrl = path.startsWith('http') ? path : `${connexionsBase}${path}`
+        }
+
+        if (connexionsPanelUrl) {
+          await supabase
+            .from('methodology_campaigns')
+            .update({
+              connexions_panel_slug: connexionsPanelSlug,
+              connexions_panel_url: connexionsPanelUrl,
+            })
+            .eq('id', casCampaign.id)
+        }
+      }
+    } catch (e) {
+      connexionsWarn = `Connexions panel create failed: ${(e as Error).message}`
+      console.warn('[validate]', connexionsWarn)
+    }
+  }
+
+  // 5. Bump card status from 'dialogue-complete' to 'validation-in-flight'
   await supabase
     .from('methodology_hypothesis_cards')
     .update({ status: 'validation-in-flight' })
     .eq('id', card.id)
     .eq('status', 'dialogue-complete') // only flip from dialogue-complete; don't override later states
 
-  return NextResponse.json({ campaign: casCampaign }, { status: 201 })
+  return NextResponse.json(
+    {
+      campaign: {
+        ...casCampaign,
+        connexions_panel_slug: connexionsPanelSlug,
+        connexions_panel_url: connexionsPanelUrl,
+      },
+      ...(connexionsWarn ? { connexions_warning: connexionsWarn } : {}),
+    },
+    { status: 201 }
+  )
 }
