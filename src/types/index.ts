@@ -21,7 +21,12 @@ export interface Platform {
   releaseMode?: 'commercial' | 'byok-free' | 'paid-client' | 'in-migration' | 'placeholder'
   githubUrl?: string // Public repo for byok-free releases
   deployUrl?: string // Vercel Deploy button URL for one-click adoption
-  deploymentModes?: Array<'customer-self-serve' | 'vendor-self-deploy'> // CQR-shaped products with multiple deploy modes
+  deploymentModes?: Array<
+    | 'customer-self-serve' // CQR: end-user clones to monitor any vendor's surfaces
+    | 'vendor-self-deploy' // CQR: vendor runs it in their own community channel
+    | 'project-owner-self-host' // Preflight: single-project owner runs it for their project
+    | 'drafting-firm-self-host' // Preflight: firm runs one deployment across parallel projects
+  > // BYOK-free products with multiple deploy audiences
   requiredCredentials?: string[] // Services the user must BYOK (Anthropic, Supabase, etc.) — high-level list for the marketplace card
   marketplaceHidden?: boolean // Hide from public marketplace render (e.g. paid-client engagements that live on /clients instead)
 }

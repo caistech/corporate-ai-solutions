@@ -263,6 +263,39 @@ export const PLATFORMS: Platform[] = [
   },
 
   {
+    id: 'preflight',
+    name: 'Preflight',
+    slug: 'preflight',
+    tagline: 'Drafter-led pre-submission triage for DA drawing sets. BYOK, self-host.',
+    problem: 'Drafters discover the same Council-blocking errors set after set; the 5-day round-trip through admin → project owner → AI tools → admin loops the same lessons every quarter.',
+    description: 'Drafter drops a PDF; Preflight runs every row of the project\'s accumulated rejection register against the extracted text and project facts, and returns a one-page triage sheet — confirmed OK / needs eyes / hard fails — before the set leaves the drafter\'s desk. Deterministic rules for text / logic / cross-reference checks; tight LLM calls only for manual-check rows (Anthropic Sonnet, or OpenRouter alternative). Per-project KB with Supabase + pgvector; Resend for drafter-link emails and inbound planner / engineer correspondence; Google Drive ingestion via OAuth. Every metered API call lands on the operator\'s account, not ours. Two deployment modes: project-owner-self-host (your own infra, your own register) or drafting-firm-self-host (one deployment across multiple parallel projects).',
+    url: 'https://preflight-phi.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    featured: true,
+    type: 'parent',
+    releaseMode: 'byok-free',
+    githubUrl: 'https://github.com/dennissolver/preflight',
+    deployUrl:
+      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fpreflight' +
+      '&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,' +
+      'ANTHROPIC_API_KEY,OPENAI_API_KEY,RESEND_API_KEY,RESEND_FROM_EMAIL,' +
+      'GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,CRON_SECRET,NEXT_PUBLIC_APP_URL' +
+      '&envDescription=Required+credentials+%E2%80%94+all+BYOK%2C+see+README+for+links' +
+      '&envLink=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fpreflight%23required-credentials',
+    deploymentModes: ['project-owner-self-host', 'drafting-firm-self-host'],
+    requiredCredentials: [
+      'ANTHROPIC_API_KEY (or OPENROUTER_API_KEY)',
+      'OPENAI_API_KEY (embeddings)',
+      'SUPABASE (URL + anon + service-role)',
+      'RESEND_API_KEY + RESEND_FROM_EMAIL',
+      'GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (Drive ingestion OAuth)',
+      'CRON_SECRET (Vercel cron auth)',
+    ],
+  },
+
+  {
     id: 'launchready',
     releaseMode: 'in-migration',
     name: 'LaunchReady',
