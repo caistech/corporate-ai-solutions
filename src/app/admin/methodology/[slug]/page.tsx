@@ -2,6 +2,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import { DecisionControls } from '@/components/methodology/DecisionControls'
 
@@ -10,6 +11,8 @@ interface PageProps {
 }
 
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 interface HypothesisRow {
   field: string
@@ -87,6 +90,7 @@ const CARD_STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function HypothesisCardDetailPage({ params }: PageProps) {
+  noStore()
   const supabase = supabaseAdmin()
 
   const { data: cardData, error: cardErr } = await supabase

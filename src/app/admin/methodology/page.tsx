@@ -1,6 +1,7 @@
 // @explanatory-header-exempt — admin-internal page (Session 1 stub); operator-only surface
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 
 export const metadata: Metadata = {
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 interface HypothesisCard {
   id: string
@@ -20,6 +23,7 @@ interface HypothesisCard {
 }
 
 export default async function MethodologyIndexPage() {
+  noStore()
   const supabase = supabaseAdmin()
   const { data, error } = await supabase
     .from('methodology_hypothesis_cards')
