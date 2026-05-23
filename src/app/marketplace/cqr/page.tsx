@@ -86,14 +86,12 @@ export default function CqrPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col sm:flex-row gap-4">
             {deployHref ? (
-              <a
-                href={deployHref}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={`/marketplace/${cqr.slug}/byok`}
                 className="btn btn-primary inline-flex items-center justify-center gap-2 px-6 py-3 text-base"
               >
-                <Rocket size={18} /> Deploy Your Own
-              </a>
+                <Rocket size={18} /> Want to BYOK?
+              </Link>
             ) : (
               <button
                 type="button"
@@ -102,7 +100,7 @@ export default function CqrPage() {
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gray-mid text-gray-light cursor-not-allowed text-base font-medium"
                 title="Vercel Deploy button URL ships when the CQR repo goes public"
               >
-                <Rocket size={18} /> Deploy Your Own &middot; coming with public ship
+                <Rocket size={18} /> BYOK deploy &middot; coming with public ship
               </button>
             )}
             <a
@@ -115,7 +113,7 @@ export default function CqrPage() {
             </a>
           </div>
           <p className="text-sm text-gray-light mt-4">
-            The Vercel Deploy button reads the env schema from the repo and prompts for every key
+            The BYOK form is four fields, then a one-click Vercel deploy that prompts for every key
             during setup. Every key is yours; no CAS-owned fallback.
           </p>
         </div>
