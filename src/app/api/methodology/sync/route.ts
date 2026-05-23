@@ -70,7 +70,11 @@ const ConnexionsPayloadSchema = z.object({
     })
     .optional(),
   questions: z.array(z.string()).optional(),
-  transcript_excerpt: z.string().min(1).max(20_000),
+  // Optional — Connexions today doesn't always capture transcripts (the
+  // ElevenLabs webhook handler is a no-op pending Session 3.5). When empty,
+  // we still persist the response row with prospect info but skip
+  // classification.
+  transcript_excerpt: z.string().max(20_000).optional(),
   extraction: z
     .object({
       per_question_signal: z.record(z.string(), SignalEnum),
@@ -155,6 +159,8 @@ export async function POST(request: NextRequest) {
       )
     }
     const prospect = parsed.data.prospect ?? {}
+    const hasTranscript = !!parsed.data.transcript_excerpt && parsed.data.transcript_excerpt.length > 0
+    const placeholderText = `(transcript unavailable — Connexions interview ${parsed.data.intake_id}; completed ${parsed.data.completed_at ?? '(no timestamp)'}. Prospect: ${prospect.name ?? '(unnamed)'}${prospect.company ? ` @ ${prospect.company}` : ''}. Re-fetch from ElevenLabs once Session 3.5 ships.)`
     normalised = {
       ip_campaign_id: parsed.data.ip_campaign_id,
       ip_partner_id: parsed.data.intake_id, // Connexions interview id stands in
@@ -162,7 +168,7 @@ export async function POST(request: NextRequest) {
       prospect_role: prospect.role ?? null,
       prospect_org: prospect.company ?? null,
       response_received_at: parsed.data.completed_at ?? new Date().toISOString(),
-      response_raw_text: parsed.data.transcript_excerpt,
+      response_raw_text: hasTranscript ? parsed.data.transcript_excerpt! : placeholderText,
       response_channel: 'voice',
       classification: parsed.data.extraction?.overall_classification ?? null,
       classification_reasoning: parsed.data.extraction?.summary ?? null,
@@ -229,8 +235,10 @@ export async function POST(request: NextRequest) {
     ? (card.hypothesis_rows as Array<{ field: string; hypothesis_text: string; [k: string]: unknown }>)
     : []
 
-  // Classify on CAS if we don't already have extraction from Connexions
-  if (!normalised.classification && normalised.response_raw_text && questions.length > 0) {
+  // Classify on CAS if we don't already have extraction from Connexions.
+  // Skip classification on placeholder text (no transcript means no signal).
+  const isPlaceholder = normalised.response_raw_text.startsWith('(transcript unavailable')
+  if (!normalised.classification && !isPlaceholder && normalised.response_raw_text && questions.length > 0) {
     try {
       const c = await classifyResponse({
         response_text: normalised.response_raw_text,
