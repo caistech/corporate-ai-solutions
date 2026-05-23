@@ -282,3 +282,27 @@ Follow-on (next sprint):
 - **Do not** introduce a fourth or fifth brand to "solve" the brand confusion. The fix is fewer brands, not more.
 - **Do not** remove the voice-agent widget. Helen did not engage with it, but the issue was the CTA label, not the agent's existence.
 - **Do not** push for an SEO / blog content strategy as part of this remediation. Helen is one persona; SEO is a different motion. Out of scope for this plan.
+---
+
+## 2026-05-20 Re-sweep addendum (cheap-probe)
+
+**Date:** 2026-05-20  
+**Method:** automated HTTP probe (curl-equivalent) of root + 3 key routes (see `cais-shared-services/probe-roster-2026-05-20.json`)  
+**Full portfolio brief:** `cais-shared-services/PORTFOLIO_NAIVE_RESWEEP_2026-05-20.md`
+
+**Re-test result:** 🟡 AMBER
+
+- Root: HTTP `200`
+- Title: `Corporate AI Solutions | The Factory That Builds AI Companies` (yes)
+- Key routes resolving: **2/3**
+- Broken: `/studio-partner` (404)
+
+**BYOK-ready determination:** **NO — persona findings + plumbing gaps still standing**
+
+**What this re-test can and cannot say:**
+
+- ✅ It confirms the URL plumbing reachable from a 2026-05-20 curl.
+- ❌ It cannot verify the persona-level findings in this doc — copy quality, trust signals, CTAs that return 200 but go nowhere, RLS holes behind 200 auth pages.
+- The persona findings above remain authoritative until each is individually re-tested.
+
+<!-- /resweep-2026-05-20 -->
