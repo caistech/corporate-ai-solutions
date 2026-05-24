@@ -33,11 +33,31 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isLogin = pathname === '/pipeline/login'
   const isCallback = pathname.startsWith('/pipeline/auth/')
+  const isAdmin = pathname.startsWith('/admin')
 
+  // Unauthenticated → login. Now covers /admin/* too (it was previously
+  // ungated — the methodology cockpit fires real outreach + API cost, so an
+  // open /admin was a live exposure).
   if (!isLogin && !isCallback && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/pipeline/login'
     return NextResponse.redirect(url)
+  }
+
+  // /admin/* is operator-only: a logged-in user must also be on the admin
+  // allowlist. Without this, any authenticated marketplace user could reach the
+  // cockpit. Allowlist via ADMIN_EMAILS env (comma-separated); falls back to the
+  // operator's email so the gate works before the env var is set.
+  if (isAdmin && user) {
+    const allow = (process.env.ADMIN_EMAILS || 'mcmdennis@gmail.com')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+    if (!allow.includes((user.email || '').toLowerCase())) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
   }
 
   if (isLogin && user) {
@@ -50,5 +70,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/pipeline/:path*'],
+  matcher: ['/pipeline/:path*', '/admin/:path*'],
 }
