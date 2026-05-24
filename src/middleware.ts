@@ -46,10 +46,10 @@ export async function middleware(request: NextRequest) {
 
   // /admin/* is operator-only: a logged-in user must also be on the admin
   // allowlist. Without this, any authenticated marketplace user could reach the
-  // cockpit. Allowlist via ADMIN_EMAILS env (comma-separated); falls back to the
-  // operator's email so the gate works before the env var is set.
+  // cockpit. Allowlist via ADMIN_EMAILS env (comma-separated) which overrides;
+  // falls back to the known operator emails so the gate works without the env var.
   if (isAdmin && user) {
-    const allow = (process.env.ADMIN_EMAILS || 'mcmdennis@gmail.com')
+    const allow = (process.env.ADMIN_EMAILS || 'mcmdennis@gmail.com,dennis@corporateaisolutions.com')
       .split(',')
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean)
