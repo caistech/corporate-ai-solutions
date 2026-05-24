@@ -41,6 +41,7 @@ const PatchSchema = z
   .object({
     status: z
       .enum([
+        'ideation',
         'dialogue-complete',
         'validation-in-flight',
         'validated',
@@ -50,6 +51,8 @@ const PatchSchema = z
       ])
       .optional(),
     decision_reason: z.string().max(4000).optional(),
+    // Soft-archive toggle — true sets archived_at = NOW(), false clears it.
+    archived: z.boolean().optional(),
     // Cockpit fields — partial updates from the pipeline cockpit.
     pipeline_stage: z
       .enum(['ideation', 'feasibility', 'validation', 'go-no-go', 'build', 'ship'])
@@ -91,6 +94,9 @@ export async function PATCH(
     if (d.build_status !== undefined) updatePayload.build_status = d.build_status
     if (d.mvp_url !== undefined) updatePayload.mvp_url = d.mvp_url
     if (d.mvp_ready !== undefined) updatePayload.mvp_ready = d.mvp_ready
+    if (d.archived !== undefined) {
+      updatePayload.archived_at = d.archived ? new Date().toISOString() : null
+    }
 
     const isTerminalDecision =
       d.status === 'redesign-to-fit' ||

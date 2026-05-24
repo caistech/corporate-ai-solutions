@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ConfirmDialog } from './ConfirmDialog'
 
 interface Props {
   productSlug: string
@@ -15,26 +16,30 @@ type Decision =
   | 'kill'
   | 'validation-in-flight'
 
-const DECISIONS: { value: Decision; label: string; description: string }[] = [
+const DECISIONS: { value: Decision; label: string; description: string; terminal: boolean }[] = [
   {
     value: 'redesign-to-fit',
     label: 'REDESIGN-TO-FIT',
     description: 'Distributor identified + reachable + wedge confirmed. Proceed to redesign per Rule 15.',
+    terminal: true,
   },
   {
     value: 'personal-interest-override',
     label: 'PERSONAL-INTEREST',
     description: 'No distributor / scratching an itch. Model B pricing. Not load-bearing.',
+    terminal: true,
   },
   {
     value: 'kill',
     label: 'KILL',
     description: 'No distributor + no personal interest. Archive.',
+    terminal: true,
   },
   {
     value: 'validation-in-flight',
     label: 'KEEP VALIDATING',
     description: 'Defer decision. Need more responses or fresh dialogue iteration.',
+    terminal: false,
   },
 ]
 
@@ -44,13 +49,17 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  // The terminal decision awaiting confirmation (null = no dialog open).
+  const [pendingDecision, setPendingDecision] = useState<Decision | null>(null)
 
   const isTerminal =
     currentStatus === 'redesign-to-fit' ||
     currentStatus === 'personal-interest-override' ||
     currentStatus === 'kill'
 
-  const submit = (decision: Decision) => {
+  const reasonGiven = reason.trim().length > 0
+
+  const run = (decision: Decision) => {
     setError(null)
     setSuccess(null)
     startTransition(async () => {
@@ -73,6 +82,23 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
     })
   }
 
+  const onClick = (d: (typeof DECISIONS)[number]) => {
+    setError(null)
+    setSuccess(null)
+    if (d.terminal) {
+      // Irreversible — require a reason, then confirm before firing.
+      if (!reasonGiven) {
+        setError('A reason is required before a terminal decision (REDESIGN / PERSONAL-INTEREST / KILL).')
+        return
+      }
+      setPendingDecision(d.value)
+      return
+    }
+    run(d.value)
+  }
+
+  const pendingMeta = DECISIONS.find((d) => d.value === pendingDecision)
+
   return (
     <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-5">
       {isTerminal && (
@@ -82,13 +108,13 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
       )}
 
       <label className="block mb-3">
-        <span className="text-xs uppercase tracking-wider text-gray-light/70">Reason (required for terminal decisions)</span>
+        <span className="text-sm uppercase tracking-wider text-gray-light/70">Reason (required for terminal decisions)</span>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
           placeholder="One-sentence rationale for the chosen decision (e.g. 'Talent agencies validated 9/10; reachable warm via Karen's network')"
-          className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
         />
       </label>
 
@@ -97,14 +123,22 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
           <button
             key={d.value}
             type="button"
-            onClick={() => submit(d.value)}
+            onClick={() => onClick(d)}
             disabled={pending}
-            className="text-left p-3 rounded-lg border border-gray-border bg-black/20 hover:border-accent hover:bg-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`min-h-[44px] text-left p-3 rounded-lg border bg-black/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              d.value === 'kill'
+                ? 'border-red-500/40 hover:border-red-400 hover:bg-red-500/10'
+                : 'border-gray-border hover:border-accent hover:bg-black/40'
+            }`}
           >
-            <div className="text-xs font-semibold uppercase tracking-wider text-accent mb-1">
+            <div
+              className={`text-sm font-semibold uppercase tracking-wider mb-1 ${
+                d.value === 'kill' ? 'text-red-300' : 'text-accent'
+              }`}
+            >
               {d.label}
             </div>
-            <div className="text-xs text-gray-light">{d.description}</div>
+            <div className="text-sm text-gray-light">{d.description}</div>
           </button>
         ))}
       </div>
@@ -115,6 +149,44 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
       {success && (
         <p className="mt-3 text-sm text-emerald-300">{success}</p>
       )}
+
+      <ConfirmDialog
+        open={pendingDecision !== null}
+        title={
+          pendingDecision === 'kill'
+            ? 'Kill this card?'
+            : `Set decision: ${pendingMeta?.label ?? ''}?`
+        }
+        confirmLabel={pendingDecision === 'kill' ? 'Kill it' : `Set ${pendingMeta?.label ?? ''}`}
+        tone={pendingDecision === 'kill' ? 'danger' : 'primary'}
+        pending={pending}
+        onCancel={() => setPendingDecision(null)}
+        onConfirm={() => {
+          const d = pendingDecision
+          setPendingDecision(null)
+          if (d) run(d)
+        }}
+        body={
+          <>
+            <p>
+              {pendingDecision === 'kill' ? (
+                <>
+                  This records a <span className="text-red-300">KILL</span> decision on{' '}
+                  <span className="font-mono text-white">{productSlug}</span> and stamps it as decided.
+                  It supersedes any prior decision.
+                </>
+              ) : (
+                <>
+                  This records a terminal <span className="text-white">{pendingMeta?.label}</span> decision on{' '}
+                  <span className="font-mono text-white">{productSlug}</span> and stamps it as decided.
+                  It supersedes any prior decision.
+                </>
+              )}
+            </p>
+            <p className="text-gray-light/70">Reason: {reason.trim()}</p>
+          </>
+        }
+      />
     </div>
   )
 }

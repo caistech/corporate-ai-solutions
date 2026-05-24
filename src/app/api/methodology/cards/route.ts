@@ -36,6 +36,10 @@ const CardCreateSchema = z.object({
   origin_summary: z.string().max(4000).optional(),
   original_end_user: z.string().max(2000).optional(),
   hypothesis_rows: z.array(HypothesisRowSchema).max(50),
+  // Initial status — a fresh idea lands at 'ideation' (no dialogue yet); a
+  // backfilled dialogue card lands at 'dialogue-complete'. Defaults to
+  // 'dialogue-complete' for backward-compatible dialogue POSTs.
+  status: z.enum(['ideation', 'dialogue-complete']).optional(),
   // Cockpit fields — optional so a dialogue POST and a "add chosen product"
   // POST can both create a card; absent keys are left at column defaults.
   pipeline_stage: z
@@ -69,7 +73,7 @@ export async function POST(request: NextRequest) {
       origin_summary: parsed.data.origin_summary ?? null,
       original_end_user: parsed.data.original_end_user ?? null,
       hypothesis_rows: parsed.data.hypothesis_rows,
-      status: 'dialogue-complete',
+      status: parsed.data.status ?? 'dialogue-complete',
     }
     if (parsed.data.pipeline_stage !== undefined) upsertRow.pipeline_stage = parsed.data.pipeline_stage
     if (parsed.data.monetisation_lane !== undefined) upsertRow.monetisation_lane = parsed.data.monetisation_lane
