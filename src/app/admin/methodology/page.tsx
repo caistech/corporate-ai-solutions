@@ -3,6 +3,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
+import { PLATFORMS } from '@/lib/constants'
+import { AddChosenProduct, type AvailableProduct } from '@/components/methodology/AddChosenProduct'
 
 export const metadata: Metadata = {
   title: 'Methodology — Hypothesis Cards',
@@ -20,6 +22,11 @@ interface HypothesisCard {
   status: string
   hypothesis_rows: unknown[] | null
   updated_at: string
+  build_status: string | null
+  mvp_ready: boolean | null
+  mvp_url: string | null
+  monetisation_lane: string | null
+  pipeline_stage: string | null
 }
 
 export default async function MethodologyIndexPage() {
@@ -27,7 +34,9 @@ export default async function MethodologyIndexPage() {
   const supabase = supabaseAdmin()
   const { data, error } = await supabase
     .from('methodology_hypothesis_cards')
-    .select('id, product_slug, origin_summary, status, hypothesis_rows, updated_at')
+    .select(
+      'id, product_slug, origin_summary, status, hypothesis_rows, updated_at, build_status, mvp_ready, mvp_url, monetisation_lane, pipeline_stage'
+    )
     .order('updated_at', { ascending: false })
 
   if (error) {
@@ -44,18 +53,28 @@ export default async function MethodologyIndexPage() {
 
   const cards = (data ?? []) as HypothesisCard[]
 
+  const cardedSlugs = new Set(cards.map((c) => c.product_slug))
+  const available: AvailableProduct[] = PLATFORMS.filter(
+    (p) => p.type === 'parent' && !cardedSlugs.has(p.slug)
+  ).map((p) => ({ slug: p.slug, name: p.name, url: p.url ?? '' }))
+
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="mb-8">
         <p className="text-xs uppercase tracking-wider text-accent font-medium mb-3">
-          Methodology · Phase Zero backfill
+          Methodology · Pipeline cockpit
         </p>
-        <h1 className="text-3xl font-bold mb-4">Hypothesis Cards</h1>
+        <h1 className="text-3xl font-bold mb-4">Pipeline cockpit</h1>
         <p className="text-base text-gray-light max-w-2xl">
-          One card per portfolio product in <code>constants.ts</code>. Each captures the
-          Phase Zero-A dialogue output (origin, end-user, hypothesised distributors) and
-          links to the Phase Zero-B validation campaigns running on InvestorPilot.
+          The pipeline front door. Add a chosen product to the workflow, set Gate 1 (thin-MVP
+          ready), and kick off dual-stream research on InvestorPilot — the outreach embeds the
+          MVP link. New ideas also arrive here from the ideation agent. Each row is a card moving
+          through the stages toward the Gate 2 go/no-go.
         </p>
+      </div>
+
+      <div className="mb-8">
+        <AddChosenProduct available={available} />
       </div>
 
       {cards.length === 0 ? (
@@ -67,43 +86,73 @@ export default async function MethodologyIndexPage() {
           </p>
         </div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-gray-border text-left text-xs uppercase tracking-wider text-gray-light/70">
-              <th className="py-3 px-3">Product slug</th>
-              <th className="py-3 px-3">Status</th>
-              <th className="py-3 px-3">Hypotheses</th>
-              <th className="py-3 px-3">Updated</th>
-              <th className="py-3 px-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {cards.map((card) => (
-              <tr key={card.id} className="border-b border-gray-border/40">
-                <td className="py-3 px-3 font-mono text-white">{card.product_slug}</td>
-                <td className="py-3 px-3">
-                  <span className="text-xs px-2 py-1 rounded bg-accent/10 text-accent uppercase tracking-wider">
-                    {card.status}
-                  </span>
-                </td>
-                <td className="py-3 px-3 text-gray-light">
-                  {Array.isArray(card.hypothesis_rows) ? card.hypothesis_rows.length : 0} rows
-                </td>
-                <td className="py-3 px-3 text-gray-light/70 text-xs">
-                  {new Date(card.updated_at).toLocaleString()}
-                </td>
-                <td className="py-3 px-3 text-right">
-                  <Link
-                    href={`/admin/methodology/${card.product_slug}`}
-                    className="text-accent hover:underline text-xs"
-                  >
-                    Open →
-                  </Link>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse min-w-[760px]">
+            <thead>
+              <tr className="border-b border-gray-border text-left text-xs uppercase tracking-wider text-gray-light/70">
+                <th className="py-3 px-3">Product</th>
+                <th className="py-3 px-3">Stage</th>
+                <th className="py-3 px-3">Status</th>
+                <th className="py-3 px-3">Build</th>
+                <th className="py-3 px-3">Gate 1</th>
+                <th className="py-3 px-3">Lane</th>
+                <th className="py-3 px-3">Updated</th>
+                <th className="py-3 px-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {cards.map((card) => {
+                const gate1Open = Boolean(card.mvp_ready && card.mvp_url)
+                return (
+                  <tr key={card.id} className="border-b border-gray-border/40">
+                    <td className="py-3 px-3 font-mono text-white">{card.product_slug}</td>
+                    <td className="py-3 px-3 text-gray-light text-xs">
+                      {card.pipeline_stage ?? 'ideation'}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-xs px-2 py-1 rounded bg-accent/10 text-accent uppercase tracking-wider">
+                        {card.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-gray-light text-xs">
+                      {card.build_status ?? 'none'}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${
+                          gate1Open
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'bg-gray-mid/40 text-gray-light/70'
+                        }`}
+                        title={
+                          gate1Open
+                            ? 'MVP ready — research kick-off unlocked'
+                            : 'No MVP link / not marked ready — kick-off blocked'
+                        }
+                      >
+                        {gate1Open ? 'ready' : 'blocked'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-gray-light/70 text-xs">
+                      {card.monetisation_lane ?? '—'}
+                    </td>
+                    <td className="py-3 px-3 text-gray-light/70 text-xs">
+                      {new Date(card.updated_at).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <Link
+                        href={`/admin/methodology/${card.product_slug}`}
+                        className="text-accent hover:underline text-xs"
+                      >
+                        Open →
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <p className="mt-8 text-xs text-gray-light/60">
