@@ -7,8 +7,8 @@ import { PLATFORMS } from '@/lib/constants'
 import { AddChosenProduct, type AvailableProduct } from '@/components/methodology/AddChosenProduct'
 
 export const metadata: Metadata = {
-  title: 'Methodology — Hypothesis Cards',
-  description: 'Phase Zero backfill index — distributor-discovery methodology.',
+  title: 'Pipeline cockpit — Methodology',
+  description: 'The pipeline front door: chosen products, Gate 1, and dual-stream research kick-off.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -156,8 +156,9 @@ export default async function MethodologyIndexPage() {
       )}
 
       <p className="mt-8 text-xs text-gray-light/60">
-        Session 1 stub. Session 2 adds per-card detail view, classification pipeline, and live
-        campaign-status badges from the InvestorPilot sync.
+        Gate 1 (MVP-ready) releases the research; Gate 2 (validated demand) releases the full build.
+        Seeded products start <span className="text-gray-light">blocked</span> — open a card to set
+        its MVP link and flip Gate 1, then launch the dual-stream kick-off.
       </p>
     </div>
   )
