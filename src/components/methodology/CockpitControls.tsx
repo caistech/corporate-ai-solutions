@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ConfirmDialog } from './ConfirmDialog'
 
 interface CardFields {
   pipeline_stage: string | null
@@ -78,16 +79,16 @@ export function CockpitControls({ productSlug, initial }: Props) {
     <div className="space-y-6">
       {/* Card fields */}
       <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-5">
-        <p className="text-xs uppercase tracking-wider text-accent font-medium mb-4">
+        <p className="text-sm uppercase tracking-wider text-accent font-medium mb-4">
           Pipeline fields
         </p>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block">
-            <span className="text-xs uppercase tracking-wider text-gray-light/70">Stage</span>
+            <span className="text-sm uppercase tracking-wider text-gray-light/70">Stage</span>
             <select
               value={stage}
               onChange={(e) => setStage(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
             >
               {STAGES.map((s) => (
                 <option key={s} value={s}>
@@ -97,13 +98,13 @@ export function CockpitControls({ productSlug, initial }: Props) {
             </select>
           </label>
           <label className="block">
-            <span className="text-xs uppercase tracking-wider text-gray-light/70">
+            <span className="text-sm uppercase tracking-wider text-gray-light/70">
               Monetisation lane
             </span>
             <select
               value={lane}
               onChange={(e) => setLane(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
             >
               {LANES.map((l) => (
                 <option key={l.value} value={l.value}>
@@ -113,7 +114,7 @@ export function CockpitControls({ productSlug, initial }: Props) {
             </select>
           </label>
           <label className="block">
-            <span className="text-xs uppercase tracking-wider text-gray-light/70">
+            <span className="text-sm uppercase tracking-wider text-gray-light/70">
               Engine cluster
             </span>
             <input
@@ -121,15 +122,15 @@ export function CockpitControls({ productSlug, initial }: Props) {
               value={engine}
               onChange={(e) => setEngine(e.target.value)}
               placeholder="voice-coaching | property | outreach | compliance | standalone"
-              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
             />
           </label>
           <label className="block">
-            <span className="text-xs uppercase tracking-wider text-gray-light/70">Build status</span>
+            <span className="text-sm uppercase tracking-wider text-gray-light/70">Build status</span>
             <select
               value={build}
               onChange={(e) => setBuild(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
             >
               {BUILDS.map((b) => (
                 <option key={b} value={b}>
@@ -139,7 +140,7 @@ export function CockpitControls({ productSlug, initial }: Props) {
             </select>
           </label>
           <label className="block md:col-span-2">
-            <span className="text-xs uppercase tracking-wider text-gray-light/70">
+            <span className="text-sm uppercase tracking-wider text-gray-light/70">
               Thin-MVP URL (embedded in outreach)
             </span>
             <input
@@ -147,30 +148,30 @@ export function CockpitControls({ productSlug, initial }: Props) {
               value={mvpUrl}
               onChange={(e) => setMvpUrl(e.target.value)}
               placeholder="https://your-thin-mvp.vercel.app"
-              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
             />
           </label>
         </div>
-        <label className="mt-4 flex items-center gap-2 text-sm text-gray-light">
+        <label className="mt-4 flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-gray-border bg-black/20 px-3 py-2 text-base text-gray-light">
           <input
             type="checkbox"
             checked={mvpReady}
             onChange={(e) => setMvpReady(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-700 bg-gray-900 accent-accent"
+            className="h-5 w-5 rounded border-gray-700 bg-gray-900 accent-accent"
           />
           Thin MVP ready (Gate 1)
         </label>
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             type="button"
             onClick={saveFields}
             disabled={savePending}
-            className="rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50"
+            className="min-h-[44px] w-full rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 sm:w-auto"
           >
             {savePending ? 'Saving…' : 'Save fields'}
           </button>
-          {saveMsg && <span className="text-xs text-emerald-300">{saveMsg}</span>}
-          {saveErr && <span className="text-xs text-red-300">Error: {saveErr}</span>}
+          {saveMsg && <span className="text-sm text-emerald-300">{saveMsg}</span>}
+          {saveErr && <span className="text-sm text-red-300">Error: {saveErr}</span>}
         </div>
       </div>
 
@@ -191,18 +192,20 @@ function KickoffPanel({
 }) {
   return (
     <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-5">
-      <p className="text-xs uppercase tracking-wider text-accent font-medium mb-1">
-        Kick off research
+      <p className="text-sm uppercase tracking-wider text-accent font-medium mb-1">
+        Launch real research
       </p>
       {!gate1Open ? (
-        <div className="rounded border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
+        <div className="rounded border border-yellow-500/30 bg-yellow-500/10 p-3 text-base text-yellow-200">
           Gate 1 closed — set a thin-MVP URL and mark the card ready (then Save fields) before
           launching. The outreach embeds the MVP link, so kick-off is blocked without it.
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-light/70 mb-4">
-            Launches a campaign on InvestorPilot + a Connexions voice panel. Run both streams.
+          <p className="text-sm text-gray-light/80 mb-4">
+            Each launch creates a real InvestorPilot campaign + a Connexions voice panel and
+            discovers real prospects (real prospect rows + API cost). Drafts are queued for your
+            approval in InvestorPilot — <span className="text-white">nothing sends until you approve.</span>{' '}
             Outreach embeds: <code className="text-accent break-all">{mvpUrl}</code>
           </p>
           <div className="grid gap-4 md:grid-cols-2">
@@ -214,6 +217,11 @@ function KickoffPanel({
       )}
     </div>
   )
+}
+
+const AUDIENCE_LABEL: Record<(typeof CAMPAIGN_TYPES)[number], string> = {
+  'target-user': 'target users',
+  'distributor-candidate': 'distributor candidates',
 }
 
 function KickoffForm({
@@ -229,22 +237,22 @@ function KickoffForm({
   const [pending, startTransition] = useTransition()
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const launch = () => {
+  const audience = AUDIENCE_LABEL[campaignType]
+
+  const qList = questions
+    .split('\n')
+    .map((q) => q.trim())
+    .filter(Boolean)
+  const icpReady = icp.trim().length >= 10
+  const questionsReady = qList.length >= 1
+  const ready = icpReady && questionsReady
+
+  const fire = () => {
+    setConfirmOpen(false)
     setMsg(null)
     setErr(null)
-    const qList = questions
-      .split('\n')
-      .map((q) => q.trim())
-      .filter(Boolean)
-    if (icp.trim().length < 10) {
-      setErr('ICP description too short (min 10 chars).')
-      return
-    }
-    if (qList.length === 0) {
-      setErr('Add at least one question (one per line).')
-      return
-    }
     startTransition(async () => {
       try {
         const res = await fetch(`/api/methodology/cards/${productSlug}/validate`, {
@@ -271,31 +279,67 @@ function KickoffForm({
 
   return (
     <div className="rounded border border-gray-border/60 bg-black/20 p-3">
-      <h4 className="text-sm font-semibold capitalize mb-2">{campaignType.replace('-', ' ')}</h4>
+      <h4 className="text-base font-semibold capitalize mb-2">{campaignType.replace('-', ' ')}</h4>
       <textarea
         value={icp}
         onChange={(e) => setIcp(e.target.value)}
         rows={2}
         placeholder="ICP description (who we're reaching)"
-        className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white outline-none focus:border-accent mb-2"
+        className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-2 text-base text-white outline-none focus:border-accent mb-2"
       />
       <textarea
         value={questions}
         onChange={(e) => setQuestions(e.target.value)}
         rows={3}
         placeholder="Questions, one per line"
-        className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white outline-none focus:border-accent"
+        className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-2 text-base text-white outline-none focus:border-accent"
       />
       <button
         type="button"
-        onClick={launch}
-        disabled={pending}
-        className="mt-2 w-full rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:opacity-50"
+        onClick={() => setConfirmOpen(true)}
+        disabled={pending || !ready}
+        className="mt-3 min-h-[44px] w-full rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {pending ? 'Launching…' : `Launch ${campaignType.replace('-', ' ')}`}
+        {pending ? 'Launching…' : `Launch real research — ${audience}`}
       </button>
-      {msg && <p className="mt-2 text-xs text-emerald-300">{msg}</p>}
-      {err && <p className="mt-2 text-xs text-red-300">Error: {err}</p>}
+      {!ready && (
+        <p className="mt-2 text-sm text-yellow-300/90">
+          {!icpReady && !questionsReady
+            ? 'Add an ICP description (min 10 chars) and at least one question to launch.'
+            : !icpReady
+            ? 'Add an ICP description (min 10 chars) to launch.'
+            : 'Add at least one question (one per line) to launch.'}
+        </p>
+      )}
+      {msg && <p className="mt-2 text-sm text-emerald-300">{msg}</p>}
+      {err && <p className="mt-2 text-sm text-red-300">Error: {err}</p>}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={`Launch real research — ${audience}?`}
+        confirmLabel={`Launch — ${audience}`}
+        tone="primary"
+        pending={pending}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={fire}
+        body={
+          <>
+            <p>
+              This creates a real InvestorPilot campaign + a Connexions voice panel for{' '}
+              <span className="text-white">{audience}</span> on <span className="font-mono text-white">{productSlug}</span>,
+              and triggers real prospect discovery (real prospect rows + API cost).
+            </p>
+            <p>
+              Drafted research invites are queued at <span className="text-white">draft_ready</span> for your
+              approval in InvestorPilot. <span className="text-white">Nothing is emailed until you approve it there.</span>
+            </p>
+            <p className="text-gray-light/70">
+              {qList.length} question{qList.length === 1 ? '' : 's'} · ICP: {icp.trim().slice(0, 80)}
+              {icp.trim().length > 80 ? '…' : ''}
+            </p>
+          </>
+        }
+      />
     </div>
   )
 }
