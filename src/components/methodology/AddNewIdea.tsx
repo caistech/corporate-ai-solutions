@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
+const NAME_MAX = 80
+
 function slugify(s: string): string {
   return s
     .trim()
@@ -49,6 +51,7 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
             product_slug: slug,
             origin_summary: desc.trim() || `New idea: ${name.trim()}`,
             hypothesis_rows: [],
+            status: 'ideation',
             pipeline_stage: 'ideation',
             build_status: 'none',
             mvp_ready: false,
@@ -70,27 +73,33 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
 
   return (
     <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-5">
-      <p className="text-xs uppercase tracking-wider text-accent font-medium mb-1">
+      <p className="text-sm uppercase tracking-wider text-accent font-medium mb-1">
         Add a brand-new idea
       </p>
-      <p className="text-xs text-gray-light/70 mb-4">
+      <p className="text-base text-gray-light/70 mb-4">
         Not already a portfolio product — a fresh idea (yours, or one the ideation agent
         surfaces). Lands at the ideation stage; build a thin MVP later to open Gate 1.
       </p>
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block">
-          <span className="text-xs uppercase tracking-wider text-gray-light/70">Idea name</span>
+          <span className="flex items-center justify-between text-sm uppercase tracking-wider text-gray-light/70">
+            <span>Idea name</span>
+            <span className={`font-mono normal-case ${name.length >= NAME_MAX ? 'text-yellow-300' : 'text-gray-light/40'}`}>
+              {name.length}/{NAME_MAX}
+            </span>
+          </span>
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            maxLength={NAME_MAX}
+            onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
             placeholder="e.g. Rehearsal coach for paramedics"
-            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
           />
           {slug && (
             <span
-              className={`mt-1 block text-xs font-mono ${
+              className={`mt-1 block text-sm font-mono ${
                 collides ? 'text-yellow-300' : 'text-gray-light/50'
               }`}
             >
@@ -100,7 +109,7 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
           )}
         </label>
         <label className="block">
-          <span className="text-xs uppercase tracking-wider text-gray-light/70">
+          <span className="text-sm uppercase tracking-wider text-gray-light/70">
             One-line description (optional)
           </span>
           <input
@@ -108,21 +117,21 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             placeholder="The problem + who it's for"
-            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
           />
         </label>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={add}
           disabled={pending || slug.length < 2 || collides}
-          className="rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-[44px] w-full rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
         >
           {pending ? 'Adding…' : 'Add idea to pipeline'}
         </button>
-        {error && <span className="text-xs text-red-300">Error: {error}</span>}
+        {error && <span className="text-sm text-red-300">Error: {error}</span>}
       </div>
     </div>
   )

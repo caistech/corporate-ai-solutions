@@ -90,6 +90,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 const CARD_STATUS_COLOR: Record<string, string> = {
+  ideation: 'bg-gray-mid/40 text-gray-light/70',
   'dialogue-complete': 'bg-gray-mid/40 text-gray-light',
   'validation-in-flight': 'bg-yellow-500/20 text-yellow-300',
   validated: 'bg-emerald-500/20 text-emerald-300',
@@ -144,25 +145,46 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      {/* Cockpit-local top bar — gives the operator a clear title + a way home on
+          mobile without depending on the global marketing header. */}
+      <div className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-gray-border bg-gray-dark/40 px-4 py-3">
+        <Link
+          href="/admin/methodology"
+          className="inline-flex min-h-[44px] items-center text-sm text-accent hover:underline"
+        >
+          ← Pipeline cockpit
+        </Link>
+        <Link
+          href="/"
+          className="inline-flex min-h-[44px] items-center text-sm text-gray-light/70 hover:text-white"
+        >
+          Home
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
-        <Link href="/admin/methodology" className="text-xs text-accent hover:underline">
-          ← All Hypothesis Cards
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-bold font-mono">{card.product_slug}</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold font-mono break-all">{card.product_slug}</h1>
           <span
-            className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${
+            className={`text-sm px-2 py-1 rounded uppercase tracking-wider ${
               CARD_STATUS_COLOR[card.status] ?? 'bg-gray-mid/40 text-gray-light'
             }`}
           >
             {card.status}
           </span>
         </div>
-        <p className="mt-2 text-xs text-gray-light/70">
+        <p className="mt-2 text-sm text-gray-light/70">
           Last updated {new Date(card.updated_at).toLocaleString()}
           {card.decision_made_at && ` · decided ${new Date(card.decision_made_at).toLocaleString()}`}
+        </p>
+        {/* Explanatory header — what this is / what you do here / why it matters. */}
+        <p className="mt-4 text-base text-gray-light max-w-2xl">
+          This is a Hypothesis Card — one product moving through the pipeline. Here you set Gate 1
+          (thin-MVP ready), launch dual-stream research, read the validated responses, and record the
+          Gate 2 go/no-go decision. The decision you make here is what advances the card to build or
+          archives it.
         </p>
       </div>
 
@@ -238,10 +260,10 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
       <section className="mb-10">
         <h2 className="text-xl font-bold mb-4">Validation campaigns</h2>
         {campaigns.length === 0 ? (
-          <p className="text-sm text-gray-light/70">
-            No campaigns configured yet. POST to InvestorPilot&apos;s{' '}
-            <code>/api/methodology/campaigns</code> + mirror to{' '}
-            <code>methodology_campaigns</code> via your sync flow.
+          <p className="text-base text-gray-light/70">
+            No research running yet. Open Gate 1 above (set the thin-MVP link and mark it ready),
+            then use Launch real research to start a target-user and a distributor-candidate stream.
+            Discovered prospects and responses will appear here.
           </p>
         ) : (
           <div className="space-y-6">

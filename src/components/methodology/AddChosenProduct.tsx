@@ -88,21 +88,21 @@ export function AddChosenProduct({ available }: Props) {
 
   return (
     <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-5">
-      <p className="text-xs uppercase tracking-wider text-accent font-medium mb-1">
+      <p className="text-sm uppercase tracking-wider text-accent font-medium mb-1">
         Add a chosen product to the pipeline
       </p>
-      <p className="text-xs text-gray-light/70 mb-4">
+      <p className="text-base text-gray-light/70 mb-4">
         Gate 1 — set the thin-MVP link and mark it ready. Kick-off into research is blocked until
         both are set, because the outreach embeds the MVP link.
       </p>
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block">
-          <span className="text-xs uppercase tracking-wider text-gray-light/70">Product</span>
+          <span className="text-sm uppercase tracking-wider text-gray-light/70">Product</span>
           <select
             value={slug}
             onChange={(e) => onSelect(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
           >
             <option value="">Select a product…</option>
             {available.map((p) => (
@@ -114,11 +114,11 @@ export function AddChosenProduct({ available }: Props) {
         </label>
 
         <label className="block">
-          <span className="text-xs uppercase tracking-wider text-gray-light/70">Build status</span>
+          <span className="text-sm uppercase tracking-wider text-gray-light/70">Build status</span>
           <select
             value={buildStatus}
             onChange={(e) => setBuildStatus(e.target.value as BuildStatus)}
-            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
           >
             {BUILD_STATUS.map((b) => (
               <option key={b} value={b}>
@@ -129,7 +129,7 @@ export function AddChosenProduct({ available }: Props) {
         </label>
 
         <label className="block md:col-span-2">
-          <span className="text-xs uppercase tracking-wider text-gray-light/70">
+          <span className="text-sm uppercase tracking-wider text-gray-light/70">
             Thin-MVP URL (embedded in outreach)
           </span>
           <input
@@ -137,36 +137,36 @@ export function AddChosenProduct({ available }: Props) {
             value={mvpUrl}
             onChange={(e) => setMvpUrl(e.target.value)}
             placeholder="https://your-thin-mvp.vercel.app"
-            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent"
           />
         </label>
       </div>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-gray-light">
+      <label className="mt-4 flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-gray-border bg-black/20 px-3 py-2 text-base text-gray-light">
         <input
           type="checkbox"
           checked={mvpReady}
           onChange={(e) => setMvpReady(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-700 bg-gray-900 accent-accent"
+          className="h-5 w-5 rounded border-gray-700 bg-gray-900 accent-accent"
         />
         Thin MVP ready (Gate 1 — unlocks research kick-off)
       </label>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={add}
           disabled={pending || !slug}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-[44px] w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
         >
           {pending ? 'Adding…' : 'Add to pipeline'}
         </button>
         {mvpReady && !mvpUrl && (
-          <span className="text-xs text-yellow-300">
+          <span className="text-sm text-yellow-300">
             Marked ready but no MVP URL — Gate 1 will still block kick-off.
           </span>
         )}
-        {error && <span className="text-xs text-red-300">Error: {error}</span>}
+        {error && <span className="text-sm text-red-300">Error: {error}</span>}
       </div>
     </div>
   )
