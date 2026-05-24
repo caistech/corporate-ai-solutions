@@ -5,6 +5,7 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import { PLATFORMS } from '@/lib/constants'
 import { AddChosenProduct, type AvailableProduct } from '@/components/methodology/AddChosenProduct'
+import { AddNewIdea } from '@/components/methodology/AddNewIdea'
 
 export const metadata: Metadata = {
   title: 'Pipeline cockpit — Methodology',
@@ -73,8 +74,9 @@ export default async function MethodologyIndexPage() {
         </p>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-8 space-y-4">
         <AddChosenProduct available={available} />
+        <AddNewIdea />
       </div>
 
       {cards.length === 0 ? (

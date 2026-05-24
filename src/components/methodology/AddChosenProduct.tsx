@@ -81,7 +81,7 @@ export function AddChosenProduct({ available }: Props) {
   if (available.length === 0) {
     return (
       <p className="text-xs text-gray-light/60">
-        All portfolio products already have a card. New ideas arrive via the ideation agent.
+        All portfolio products are already in the pipeline — add a brand-new idea below.
       </p>
     )
   }
