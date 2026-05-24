@@ -99,6 +99,13 @@ export async function POST(
     )
   }
 
+  // ip_org_id: the IP organisation that hosts the research prospects + where the
+  // operator approves outreach (Option A — the canonical CAS org in IP). Override
+  // via INVESTORPILOT_METHODOLOGY_ORG_ID; falls back to the known canonical org id
+  // (a non-secret identifier, not a credential).
+  const ipOrgId =
+    process.env.INVESTORPILOT_METHODOLOGY_ORG_ID || '13127cee-a2ae-4ee4-b957-76e94ceab2be'
+
   // 2. Create the campaign on InvestorPilot
   const ipPayload = {
     cas_product_slug: params.slug,
@@ -110,6 +117,9 @@ export async function POST(
     channel_mix: parsed.data.channel_mix ?? ['linkedin', 'email'],
     // Gate-1 payload: the thin-MVP link the outreach embeds for both streams.
     mvp_url: card.mvp_url,
+    // Option A: research prospects live in the canonical CAS org in IP, where the
+    // operator reviews + approves the drafted invites.
+    ip_org_id: ipOrgId,
   }
 
   let ipResponse
@@ -243,6 +253,48 @@ export async function POST(
     }
   }
 
+  // 4b. Gate-1 kick-off → discovery + drafting on InvestorPilot. Only once we
+  //     have a Connexions interview URL to embed in the invite. IP's activate
+  //     returns 202 fast (discovery + drafting run in IP's background via
+  //     waitUntil), so this doesn't block validate. Soft-fail: a kick-off hiccup
+  //     shouldn't fail the whole validate — the operator can re-trigger.
+  let activateWarn: string | null = null
+  if (connexionsPanelUrl) {
+    try {
+      const aRes = await fetch(
+        `${ipBase}/api/methodology/campaigns/${ipCampaignId}/activate`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ipKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            connexions_interview_url: connexionsPanelUrl,
+            mvp_url: card.mvp_url,
+          }),
+          signal: AbortSignal.timeout(20_000),
+        }
+      )
+      if (!aRes.ok) {
+        activateWarn = `IP activate returned ${aRes.status}: ${(await aRes.text()).slice(0, 200)}`
+        console.warn('[validate]', activateWarn)
+      } else {
+        // Mark the CAS campaign as sourcing — IP is now discovering + drafting.
+        await supabase
+          .from('methodology_campaigns')
+          .update({ status: 'sourcing' })
+          .eq('id', casCampaign.id)
+      }
+    } catch (e) {
+      activateWarn = `IP activate call failed: ${(e as Error).message}`
+      console.warn('[validate]', activateWarn)
+    }
+  } else {
+    activateWarn =
+      'No Connexions panel URL — discovery not kicked off (campaign + panel only). Re-run validate once the panel exists.'
+  }
+
   // 5. Bump card status from 'dialogue-complete' to 'validation-in-flight'
   await supabase
     .from('methodology_hypothesis_cards')
@@ -258,6 +310,7 @@ export async function POST(
         connexions_panel_url: connexionsPanelUrl,
       },
       ...(connexionsWarn ? { connexions_warning: connexionsWarn } : {}),
+      ...(activateWarn ? { activate_warning: activateWarn } : {}),
     },
     { status: 201 }
   )
