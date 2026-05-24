@@ -71,7 +71,7 @@ export async function POST(
   // 1. Find the parent Hypothesis Card by slug
   const { data: card, error: cardErr } = await supabase
     .from('methodology_hypothesis_cards')
-    .select('id, product_slug')
+    .select('id, product_slug, mvp_ready, mvp_url')
     .eq('product_slug', params.slug)
     .maybeSingle()
 
@@ -83,6 +83,22 @@ export async function POST(
     return NextResponse.json({ error: 'Hypothesis Card not found' }, { status: 404 })
   }
 
+  // Gate 1 — "is the thin MVP ready?". The research outreach embeds the MVP
+  // link, so kick-off is blocked until the card is mvp_ready with an mvp_url.
+  // No MVP, no link, no send.
+  if (!card.mvp_ready || !card.mvp_url) {
+    return NextResponse.json(
+      {
+        error:
+          'Gate 1 not met: the thin MVP is not ready. Set an mvp_url and mark the card mvp_ready before kicking off research — the outreach embeds the MVP link.',
+        gate: 'mvp-ready',
+        mvp_ready: card.mvp_ready ?? false,
+        has_mvp_url: Boolean(card.mvp_url),
+      },
+      { status: 412 }
+    )
+  }
+
   // 2. Create the campaign on InvestorPilot
   const ipPayload = {
     cas_product_slug: params.slug,
@@ -92,6 +108,8 @@ export async function POST(
     questions: parsed.data.questions,
     expected_response_count: parsed.data.expected_response_count ?? 30,
     channel_mix: parsed.data.channel_mix ?? ['linkedin', 'email'],
+    // Gate-1 payload: the thin-MVP link the outreach embeds for both streams.
+    mvp_url: card.mvp_url,
   }
 
   let ipResponse
@@ -182,6 +200,7 @@ export async function POST(
         campaign_type: parsed.data.campaign_type,
         icp_description: parsed.data.icp_description,
         questions: parsed.data.questions,
+        mvp_url: card.mvp_url,
         sync_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://corporate-ai-solutions.vercel.app'}/api/methodology/sync`,
         sync_secret: connexionsSecret,
       }

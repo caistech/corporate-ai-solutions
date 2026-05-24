@@ -36,6 +36,16 @@ const CardCreateSchema = z.object({
   origin_summary: z.string().max(4000).optional(),
   original_end_user: z.string().max(2000).optional(),
   hypothesis_rows: z.array(HypothesisRowSchema).max(50),
+  // Cockpit fields — optional so a dialogue POST and a "add chosen product"
+  // POST can both create a card; absent keys are left at column defaults.
+  pipeline_stage: z
+    .enum(['ideation', 'feasibility', 'validation', 'go-no-go', 'build', 'ship'])
+    .optional(),
+  monetisation_lane: z.enum(['1-paid-saas', '2-studio', '3-contract', '4-byok']).optional(),
+  engine_cluster: z.string().max(120).optional(),
+  build_status: z.enum(['none', 'thin-mvp', 'fat-mvp', 'full']).optional(),
+  mvp_url: z.string().url().max(500).optional(),
+  mvp_ready: z.boolean().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -52,18 +62,25 @@ export async function POST(request: NextRequest) {
     const supabase = supabaseAdmin()
 
     // Upsert on product_slug (UNIQUE constraint). Latest dialogue wins.
+    // Cockpit fields are only written when provided, so a dialogue re-post
+    // doesn't clobber a build_status/mvp_url an operator set in the cockpit.
+    const upsertRow: Record<string, unknown> = {
+      product_slug: parsed.data.product_slug,
+      origin_summary: parsed.data.origin_summary ?? null,
+      original_end_user: parsed.data.original_end_user ?? null,
+      hypothesis_rows: parsed.data.hypothesis_rows,
+      status: 'dialogue-complete',
+    }
+    if (parsed.data.pipeline_stage !== undefined) upsertRow.pipeline_stage = parsed.data.pipeline_stage
+    if (parsed.data.monetisation_lane !== undefined) upsertRow.monetisation_lane = parsed.data.monetisation_lane
+    if (parsed.data.engine_cluster !== undefined) upsertRow.engine_cluster = parsed.data.engine_cluster
+    if (parsed.data.build_status !== undefined) upsertRow.build_status = parsed.data.build_status
+    if (parsed.data.mvp_url !== undefined) upsertRow.mvp_url = parsed.data.mvp_url
+    if (parsed.data.mvp_ready !== undefined) upsertRow.mvp_ready = parsed.data.mvp_ready
+
     const { data, error } = await supabase
       .from('methodology_hypothesis_cards')
-      .upsert(
-        {
-          product_slug: parsed.data.product_slug,
-          origin_summary: parsed.data.origin_summary ?? null,
-          original_end_user: parsed.data.original_end_user ?? null,
-          hypothesis_rows: parsed.data.hypothesis_rows,
-          status: 'dialogue-complete',
-        },
-        { onConflict: 'product_slug' }
-      )
+      .upsert(upsertRow, { onConflict: 'product_slug' })
       .select()
       .single()
 
