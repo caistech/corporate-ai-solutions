@@ -17,7 +17,7 @@ function slugify(s: string): string {
  * being the always-on ideation agent). Creates a Hypothesis Card at the ideation stage
  * with no MVP yet (Gate 1 stays closed until you build + mark one).
  */
-export function AddNewIdea() {
+export function AddNewIdea({ existing }: { existing: string[] }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
@@ -25,10 +25,18 @@ export function AddNewIdea() {
   const [error, setError] = useState<string | null>(null)
 
   const slug = slugify(name)
+  // Canonical-slug guard: the product_slug is the single identifier across cards,
+  // PLATFORMS, IP campaigns and Connexions panels. Block a colliding slug so an idea
+  // can never duplicate an existing card or product.
+  const collides = slug.length >= 2 && new Set(existing).has(slug)
 
   const add = () => {
     if (slug.length < 2) {
       setError('Give the idea a short name first.')
+      return
+    }
+    if (collides) {
+      setError(`'${slug}' already exists in the pipeline — open it instead of adding a duplicate.`)
       return
     }
     setError(null)
@@ -81,7 +89,14 @@ export function AddNewIdea() {
             className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
           />
           {slug && (
-            <span className="mt-1 block text-xs text-gray-light/50 font-mono">slug: {slug}</span>
+            <span
+              className={`mt-1 block text-xs font-mono ${
+                collides ? 'text-yellow-300' : 'text-gray-light/50'
+              }`}
+            >
+              slug: {slug}
+              {collides ? ' · already in the pipeline — open it instead' : ''}
+            </span>
           )}
         </label>
         <label className="block">
@@ -102,7 +117,7 @@ export function AddNewIdea() {
         <button
           type="button"
           onClick={add}
-          disabled={pending || slug.length < 2}
+          disabled={pending || slug.length < 2 || collides}
           className="rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? 'Adding…' : 'Add idea to pipeline'}

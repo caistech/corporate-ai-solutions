@@ -59,6 +59,12 @@ export default async function MethodologyIndexPage() {
     (p) => p.type === 'parent' && !cardedSlugs.has(p.slug)
   ).map((p) => ({ slug: p.slug, name: p.name, url: p.url ?? '' }))
 
+  // Every slug already spoken for — carded cards + every PLATFORMS slug. The new-idea
+  // form blocks collisions against this so a fresh idea can't duplicate an existing one.
+  const existingSlugs = Array.from(
+    new Set(cards.map((c) => c.product_slug).concat(PLATFORMS.map((p) => p.slug)))
+  )
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="mb-8">
@@ -76,7 +82,7 @@ export default async function MethodologyIndexPage() {
 
       <div className="mb-8 space-y-4">
         <AddChosenProduct available={available} />
-        <AddNewIdea />
+        <AddNewIdea existing={existingSlugs} />
       </div>
 
       {cards.length === 0 ? (
