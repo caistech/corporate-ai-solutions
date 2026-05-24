@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import { DecisionControls } from '@/components/methodology/DecisionControls'
+import { CockpitControls } from '@/components/methodology/CockpitControls'
 
 interface PageProps {
   params: { slug: string }
@@ -31,6 +32,12 @@ interface Card {
   decision_reason: string | null
   decision_made_at: string | null
   updated_at: string
+  pipeline_stage: string | null
+  monetisation_lane: string | null
+  engine_cluster: string | null
+  build_status: string | null
+  mvp_url: string | null
+  mvp_ready: boolean | null
 }
 
 interface Campaign {
@@ -209,6 +216,22 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Pipeline & kick-off */}
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-4">Pipeline &amp; kick-off</h2>
+        <CockpitControls
+          productSlug={card.product_slug}
+          initial={{
+            pipeline_stage: card.pipeline_stage,
+            monetisation_lane: card.monetisation_lane,
+            engine_cluster: card.engine_cluster,
+            build_status: card.build_status,
+            mvp_url: card.mvp_url,
+            mvp_ready: card.mvp_ready,
+          }}
+        />
       </section>
 
       {/* Campaigns + responses */}
