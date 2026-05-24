@@ -6,6 +6,8 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import { DecisionControls } from '@/components/methodology/DecisionControls'
 import { CockpitControls } from '@/components/methodology/CockpitControls'
+import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
+import type { CardClarifierState } from '@/lib/methodology/clarifier-context'
 
 interface PageProps {
   params: { slug: string }
@@ -142,6 +144,37 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
   for (const r of responses) {
     if (!responsesByCampaign.has(r.campaign_id)) responsesByCampaign.set(r.campaign_id, [])
     responsesByCampaign.get(r.campaign_id)!.push(r)
+  }
+
+  // Compact, serialisable snapshot for the in-context voice clarifier. The clarifier pulls
+  // this on demand (get_card_state) rather than having it pushed into the agent prompt.
+  const responseCounts = responses.reduce<Record<string, number>>((acc, r) => {
+    const key = r.classification ?? 'unclassified'
+    acc[key] = (acc[key] ?? 0) + 1
+    return acc
+  }, {})
+  const clarifierState: CardClarifierState = {
+    product_slug: card.product_slug,
+    status: card.status,
+    pipeline_stage: card.pipeline_stage,
+    monetisation_lane: card.monetisation_lane,
+    engine_cluster: card.engine_cluster,
+    build_status: card.build_status,
+    mvp_url: card.mvp_url,
+    mvp_ready: card.mvp_ready,
+    origin_summary: card.origin_summary,
+    original_end_user: card.original_end_user,
+    hypotheses: hypothesisRows.map((h) => ({
+      field: h.field,
+      status: h.validation_status ?? 'pending',
+    })),
+    campaigns: campaigns.map((c) => ({
+      type: c.campaign_type,
+      status: c.status,
+      responses: (responsesByCampaign.get(c.id) ?? []).length,
+      expected: c.expected_response_count,
+    })),
+    response_counts: responseCounts,
   }
 
   return (
@@ -391,6 +424,11 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
           currentReason={card.decision_reason}
         />
       </section>
+
+      {/* In-context voice clarifier — floating; helps with Gate 1, the Launch consequence,
+          and which Gate-2 decision fits this card. Renders nothing until an agent is
+          provisioned (see scripts/provision-cockpit-clarifier.ts). */}
+      <CockpitClarifier card={clarifierState} />
     </div>
   )
 }

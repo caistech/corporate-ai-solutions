@@ -1,0 +1,52 @@
+{
+  "name": "Methodology cockpit voice clarifier",
+  "description": "In-context ElevenLabs ConvAI clarifier on the /admin/methodology card detail. Consumes @caistech/elevenlabs-convai (/react VoiceWidget). The agent pulls the current card's state (get_card_state) and the methodology definitions (get_methodology_context) on demand; it helps the operator with Gate 1 readiness, what 'Launch real research' fires, and which Gate-2 decision fits the card. Guide/clarifier scope — no cross-session memory loop.",
+  "introduced_at": "2026-05-25",
+  "env_vars": [
+    {
+      "name": "GITHUB_PACKAGES_TOKEN",
+      "required": true,
+      "description": "read:packages token to install @caistech/elevenlabs-convai from GitHub Packages (consumed as NODE_AUTH_TOKEN by .npmrc).",
+      "scope": "local",
+      "where": "shell env + Vercel build env"
+    },
+    {
+      "name": "ELEVENLABS_API_KEY",
+      "required": true,
+      "description": "ElevenLabs key (BYOK). Used to provision the clarifier agent AND the agent runs on it, so all voice cost lands on the operator's ElevenLabs account.",
+      "scope": "local+vercel",
+      "where": ".env.local (provisioning) + Vercel (runtime)"
+    },
+    {
+      "name": "NEXT_PUBLIC_ELEVENLABS_AGENT_COCKPIT_CLARIFIER",
+      "required": false,
+      "description": "Provisioned ConvAI agent id for the cockpit clarifier. The widget renders only when this resolves (env var, or the baked fallback in src/voice.config.ts). Produced by the provisioning script.",
+      "scope": "vercel+local",
+      "where": "set on Vercel, or baked into src/voice.config.ts as the COCKPIT_CLARIFIER_AGENT_ID fallback",
+      "depends_on": "ELEVENLABS_API_KEY"
+    },
+    {
+      "name": "NEXT_PUBLIC_APP_URL",
+      "required": false,
+      "description": "App public URL — used to derive the agent allowlist + base URL at provision time. Defaults to https://corporate-ai-solutions.vercel.app.",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel"
+    }
+  ],
+  "external_setup": [
+    {
+      "id": "provision-clarifier-agent",
+      "type": "cli",
+      "title": "Provision the cockpit clarifier ConvAI agent (ElevenLabs)",
+      "description": "Creates (or idempotently updates) the 'CAS Methodology Cockpit Clarifier' agent on the operator's ElevenLabs workspace, declares the get_card_state + get_methodology_context client tools, enables conversation_config overrides, and writes the Security allowlist (prod + *.vercel.app + localhost). Prints the agent id to wire in.",
+      "url": "https://elevenlabs.io/app/conversational-ai",
+      "steps": [
+        "Ensure ELEVENLABS_API_KEY is in .env.local (BYOK).",
+        "From the project root run: npm run provision:clarifier",
+        "Copy the printed agentId.",
+        "Set NEXT_PUBLIC_ELEVENLABS_AGENT_COCKPIT_CLARIFIER=<agentId> on Vercel (Production + Preview), OR paste it as the COCKPIT_CLARIFIER_AGENT_ID fallback in src/voice.config.ts.",
+        "Redeploy. Open a card at /admin/methodology/<slug> — the floating clarifier should appear; click it and ask 'is this card ready for Gate 1?' to confirm the get_card_state pull works."
+      ]
+    }
+  ]
+}

@@ -11,6 +11,7 @@
     "setup:vercel": "npx ts-node scripts/setup-vercel-supabase.ts",
     "setup:stripe": "npx ts-node scripts/setup-stripe.ts",
     "setup:elevenlabs": "npx ts-node scripts/setup-elevenlabs.ts",
+    "provision:clarifier": "node scripts/provision-cockpit-clarifier.ts",
     "db:migrate": "supabase db push",
     "db:generate": "supabase gen types typescript --local > src/types/database.ts",
     "test": "vitest run",
@@ -19,7 +20,9 @@
   },
   "dependencies": {
     "@caistech/corporate-components": "^0.3.0",
+    "@caistech/elevenlabs-convai": "^0.4.0",
     "@elevenlabs/client": "^0.11.0",
+    "@elevenlabs/react": "^1.6.3",
     "@supabase/ssr": "^0.1.0",
     "@supabase/supabase-js": "^2.39.0",
     "clsx": "^2.1.0",
