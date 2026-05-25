@@ -178,7 +178,7 @@ export const PLATFORMS: Platform[] = [
     featured: true,
     type: 'parent',
     isGenerator: true,
-    children: ['universal-interviews'],
+    children: [], // universal-interviews dropped 2026-05-26 (engine shell, not a shippable example) — see its entry
   },
   // UniversalLingo - Real-time Translation Generator
   {
@@ -430,6 +430,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'ndis-sda-automate',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Dropped 2026-05-26 (GTM landing-story audit): bare slug hijacked (serves "PF Platform — Property Friends"); single-client instance, no generic product story. Relist when pointed at a product page.
     name: 'NDIS SDA Automate',
     slug: 'ndis-sda-automate',
     tagline: 'NDIS & SDA compliance automation',
@@ -582,6 +583,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'lingopure-ai',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Dropped 2026-05-26 (GTM landing-story audit): public tile pointed at a self-disowning demo ("not the real service"). Relist when re-routed to the real LingoPure or the demo owns its story.
     name: 'LingoPure AI',
     slug: 'lingopure-ai',
     tagline: 'AI-first business English platform',
@@ -671,6 +673,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'aiftis',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Dropped 2026-05-26 (GTM landing-story audit): page is a "working sketch — not for distribution"; not a shippable product. Relist when it's a real product.
     name: 'AIFTIS Recognition Rail',
     slug: 'aiftis',
     tagline: 'Cross-border professional credential infrastructure for ASEAN MRA signatories',
@@ -714,6 +717,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'universal-interviews',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Dropped 2026-05-26 (GTM landing-story audit): engine shell ("Loading…"), not an end-user product; the value lives in its parent Connexions.
     name: 'Universal Interviews',
     slug: 'universal-interviews',
     tagline: 'AI-powered interview panels',
