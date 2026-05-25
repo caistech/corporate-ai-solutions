@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { IntakeOverrideField } from './IntakeOverrideField'
 
 const NAME_MAX = 80
 
@@ -19,10 +20,20 @@ function slugify(s: string): string {
  * being the always-on ideation agent). Creates a Hypothesis Card at the ideation stage
  * with no MVP yet (Gate 1 stays closed until you build + mark one).
  */
-export function AddNewIdea({ existing }: { existing: string[] }) {
+export function AddNewIdea({
+  existing,
+  gateOpen,
+  untriaged,
+}: {
+  existing: string[]
+  /** Rule 16 intake gate — false when the board has untriaged cards. */
+  gateOpen: boolean
+  untriaged: { product_slug: string; display_name: string | null }[]
+}) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
+  const [overrideReason, setOverrideReason] = useState('')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -31,6 +42,9 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
   // PLATFORMS, IP campaigns and Connexions panels. Block a colliding slug so an idea
   // can never duplicate an existing card or product.
   const collides = slug.length >= 2 && new Set(existing).has(slug)
+  const blocked = !gateOpen
+  // When the gate is blocked, intake requires a written override reason (Rule 16).
+  const canAdd = slug.length >= 2 && !collides && (!blocked || overrideReason.trim().length > 0)
 
   const add = () => {
     if (slug.length < 2) {
@@ -55,6 +69,10 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
             pipeline_stage: 'ideation',
             build_status: 'none',
             mvp_ready: false,
+            // Manual cockpit intake — subject to the Rule 16 WIP gate.
+            cockpit_intake: true,
+            intake_source: 'operator',
+            intake_override_reason: blocked ? overrideReason.trim() : undefined,
           }),
         })
         const json = await res.json().catch(() => ({}))
@@ -64,6 +82,7 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
         }
         setName('')
         setDesc('')
+        setOverrideReason('')
         router.refresh()
       } catch (e) {
         setError((e as Error).message)
@@ -122,14 +141,18 @@ export function AddNewIdea({ existing }: { existing: string[] }) {
         </label>
       </div>
 
+      {blocked && (
+        <IntakeOverrideField untriaged={untriaged} value={overrideReason} onChange={setOverrideReason} />
+      )}
+
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={add}
-          disabled={pending || slug.length < 2 || collides}
+          disabled={pending || !canAdd}
           className="min-h-[44px] w-full rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
         >
-          {pending ? 'Adding…' : 'Add idea to pipeline'}
+          {pending ? 'Adding…' : blocked ? 'Override gate & add idea' : 'Add idea to pipeline'}
         </button>
         {error && <span className="text-sm text-red-300">Error: {error}</span>}
       </div>

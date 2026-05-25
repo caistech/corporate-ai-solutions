@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
+import { computeIntakeGate, type IntakeGateCard } from '@/lib/methodology-intake-gate'
 
 /**
  * POST /api/methodology/cards
@@ -50,6 +51,14 @@ const CardCreateSchema = z.object({
   build_status: z.enum(['none', 'thin-mvp', 'fat-mvp', 'full']).optional(),
   mvp_url: z.string().url().max(500).optional(),
   mvp_ready: z.boolean().optional(),
+  // Intake WIP gate (Rule 16). `cockpit_intake` marks a fresh MANUAL operator add
+  // from the cockpit — the only thing the gate blocks (dialogue re-posts + agent
+  // deposits are exempt). `intake_source` records origin; an 'ideation-agent'
+  // deposit lands in the inbox and never counts against the gate.
+  // `intake_override_reason` force-admits past a blocked gate and is logged on the card.
+  cockpit_intake: z.boolean().optional(),
+  intake_source: z.enum(['operator', 'ideation-agent']).optional(),
+  intake_override_reason: z.string().trim().min(1).max(2000).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -65,6 +74,46 @@ export async function POST(request: NextRequest) {
 
     const supabase = supabaseAdmin()
 
+    // Is this a brand-new card, or a re-post/update of an existing slug? The
+    // intake WIP gate (Rule 16) only fires on genuinely-new MANUAL operator
+    // intake — never on dialogue re-posts (idempotent upserts) or agent deposits.
+    const { data: existing } = await supabase
+      .from('methodology_hypothesis_cards')
+      .select('id')
+      .eq('product_slug', parsed.data.product_slug)
+      .maybeSingle()
+    const isNew = !existing
+
+    const fromIdeationAgent = parsed.data.intake_source === 'ideation-agent'
+    const overrideReason = parsed.data.intake_override_reason?.trim() || undefined
+
+    // RULE 16 — block fresh manual operator intake while the board is untriaged.
+    // Reasoned override (a written justification) force-admits one product and is
+    // logged on the card. The always-on ideation agent's deposits (inbox) and any
+    // re-post of an existing card are exempt.
+    if (isNew && parsed.data.cockpit_intake && !fromIdeationAgent) {
+      const { data: allCards } = await supabase
+        .from('methodology_hypothesis_cards')
+        .select('product_slug, status, pipeline_stage, archived_at, inbox')
+      const gate = computeIntakeGate((allCards ?? []) as IntakeGateCard[])
+      if (!gate.open && !overrideReason) {
+        return NextResponse.json(
+          {
+            error: `Intake blocked (Rule 16): drain the backlog first. ${gate.untriagedCount} card(s) are untriaged — push each into research or record a terminal decision (kill / personal-interest / redesign), or supply an override reason to force this one through.`,
+            gate: 'intake-wip',
+            untriaged_count: gate.untriagedCount,
+            untriaged: gate.untriaged,
+          },
+          { status: 412 }
+        )
+      }
+      if (!gate.open && overrideReason) {
+        console.warn(
+          `[intake-gate] Rule 16 override: admitting '${parsed.data.product_slug}' with ${gate.untriagedCount} untriaged. Reason: ${overrideReason}`
+        )
+      }
+    }
+
     // Upsert on product_slug (UNIQUE constraint). Latest dialogue wins.
     // Cockpit fields are only written when provided, so a dialogue re-post
     // doesn't clobber a build_status/mvp_url an operator set in the cockpit.
@@ -74,6 +123,16 @@ export async function POST(request: NextRequest) {
       original_end_user: parsed.data.original_end_user ?? null,
       hypothesis_rows: parsed.data.hypothesis_rows,
       status: parsed.data.status ?? 'dialogue-complete',
+    }
+    // Intake-gate bookkeeping — only on CREATE, so a re-post never clobbers the
+    // origin/inbox state of an existing card (the columns default on the row).
+    if (isNew) {
+      upsertRow.intake_source = fromIdeationAgent ? 'ideation-agent' : 'operator'
+      upsertRow.inbox = fromIdeationAgent // agent deposits land in the inbox
+      if (overrideReason && parsed.data.cockpit_intake && !fromIdeationAgent) {
+        upsertRow.intake_override_reason = overrideReason
+        upsertRow.intake_override_at = new Date().toISOString()
+      }
     }
     if (parsed.data.pipeline_stage !== undefined) upsertRow.pipeline_stage = parsed.data.pipeline_stage
     if (parsed.data.monetisation_lane !== undefined) upsertRow.monetisation_lane = parsed.data.monetisation_lane

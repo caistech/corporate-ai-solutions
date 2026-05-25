@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { IntakeOverrideField } from './IntakeOverrideField'
 
 export interface AvailableProduct {
   slug: string
@@ -11,6 +12,9 @@ export interface AvailableProduct {
 
 interface Props {
   available: AvailableProduct[]
+  /** Rule 16 intake gate — false when the board has untriaged cards. */
+  gateOpen: boolean
+  untriaged: { product_slug: string; display_name: string | null }[]
 }
 
 const BUILD_STATUS = ['none', 'thin-mvp', 'fat-mvp', 'full'] as const
@@ -22,16 +26,20 @@ type BuildStatus = (typeof BUILD_STATUS)[number]
  * Gate 1 (MVP-ready) can release the research kick-off — the outreach embeds
  * the MVP link, so no link = no send.
  */
-export function AddChosenProduct({ available }: Props) {
+export function AddChosenProduct({ available, gateOpen, untriaged }: Props) {
   const router = useRouter()
   const [slug, setSlug] = useState('')
   const [mvpUrl, setMvpUrl] = useState('')
   const [buildStatus, setBuildStatus] = useState<BuildStatus>('none')
   const [mvpReady, setMvpReady] = useState(false)
+  const [overrideReason, setOverrideReason] = useState('')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   const selected = available.find((p) => p.slug === slug)
+  const blocked = !gateOpen
+  // When the gate is blocked, intake requires a written override reason (Rule 16).
+  const canAdd = Boolean(slug) && (!blocked || overrideReason.trim().length > 0)
 
   const onSelect = (s: string) => {
     setSlug(s)
@@ -60,6 +68,10 @@ export function AddChosenProduct({ available }: Props) {
             build_status: buildStatus,
             mvp_url: mvpUrl || undefined,
             mvp_ready: mvpReady,
+            // Manual cockpit intake — subject to the Rule 16 WIP gate.
+            cockpit_intake: true,
+            intake_source: 'operator',
+            intake_override_reason: blocked ? overrideReason.trim() : undefined,
           }),
         })
         const json = await res.json().catch(() => ({}))
@@ -71,6 +83,7 @@ export function AddChosenProduct({ available }: Props) {
         setMvpUrl('')
         setBuildStatus('none')
         setMvpReady(false)
+        setOverrideReason('')
         router.refresh()
       } catch (e) {
         setError((e as Error).message)
@@ -152,14 +165,18 @@ export function AddChosenProduct({ available }: Props) {
         Thin MVP ready (Gate 1 — unlocks research kick-off)
       </label>
 
+      {blocked && (
+        <IntakeOverrideField untriaged={untriaged} value={overrideReason} onChange={setOverrideReason} />
+      )}
+
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={add}
-          disabled={pending || !slug}
+          disabled={pending || !canAdd}
           className="min-h-[44px] w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
         >
-          {pending ? 'Adding…' : 'Add to pipeline'}
+          {pending ? 'Adding…' : blocked ? 'Override gate & add' : 'Add to pipeline'}
         </button>
         {mvpReady && !mvpUrl && (
           <span className="text-sm text-yellow-300">

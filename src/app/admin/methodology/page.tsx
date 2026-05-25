@@ -6,6 +6,8 @@ import { PLATFORMS } from '@/lib/constants'
 import { AddChosenProduct, type AvailableProduct } from '@/components/methodology/AddChosenProduct'
 import { AddNewIdea } from '@/components/methodology/AddNewIdea'
 import { BoardTable, type BoardCard } from '@/components/methodology/BoardTable'
+import { IdeationInbox, type InboxCard } from '@/components/methodology/IdeationInbox'
+import { computeIntakeGate, type IntakeGateCard } from '@/lib/methodology-intake-gate'
 
 export const metadata: Metadata = {
   title: 'Pipeline cockpit — Methodology',
@@ -29,6 +31,8 @@ interface HypothesisCard {
   monetisation_lane: string | null
   pipeline_stage: string | null
   archived_at: string | null
+  intake_source: string | null
+  inbox: boolean | null
 }
 
 export default async function MethodologyIndexPage() {
@@ -37,7 +41,7 @@ export default async function MethodologyIndexPage() {
   const { data, error } = await supabase
     .from('methodology_hypothesis_cards')
     .select(
-      'id, product_slug, origin_summary, status, hypothesis_rows, updated_at, build_status, mvp_ready, mvp_url, monetisation_lane, pipeline_stage, archived_at'
+      'id, product_slug, origin_summary, status, hypothesis_rows, updated_at, build_status, mvp_ready, mvp_url, monetisation_lane, pipeline_stage, archived_at, intake_source, inbox'
     )
     .order('updated_at', { ascending: false })
 
@@ -55,6 +59,26 @@ export default async function MethodologyIndexPage() {
 
   const cards = (data ?? []) as HypothesisCard[]
 
+  // Resolve a human display name from PLATFORMS so the board shows the product
+  // name, not just the slug (free-form ideas with no PLATFORMS entry fall back
+  // to the slug). No schema change — purely a read-side join.
+  const nameBySlug = new Map(PLATFORMS.map((p) => [p.slug, p.name]))
+  const displayName = (slug: string) => nameBySlug.get(slug) ?? null
+
+  // Ideation-agent deposits not yet promoted sit in the inbox — shown separately
+  // and excluded from both the board and the intake gate (Rule 16 carve-out).
+  const inboxCards: InboxCard[] = cards
+    .filter((c) => c.inbox)
+    .map((c) => ({
+      id: c.id,
+      product_slug: c.product_slug,
+      display_name: displayName(c.product_slug),
+      origin_summary: c.origin_summary,
+      updated_at: c.updated_at,
+    }))
+
+  const onBoard = cards.filter((c) => !c.inbox)
+
   const cardedSlugs = new Set(cards.map((c) => c.product_slug))
   const available: AvailableProduct[] = PLATFORMS.filter(
     (p) => p.type === 'parent' && !cardedSlugs.has(p.slug)
@@ -66,14 +90,10 @@ export default async function MethodologyIndexPage() {
     new Set(cards.map((c) => c.product_slug).concat(PLATFORMS.map((p) => p.slug)))
   )
 
-  // Resolve a human display name from PLATFORMS so the board shows the product
-  // name, not just the slug (free-form ideas with no PLATFORMS entry fall back
-  // to the slug). No schema change — purely a read-side join.
-  const nameBySlug = new Map(PLATFORMS.map((p) => [p.slug, p.name]))
-  const boardCards: BoardCard[] = cards.map((c) => ({
+  const boardCards: BoardCard[] = onBoard.map((c) => ({
     id: c.id,
     product_slug: c.product_slug,
-    display_name: nameBySlug.get(c.product_slug) ?? null,
+    display_name: displayName(c.product_slug),
     status: c.status,
     pipeline_stage: c.pipeline_stage,
     build_status: c.build_status,
@@ -83,6 +103,21 @@ export default async function MethodologyIndexPage() {
     mvp_url: c.mvp_url,
     archived_at: c.archived_at,
   }))
+
+  // RULE 16 — the intake WIP gate. Computed from the on-board cards (inbox
+  // excluded by construction). Manual intake is open only when zero are untriaged.
+  const gate = computeIntakeGate(
+    onBoard.map(
+      (c): IntakeGateCard => ({
+        product_slug: c.product_slug,
+        display_name: displayName(c.product_slug),
+        status: c.status,
+        pipeline_stage: c.pipeline_stage,
+        archived_at: c.archived_at,
+        inbox: c.inbox,
+      })
+    )
+  )
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -111,12 +146,49 @@ export default async function MethodologyIndexPage() {
         </p>
       </div>
 
+      {/* Gate 0 — the intake WIP gate (Rule 16). Open only when the board is
+          fully triaged. Blocked → manual intake is disabled below until the
+          backlog is drained (or force-admitted with a logged reason). */}
+      {gate.open ? (
+        <div className="mb-6 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3">
+          <p className="text-sm text-emerald-200">
+            <span className="font-semibold">Intake open</span> — the board is triaged. Every card is
+            in research or terminally decided. Add a new product or idea below.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-6 rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-4 py-3">
+          <p className="text-sm font-semibold text-yellow-200">
+            Intake blocked — drain the backlog first ({gate.untriagedCount} untriaged)
+          </p>
+          <p className="mt-1 text-sm text-yellow-100/80">
+            Rule 16: no new product until every card is in research or terminally decided
+            (kill / personal-interest / redesign). Triage these, then intake reopens — or force one
+            through below with a logged reason.
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {gate.untriaged.map((u) => (
+              <li key={u.product_slug}>
+                <Link
+                  href={`/admin/methodology/${u.product_slug}`}
+                  className="inline-flex items-center rounded border border-yellow-500/30 bg-black/20 px-2 py-1 font-mono text-sm text-yellow-100 hover:border-yellow-400"
+                >
+                  {u.display_name ?? u.product_slug}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="mb-8 space-y-4">
-        <AddChosenProduct available={available} />
-        <AddNewIdea existing={existingSlugs} />
+        <AddChosenProduct available={available} gateOpen={gate.open} untriaged={gate.untriaged} />
+        <AddNewIdea existing={existingSlugs} gateOpen={gate.open} untriaged={gate.untriaged} />
       </div>
 
-      {cards.length === 0 ? (
+      <IdeationInbox cards={inboxCards} />
+
+      {boardCards.length === 0 ? (
         <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-8 text-center">
           <p className="text-base text-gray-light mb-2">No cards in the pipeline yet.</p>
           <p className="text-base text-gray-light/70">
@@ -128,9 +200,10 @@ export default async function MethodologyIndexPage() {
       )}
 
       <p className="mt-8 text-sm text-gray-light/60">
-        Gate 1 (MVP-ready) releases the research; Gate 2 (validated demand) releases the full build.
-        Seeded products start <span className="text-gray-light">blocked</span> — open a card to set
-        its MVP link and flip Gate 1, then launch the dual-stream kick-off.
+        Gate 0 (intake triaged) lets you add a product; Gate 1 (MVP-ready) releases the research;
+        Gate 2 (validated demand) releases the full build. Seeded products start{' '}
+        <span className="text-gray-light">blocked</span> — open a card to set its MVP link and flip
+        Gate 1, then launch the dual-stream kick-off.
       </p>
     </div>
   )
