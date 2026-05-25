@@ -124,6 +124,11 @@ export function VoiceAgent() {
 
   if (!agent) return null
 
+  // Suppress the marketing voice agent on the operator cockpit (/admin/*): that surface ships
+  // the in-context Methodology clarifier (CockpitClarifier), and two competing voice buttons is
+  // confusing. This is the global marketing agent; the clarifier is the cockpit's voice surface.
+  if (pathname?.startsWith('/admin')) return null
+
   return (
     <>
       {/* Floating button - show avatar if agent has one */}

@@ -25,6 +25,7 @@ import {
 // .ts extension: run with native Node type-stripping (node scripts/...ts), which resolves
 // the literal path — no ts-node, which cycle-errors on Node 24.
 import { buildClarifierSystemPrompt, CLARIFIER_FIRST_MESSAGE } from '../src/lib/methodology/clarifier-context.ts'
+import { attachClarifierClientTools } from './attach-clarifier-client-tools.ts'
 
 dotenv.config({ path: '.env.local' })
 
@@ -84,9 +85,16 @@ async function main(): Promise<void> {
     enableOverrides: true,
   })
 
+  // The hub package cannot wire client tools (ensureWorkspaceTools filters to webhook-only and,
+  // on the update path, wipes tool_ids to []), so attach the two client tools here, AFTER
+  // provisioning — this must run last or it gets clobbered. Without it the agent ships with zero
+  // tools and the clarifier deflects every card-specific question.
+  const toolIds = await attachClarifierClientTools(apiKey as string, result.agentId)
+
   console.log('\n✅ Methodology cockpit clarifier provisioned')
   console.log('   agentId :', result.agentId)
   console.log('   created :', result.created)
+  console.log('   tools   :', toolIds.join(', '), '(get_card_state, get_methodology_context)')
   console.log('   allowlist:', standardAllowlist(prodHostname).join(', '))
   console.log('\nNext step — wire the id so the widget renders:')
   console.log('   • set NEXT_PUBLIC_ELEVENLABS_AGENT_COCKPIT_CLARIFIER=' + result.agentId)
