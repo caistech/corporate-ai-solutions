@@ -53,6 +53,9 @@ const PatchSchema = z
     decision_reason: z.string().max(4000).optional(),
     // Soft-archive toggle — true sets archived_at = NOW(), false clears it.
     archived: z.boolean().optional(),
+    // Promote an ideation-agent inbox idea into the pipeline — false flips it out
+    // of the inbox, after which it counts against the intake WIP gate (Rule 16).
+    inbox: z.boolean().optional(),
     // Cockpit fields — partial updates from the pipeline cockpit.
     pipeline_stage: z
       .enum(['ideation', 'feasibility', 'validation', 'go-no-go', 'build', 'ship'])
@@ -97,6 +100,7 @@ export async function PATCH(
     if (d.archived !== undefined) {
       updatePayload.archived_at = d.archived ? new Date().toISOString() : null
     }
+    if (d.inbox !== undefined) updatePayload.inbox = d.inbox
 
     const isTerminalDecision =
       d.status === 'redesign-to-fit' ||
