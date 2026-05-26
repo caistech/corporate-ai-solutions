@@ -125,12 +125,20 @@ export default async function MethodologyIndexPage() {
           independent of the global marketing header. */}
       <div className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-gray-border bg-gray-dark/40 px-4 py-3">
         <span className="text-sm font-semibold text-white">Methodology cockpit</span>
-        <Link
-          href="/"
-          className="inline-flex min-h-[44px] items-center text-sm text-gray-light/70 hover:text-white"
-        >
-          Home
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/admin/methodology/readiness"
+            className="inline-flex min-h-[44px] items-center text-sm text-accent hover:underline"
+          >
+            Gate-1 criteria
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex min-h-[44px] items-center text-sm text-gray-light/70 hover:text-white"
+          >
+            Home
+          </Link>
+        </div>
       </div>
 
       <div className="mb-8">

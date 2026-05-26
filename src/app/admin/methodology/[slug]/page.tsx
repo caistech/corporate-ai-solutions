@@ -54,6 +54,16 @@ interface Campaign {
   connexions_panel_url: string | null
 }
 
+interface PromiseAttribute {
+  id: string
+  attribute: string
+  quality_bar: string
+  verify: string | null
+  promise: string | null
+  distributor: string | null
+  sort_order: number
+}
+
 interface Response {
   id: string
   campaign_id: string
@@ -122,6 +132,14 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
   if (!cardData) notFound()
 
   const card = cardData as Card
+
+  const { data: promiseData } = await supabase
+    .from('promise_attributes')
+    .select('id, attribute, quality_bar, verify, promise, distributor, sort_order')
+    .eq('product_slug', params.slug)
+    .order('sort_order', { ascending: true })
+
+  const promiseAttributes = (promiseData ?? []) as PromiseAttribute[]
 
   const { data: campaignsData } = await supabase
     .from('methodology_campaigns')
@@ -287,6 +305,71 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
             mvp_ready: card.mvp_ready,
           }}
         />
+      </section>
+
+      {/* Promise bars — the ratified "I want that" definition (THIN_MVP_RUBRIC v2 §7,
+          scores check #9). Read-only fold-in from the GATE_READINESS_REVIEW_V4 sign-off. */}
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-2">Promise bars — the &ldquo;I want that&rdquo; test</h2>
+        <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
+          The ratified quality bars for this product&rsquo;s promise, in &ldquo;X, not Y&rdquo; form. A thin
+          MVP is Gate-1-ready only when each bar is met at demo quality (a present-but-weak attribute
+          fails as surely as a missing one). These score readiness check&nbsp;#9.
+        </p>
+        {promiseAttributes.length === 0 ? (
+          <p className="rounded-lg border border-gray-border bg-gray-dark/40 p-4 text-sm text-gray-light/70">
+            No ratified promise bars yet. The bar is the judgement — set it as this product nears
+            Gate&nbsp;1. (Infrastructure, engine, and kill-lane products may never need one.)
+          </p>
+        ) : (
+          <>
+            {(promiseAttributes[0].promise || promiseAttributes[0].distributor) && (
+              <div className="mb-4 rounded-lg border border-accent/30 bg-accent/5 p-4">
+                {promiseAttributes[0].promise && (
+                  <p className="text-sm text-white">
+                    <span className="text-xs uppercase tracking-wider text-accent font-medium">Promise </span>
+                    {promiseAttributes[0].promise}
+                  </p>
+                )}
+                {promiseAttributes[0].distributor && (
+                  <p className="mt-2 text-sm">
+                    <span className="text-xs uppercase tracking-wider text-accent font-medium">Distributor </span>
+                    <span className="text-gray-light">{promiseAttributes[0].distributor}</span>
+                  </p>
+                )}
+              </div>
+            )}
+            <div className="space-y-3">
+              {promiseAttributes.map((p) => {
+                const splitIdx = p.quality_bar.search(/\s[-—]\s+not\s/i)
+                const target = splitIdx >= 0 ? p.quality_bar.slice(0, splitIdx) : p.quality_bar
+                const notPart =
+                  splitIdx >= 0
+                    ? p.quality_bar.slice(splitIdx).replace(/^\s[-—]\s+/, '')
+                    : null
+                return (
+                  <div key={p.id} className="rounded-lg border border-gray-border bg-gray-dark/40 p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <p className="text-sm font-semibold text-white">{p.attribute}</p>
+                      {p.verify && (
+                        <span className="shrink-0 text-xs px-2 py-1 rounded bg-gray-mid/40 text-gray-light/70 uppercase tracking-wider font-mono">
+                          {p.verify}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-emerald-200">{target}</p>
+                    {notPart && (
+                      <p className="mt-1 text-sm text-red-300/80">
+                        <span className="uppercase text-xs tracking-wider">not </span>
+                        {notPart}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Campaigns + responses */}
