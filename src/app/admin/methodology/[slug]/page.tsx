@@ -8,6 +8,7 @@ import { DecisionControls } from '@/components/methodology/DecisionControls'
 import { CockpitControls } from '@/components/methodology/CockpitControls'
 import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
 import { IdeaCardEditor } from '@/components/methodology/IdeaCardEditor'
+import { gateCriticalStatus } from '@/lib/methodology/gate-critical'
 import type { CardClarifierState } from '@/lib/methodology/clarifier-context'
 
 interface PageProps {
@@ -307,7 +308,23 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
 
       {/* Idea card — the structured intake one-pager, EDITABLE (office-hours produces/refines it). */}
       <section className="mb-10">
-        <h2 className="text-xl font-bold mb-2">Idea card (intake one-pager)</h2>
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <h2 className="text-xl font-bold">Idea card (intake one-pager)</h2>
+          {(() => {
+            const gc = gateCriticalStatus(card.build_type, card.idea_card)
+            const complete = gc.missing.length === 0
+            return (
+              <span
+                className={`text-xs px-2 py-1 rounded uppercase tracking-wider ${
+                  complete ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+                }`}
+                title={complete ? 'All gate-critical fields filled' : `Blank: ${gc.missing.join(', ')} — blocks advancing past the review gates`}
+              >
+                ⚑ {gc.filled}/{gc.required} gate-critical
+              </span>
+            )
+          })()}
+        </div>
         <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
           The structured intake for this idea, set at the door and refined as office-hours produces
           it. The ⚑ fields are gate-critical: a card cannot pass its review gates while they are blank

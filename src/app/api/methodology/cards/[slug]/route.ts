@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
+import { advancesPastReview, missingGateCritical, missingLabels } from '@/lib/methodology/gate-critical'
 
 /**
  * GET /api/methodology/cards/[slug] — fetch a single Hypothesis Card by product slug
@@ -93,6 +94,31 @@ export async function PATCH(
     const supabase = supabaseAdmin()
 
     const d = parsed.data
+
+    // ⚑ GATE-CRITICAL ENFORCEMENT (the cardinal self-audit finding): a card cannot
+    // advance past the review gates (to validation+ / Gate-1 mvp_ready) while its
+    // build-type's gate-critical idea-card fields are blank. Makes the UI's claim true.
+    if (advancesPastReview(d.pipeline_stage) || d.mvp_ready === true) {
+      const { data: cur } = await supabase
+        .from('methodology_hypothesis_cards')
+        .select('build_type, idea_card')
+        .eq('product_slug', params.slug)
+        .maybeSingle()
+      const buildType = (d.build_type ?? cur?.build_type) as string | null
+      const ideaCard = (d.idea_card ?? cur?.idea_card) as Record<string, string> | null
+      const missing = missingGateCritical(buildType, ideaCard)
+      if (missing.length) {
+        return NextResponse.json(
+          {
+            error: `Can't advance ${params.slug} to ${d.mvp_ready === true ? 'Gate-1 (MVP-ready)' : d.pipeline_stage}: gate-critical fields are blank — ${missingLabels(missing).join(', ')}. Fill them on the idea card first (build type: ${buildType ?? 'product'}).`,
+            gate: 'gate-critical-incomplete',
+            missing,
+          },
+          { status: 412 },
+        )
+      }
+    }
+
     const updatePayload: Record<string, unknown> = {}
     if (d.status !== undefined) updatePayload.status = d.status
     if (d.decision_reason !== undefined) updatePayload.decision_reason = d.decision_reason ?? null

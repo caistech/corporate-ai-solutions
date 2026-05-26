@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 type BuildType = 'product' | 'shared-service' | 'infra-product-candidate'
@@ -54,6 +54,19 @@ export function IdeaCardEditor({
   })
   const [pending, startTransition] = useTransition()
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // Unsaved-edit guard: the page is heavy and can crash mid-edit (self-audit
+  // finding) — warn before a navigation/close drops a long, unsaved idea-card.
+  const [dirty, setDirty] = useState(false)
+
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
 
   const save = () => {
     setMsg(null)
@@ -72,6 +85,7 @@ export function IdeaCardEditor({
           return
         }
         setMsg({ ok: true, text: 'Saved.' })
+        setDirty(false)
         router.refresh()
       } catch (e) {
         setMsg({ ok: false, text: (e as Error).message })
@@ -93,7 +107,7 @@ export function IdeaCardEditor({
               <button
                 key={b.value}
                 type="button"
-                onClick={() => setBuildType(b.value)}
+                onClick={() => { setBuildType(b.value); setDirty(true) }}
                 aria-pressed={active}
                 className={`min-h-[44px] rounded-lg border px-3 py-2 text-sm ${
                   active
@@ -118,7 +132,7 @@ export function IdeaCardEditor({
             <textarea
               rows={f.key === 'one_liner' ? 2 : 3}
               value={fields[f.key]}
-              onChange={(e) => setFields((s) => ({ ...s, [f.key]: e.target.value }))}
+              onChange={(e) => { setFields((s) => ({ ...s, [f.key]: e.target.value })); setDirty(true) }}
               className={ta}
               placeholder={f.critical ? 'Gate-critical — be concrete (a named human, not “a market”).' : undefined}
             />

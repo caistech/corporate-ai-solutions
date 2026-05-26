@@ -19,8 +19,8 @@ type Decision =
 const DECISIONS: { value: Decision; label: string; description: string; terminal: boolean }[] = [
   {
     value: 'redesign-to-fit',
-    label: 'REDESIGN-TO-FIT',
-    description: 'Distributor identified + reachable + wedge confirmed. Proceed to redesign per Rule 15.',
+    label: 'GO (redesign to fit)',
+    description: 'The green light: distributor identified + reachable + wedge confirmed. Proceed to build, redesigning to fit per Rule 15.',
     terminal: true,
   },
   {

@@ -246,7 +246,9 @@ function BoardRowDesktop({ card, onArchiveChange }: { card: BoardCard; onArchive
       <td className="py-3 px-3 text-white">
         <Link href={`/admin/methodology/${card.product_slug}`} className="hover:underline">
           <span className="font-medium">{card.display_name ?? card.product_slug}</span>
-          <span className="ml-2 font-mono text-sm text-gray-light/60">{card.product_slug}</span>
+          {card.display_name && card.display_name.toLowerCase() !== card.product_slug.toLowerCase() && (
+            <span className="ml-2 font-mono text-sm text-gray-light/60">{card.product_slug}</span>
+          )}
         </Link>
       </td>
       <td className="py-3 px-3"><BuildTypeBadge buildType={card.build_type} /></td>
@@ -310,7 +312,9 @@ function BoardCardMobile({ card, onArchiveChange }: { card: BoardCard; onArchive
     <li className={`rounded-lg border border-gray-border bg-gray-dark/40 p-4 ${archived ? 'opacity-50' : ''}`}>
       <Link href={`/admin/methodology/${card.product_slug}`} className="block">
         <p className="text-base font-semibold text-white">{card.display_name ?? card.product_slug}</p>
-        <p className="font-mono text-sm text-gray-light/60">{card.product_slug}</p>
+        {card.display_name && card.display_name.toLowerCase() !== card.product_slug.toLowerCase() && (
+          <p className="font-mono text-sm text-gray-light/60">{card.product_slug}</p>
+        )}
       </Link>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
         {rows.map((r) => (
