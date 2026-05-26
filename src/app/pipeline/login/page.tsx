@@ -16,19 +16,33 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/pipeline/auth/callback`,
-        },
-      })
+      // Bound the call — never let the button hang on "Sending…" forever (the
+      // built-in mailer can rate-limit / stall). Degrade to a retry-able error.
+      const result = await Promise.race([
+        supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/pipeline/auth/callback`,
+          },
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('TIMEOUT')), 12000),
+        ),
+      ])
+      const { error } = result as Awaited<ReturnType<typeof supabase.auth.signInWithOtp>>
       if (error) {
         setError(error.message)
       } else {
         setSent(true)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      setError(
+        err instanceof Error && err.message === 'TIMEOUT'
+          ? "Couldn't send the link right now — please try again in a moment."
+          : err instanceof Error
+            ? err.message
+            : 'Unknown error',
+      )
     } finally {
       setSubmitting(false)
     }
@@ -37,8 +51,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="w-full max-w-sm bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h1 className="text-xl font-bold text-[#0B1F3A] mb-1">Pipeline</h1>
-        <p className="text-sm text-[#5C6B7A] mb-6">Sign in with a magic link.</p>
+        <h1 className="text-xl font-bold text-[#0B1F3A] mb-1">Pipeline Cockpit</h1>
+        <p className="text-sm text-[#5C6B7A] mb-6">
+          The product-validation pipeline. Sign in to triage ideas through the
+          go/no-go gates. We&apos;ll email you a magic link — no password.
+        </p>
 
         {sent ? (
           <div className="bg-[#0B7A5C]/10 border border-[#0B7A5C]/30 text-[#0B7A5C] rounded p-4 text-sm">

@@ -3,8 +3,8 @@ import { PipelineNav } from '@/components/pipeline/PipelineNav'
 import { createClient } from '@/lib/pipeline/supabase-server'
 
 export const metadata: Metadata = {
-  title: 'Pipeline Tracker',
-  description: 'Private CRM for Dennis McMahon.',
+  title: 'Pipeline Cockpit',
+  description: 'The product-validation pipeline cockpit — operator only.',
   robots: { index: false, follow: false },
 }
 

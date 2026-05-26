@@ -16,15 +16,14 @@ vulnerability, same severity as an unguarded endpoint.
 - **Preview deploys sit behind Vercel deployment protection** — the app login is unreachable
   there (a `vercel.com/login` 401 wall) without a bypass token.
 
-## The QA account (one-time provisioning)
+## The QA account (PROVISIONED 2026-05-27 — these steps are done)
 
-1. Create a **dedicated, email-confirmed QA `owner` account** (not the operator's personal
-   account):
-   ```js
-   // service-role, one-off
-   await supabase.auth.admin.createUser({ email: 'qa@updates.corporateaisolutions.com', email_confirm: true })
-   ```
-2. Add that email to **`ADMIN_EMAILS`** (so it can reach `/admin/*`).
+The account below **exists** and is allowlisted; the steps are recorded for re-provisioning.
+
+1. A **dedicated, email-confirmed QA `owner` account** — `cockpit-qa@corporateaisolutions.com`
+   (created via service-role `admin.createUser({ email, email_confirm: true })`). Not the
+   operator's personal account; no mailbox required (Mode B mints the session directly).
+2. Its email is in **`ADMIN_EMAILS`** (Vercel, prod+preview) so it can reach `/admin/*`. ✓
 3. Make `SUPABASE_SERVICE_ROLE_KEY` available to the minter (from `.env.local` or env).
 4. For **local** testing, add `http://localhost:3000/pipeline/auth/callback` to the Supabase
    **redirect allow-list** (otherwise a magic link falls back to the prod Site URL and is
@@ -50,7 +49,7 @@ round-trip, no PKCE/redirect-allow-list dependency. It uses the service-role
 would write:
 
 ```bash
-QA_TEST_EMAIL='qa@updates.corporateaisolutions.com' \
+QA_TEST_EMAIL='cockpit-qa@corporateaisolutions.com' \
 SUPABASE_SERVICE_ROLE_KEY='<service-role>' \
 node ../cais-shared-services/scripts/qa-session.mjs --magic-link \
   --root . --origin http://localhost:3000
