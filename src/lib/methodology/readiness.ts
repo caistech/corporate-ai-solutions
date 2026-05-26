@@ -9,13 +9,15 @@
 // Used by BOTH the /score route and the card detail page (direct import, no HTTP round-trip).
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { scoreCard, type Criterion, type CheckVerdict, type ScoreResult } from './score'
+import { scoreCard, isMvpReady, type Criterion, type CheckVerdict, type ScoreResult } from './score'
 
 export interface CardScore {
   found: boolean
   slug: string
   features: string[]
   score?: ScoreResult
+  /** Harness-derived Gate-1 readiness (HARD gate passed AND band GO) — the value `mvp_ready` derives from. */
+  mvpReady: boolean
 }
 
 export async function loadCardScore(slug: string): Promise<CardScore> {
@@ -27,7 +29,7 @@ export async function loadCardScore(slug: string): Promise<CardScore> {
     .eq('product_slug', slug)
     .maybeSingle()
 
-  if (!card) return { found: false, slug, features: [] }
+  if (!card) return { found: false, slug, features: [], mvpReady: false }
 
   const features: string[] = (card.features as string[] | null) ?? []
 
@@ -49,5 +51,5 @@ export async function loadCardScore(slug: string): Promise<CardScore> {
     verdicts: (results ?? []) as CheckVerdict[],
   })
 
-  return { found: true, slug, features, score }
+  return { found: true, slug, features, score, mvpReady: isMvpReady(score) }
 }

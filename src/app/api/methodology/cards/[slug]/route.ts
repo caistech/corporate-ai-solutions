@@ -68,7 +68,6 @@ const PatchSchema = z
     engine_cluster: z.string().max(120).nullable().optional(),
     build_status: z.enum(['none', 'thin-mvp', 'fat-mvp', 'full']).optional(),
     mvp_url: z.string().url().max(500).nullable().optional(),
-    mvp_ready: z.boolean().optional(),
     // The first gate (editable post-intake) + the structured idea-card (office-hours
     // produces/refines it) + the Gate-2 GO that unlocks scale-infra provisioning.
     build_type: z.enum(['product', 'shared-service', 'infra-product-candidate']).optional(),
@@ -101,9 +100,10 @@ export async function PATCH(
     const d = parsed.data
 
     // ⚑ GATE-CRITICAL ENFORCEMENT (the cardinal self-audit finding): a card cannot
-    // advance past the review gates (to validation+ / Gate-1 mvp_ready) while its
-    // build-type's gate-critical idea-card fields are blank. Makes the UI's claim true.
-    if (advancesPastReview(d.pipeline_stage) || d.mvp_ready === true) {
+    // advance past the review gates (to validation+) while its build-type's gate-critical
+    // idea-card fields are blank. Makes the UI's claim true. (Gate-1 readiness is no longer
+    // an operator field — it derives from the scorer; see lib/methodology/score.ts isMvpReady.)
+    if (advancesPastReview(d.pipeline_stage)) {
       const { data: cur } = await supabase
         .from('methodology_hypothesis_cards')
         .select('build_type, idea_card')
@@ -115,7 +115,7 @@ export async function PATCH(
       if (missing.length) {
         return NextResponse.json(
           {
-            error: `Can't advance ${params.slug} to ${d.mvp_ready === true ? 'Gate-1 (MVP-ready)' : d.pipeline_stage}: gate-critical fields are blank — ${missingLabels(missing).join(', ')}. Fill them on the idea card first (build type: ${buildType ?? 'product'}).`,
+            error: `Can't advance ${params.slug} to stage ${d.pipeline_stage}: gate-critical fields are blank — ${missingLabels(missing).join(', ')}. Fill them on the idea card first (build type: ${buildType ?? 'product'}).`,
             gate: 'gate-critical-incomplete',
             missing,
           },
@@ -132,7 +132,6 @@ export async function PATCH(
     if (d.engine_cluster !== undefined) updatePayload.engine_cluster = d.engine_cluster
     if (d.build_status !== undefined) updatePayload.build_status = d.build_status
     if (d.mvp_url !== undefined) updatePayload.mvp_url = d.mvp_url
-    if (d.mvp_ready !== undefined) updatePayload.mvp_ready = d.mvp_ready
     if (d.build_type !== undefined) updatePayload.build_type = d.build_type
     if (d.idea_card !== undefined) updatePayload.idea_card = d.idea_card
     if (d.gate2_go !== undefined) updatePayload.gate2_go = d.gate2_go

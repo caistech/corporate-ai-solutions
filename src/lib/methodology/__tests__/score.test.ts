@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreCard, latestVerdicts, type Criterion, type CheckVerdict } from '../score'
+import { scoreCard, latestVerdicts, isMvpReady, type Criterion, type CheckVerdict } from '../score'
 
 // Compact fixture builders.
 const C = (code: string, tier: Criterion['tier'], weight: Criterion['weight'], applies_when: string | null = null): Criterion => ({
@@ -114,5 +114,24 @@ describe('latestVerdicts', () => {
     const deduped = latestVerdicts([V('9', 'pass'), V('9', 'fail'), V('1', 'pass')])
     expect(deduped).toHaveLength(2)
     expect(deduped.find((v) => v.check_code === '9')!.status).toBe('pass')
+  })
+})
+
+describe('isMvpReady (the derived Gate-1 flag)', () => {
+  it('is true only when the HARD gate passes AND the band is GO', () => {
+    const go = scoreCard({
+      features: ['voice', 'auth'],
+      criteria,
+      verdicts: [V('P1', 'pass'), V('2', 'pass'), V('10', 'pass'), V('22', 'pass'), V('9', 'pass'), V('1', 'pass'), V('15', 'pass')],
+    })
+    expect(go.band).toBe('GO')
+    expect(isMvpReady(go)).toBe(true)
+
+    const redesign = scoreCard({ features: [], criteria, verdicts: [V('P1', 'pass'), V('2', 'pass'), V('9', 'pass'), V('1', 'fail')] })
+    expect(redesign.band).toBe('REDESIGN')
+    expect(isMvpReady(redesign)).toBe(false)
+
+    const blocked = scoreCard({ features: [], criteria, verdicts: [V('2', 'pass')] }) // HARD gate not passed
+    expect(isMvpReady(blocked)).toBe(false)
   })
 })

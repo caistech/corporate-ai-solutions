@@ -224,7 +224,7 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
     engine_cluster: card.engine_cluster,
     build_status: card.build_status,
     mvp_url: card.mvp_url,
-    mvp_ready: card.mvp_ready,
+    mvp_ready: readiness.mvpReady,
     origin_summary: card.origin_summary,
     original_end_user: card.original_end_user,
     hypotheses: hypothesisRows.map((h) => ({
@@ -386,13 +386,13 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
         <h2 className="text-xl font-bold mb-4">Pipeline &amp; kick-off</h2>
         <CockpitControls
           productSlug={card.product_slug}
+          mvpReady={readiness.mvpReady}
           initial={{
             pipeline_stage: card.pipeline_stage,
             monetisation_lane: card.monetisation_lane,
             engine_cluster: card.engine_cluster,
             build_status: card.build_status,
             mvp_url: card.mvp_url,
-            mvp_ready: card.mvp_ready,
             features: card.features,
           }}
         />

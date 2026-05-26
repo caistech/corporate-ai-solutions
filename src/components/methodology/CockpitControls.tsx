@@ -10,13 +10,15 @@ interface CardFields {
   engine_cluster: string | null
   build_status: string | null
   mvp_url: string | null
-  mvp_ready: boolean | null
   features: string[] | null
 }
 
 interface Props {
   productSlug: string
   initial: CardFields
+  // Gate-1 readiness is harness-derived (the scorer), not an operator field — passed in from
+  // the server (loadCardScore). The kick-off forms gate on this.
+  mvpReady: boolean
 }
 
 const STAGES = ['ideation', 'feasibility', 'validation', 'go-no-go', 'build', 'ship']
@@ -41,16 +43,15 @@ const FEATURE_LABEL: Record<(typeof FEATURES)[number], string> = {
   email: 'Sends email',
 }
 
-export function CockpitControls({ productSlug, initial }: Props) {
+export function CockpitControls({ productSlug, initial, mvpReady }: Props) {
   const router = useRouter()
 
-  // --- Card fields editor (Gate 1 + lane/engine/stage) ---
+  // --- Card fields editor (lane / engine / stage / url / features) ---
   const [stage, setStage] = useState(initial.pipeline_stage ?? 'ideation')
   const [lane, setLane] = useState(initial.monetisation_lane ?? '')
   const [engine, setEngine] = useState(initial.engine_cluster ?? '')
   const [build, setBuild] = useState(initial.build_status ?? 'none')
   const [mvpUrl, setMvpUrl] = useState(initial.mvp_url ?? '')
-  const [mvpReady, setMvpReady] = useState(Boolean(initial.mvp_ready))
   const [features, setFeatures] = useState<string[]>(initial.features ?? [])
   const toggleFeature = (f: string) =>
     setFeatures((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))
@@ -58,7 +59,7 @@ export function CockpitControls({ productSlug, initial }: Props) {
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saveErr, setSaveErr] = useState<string | null>(null)
 
-  const gate1Open = mvpReady && Boolean(mvpUrl)
+  const gate1Open = mvpReady // harness-derived (the recorded readiness score), not a tickbox
 
   const saveFields = () => {
     setSaveMsg(null)
@@ -74,7 +75,6 @@ export function CockpitControls({ productSlug, initial }: Props) {
             engine_cluster: engine || null,
             build_status: build,
             mvp_url: mvpUrl || null,
-            mvp_ready: mvpReady,
             features,
           }),
         })
@@ -168,15 +168,19 @@ export function CockpitControls({ productSlug, initial }: Props) {
             />
           </label>
         </div>
-        <label className="mt-4 flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-gray-border bg-black/20 px-3 py-2 text-base text-gray-light">
-          <input
-            type="checkbox"
-            checked={mvpReady}
-            onChange={(e) => setMvpReady(e.target.checked)}
-            className="h-5 w-5 rounded border-gray-700 bg-gray-900 accent-accent"
-          />
-          Thin MVP ready (Gate 1)
-        </label>
+        <div className="mt-4 flex min-h-[44px] flex-wrap items-center gap-3 rounded-lg border border-gray-border bg-black/20 px-3 py-2 text-base">
+          <span
+            className={`shrink-0 text-xs px-2 py-0.5 rounded uppercase tracking-wider ${
+              mvpReady ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-mid/40 text-gray-light/60'
+            }`}
+          >
+            {mvpReady ? 'ready' : 'not ready'}
+          </span>
+          <span className="text-gray-light/80">
+            Gate 1 (thin-MVP ready) — set by the harness, not by hand. It derives from the readiness
+            score above (HARD gate passed + GO). Run <code className="text-accent">/naive-tester</code> to prove it.
+          </span>
+        </div>
         <fieldset className="mt-4">
           <legend className="text-sm uppercase tracking-wider text-gray-light/70 mb-2">
             Features (drives the readiness scorer&rsquo;s conditional checks)
@@ -234,8 +238,9 @@ function KickoffPanel({
       </p>
       {!gate1Open ? (
         <div className="rounded border border-yellow-500/30 bg-yellow-500/10 p-3 text-base text-yellow-200">
-          Gate 1 closed — set a thin-MVP URL and mark the card ready (then Save fields) before
-          launching. The outreach embeds the MVP link, so kick-off is blocked without it.
+          Gate 1 closed — the thin MVP isn&rsquo;t harness-proven ready yet. Set the thin-MVP URL, then
+          run <code>/naive-tester</code> against it (and <code>/voice-auditor</code> if voiced); once the
+          HARD checks pass and the score reaches GO, this opens automatically. See the readiness panel above.
         </div>
       ) : (
         <>

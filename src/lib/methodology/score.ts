@@ -122,6 +122,15 @@ function bandFor(score: number): Band {
 }
 
 /**
+ * Gate-1 "ready" — harness-PROVEN, not an operator tickbox. The HARD gate must pass AND the
+ * weighted score reach the GO band. (REDESIGN / NO-GO / an un-audited card are not ready.)
+ * This is what `mvp_ready` derives from: pass the mandatories, then score well enough.
+ */
+export function isMvpReady(score: ScoreResult | null | undefined): boolean {
+  return !!score && score.gate1Ready && score.band === 'GO'
+}
+
+/**
  * Score a card's Gate-1 readiness. Pure — no I/O. The HARD gate must pass before a
  * weighted score is reported (score/band stay null otherwise), mirroring the §5
  * dimension-3 hard-gate discipline extended to readiness.

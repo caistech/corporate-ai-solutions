@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
+import { loadCardScore } from '@/lib/methodology/readiness'
 
 /**
  * POST /api/methodology/cards/[slug]/validate
@@ -71,7 +72,7 @@ export async function POST(
   // 1. Find the parent Hypothesis Card by slug
   const { data: card, error: cardErr } = await supabase
     .from('methodology_hypothesis_cards')
-    .select('id, product_slug, mvp_ready, mvp_url')
+    .select('id, product_slug, mvp_url')
     .eq('product_slug', params.slug)
     .maybeSingle()
 
@@ -83,17 +84,25 @@ export async function POST(
     return NextResponse.json({ error: 'Hypothesis Card not found' }, { status: 404 })
   }
 
-  // Gate 1 — "is the thin MVP ready?". The research outreach embeds the MVP
-  // link, so kick-off is blocked until the card is mvp_ready with an mvp_url.
-  // No MVP, no link, no send.
-  if (!card.mvp_ready || !card.mvp_url) {
+  // Gate 1 — harness-PROVEN readiness, not an operator tickbox. `mvp_ready` derives from the
+  // scorer: the HARD gate must pass AND the score reach GO (recorded by the auditors into
+  // readiness_results). The outreach also embeds the thin-MVP link, so an mvp_url must exist.
+  const readiness = await loadCardScore(params.slug)
+  if (!card.mvp_url || !readiness.mvpReady) {
+    const s = readiness.score
+    const why = !card.mvp_url
+      ? 'no thin-MVP URL is set — set the mvp_url (the outreach embeds it).'
+      : s && !s.gate1Ready
+        ? `the HARD gate has not passed (${s.hardGate.failing.length} check(s) failing or untested).`
+        : `the score is ${s?.score ?? '—'}/10 (${s?.band ?? '—'}) — it needs to reach GO (≥6.5).`
     return NextResponse.json(
       {
-        error:
-          'Gate 1 not met: the thin MVP is not ready. Set an mvp_url and mark the card mvp_ready before kicking off research — the outreach embeds the MVP link.',
+        error: `Gate 1 not met: the thin MVP is not harness-proven ready — ${why} Run /naive-tester (and /voice-auditor if voiced) against the live MVP and fix the findings; readiness updates automatically. See the readiness panel on the card.`,
         gate: 'mvp-ready',
-        mvp_ready: card.mvp_ready ?? false,
         has_mvp_url: Boolean(card.mvp_url),
+        gate1_ready: s?.gate1Ready ?? false,
+        band: s?.band ?? null,
+        score: s?.score ?? null,
       },
       { status: 412 }
     )
