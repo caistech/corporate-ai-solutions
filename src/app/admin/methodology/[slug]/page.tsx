@@ -7,6 +7,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { DecisionControls } from '@/components/methodology/DecisionControls'
 import { CockpitControls } from '@/components/methodology/CockpitControls'
 import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
+import { IdeaCardEditor } from '@/components/methodology/IdeaCardEditor'
 import type { CardClarifierState } from '@/lib/methodology/clarifier-context'
 
 interface PageProps {
@@ -138,24 +139,6 @@ const BUILD_TYPE_COLOR: Record<string, string> = {
   'shared-service': 'bg-blue-500/20 text-blue-300',
   'infra-product-candidate': 'bg-purple-500/20 text-purple-300',
 }
-
-// The idea-card fields, in display order. ⚑ = gate-critical (a card can't pass the
-// relevant gate while these are blank/hand-wavy — see THIN_MVP/BUSINESS_MODEL §5).
-const IDEA_CARD_FIELDS: { key: string; label: string; critical?: boolean }[] = [
-  { key: 'problem', label: 'Problem' },
-  { key: 'demand_evidence', label: 'Demand evidence', critical: true },
-  { key: 'wedge', label: 'Wedge' },
-  { key: 'scope', label: 'Scope' },
-  { key: 'architecture', label: 'Architecture (build vs buy)', critical: true },
-  { key: 'build_sequence', label: 'Build sequence' },
-  { key: 'shared_layers', label: 'Shared layers' },
-  { key: 'lane', label: 'Lane' },
-  { key: 'distributor', label: 'Distributor', critical: true },
-  { key: 'risks_open_questions', label: 'Risks & open questions' },
-  { key: 'decisions_needed', label: 'Decisions needed', critical: true },
-  { key: 'commercial_structure', label: 'Commercial structure' },
-  { key: 'source_artifact', label: 'Source' },
-]
 
 export default async function HypothesisCardDetailPage({ params }: PageProps) {
   noStore()
@@ -322,34 +305,21 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Idea card — the structured intake one-pager (gate-critical fields marked ⚑). */}
-      {card.idea_card && Object.keys(card.idea_card).length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-xl font-bold mb-2">Idea card (intake one-pager)</h2>
-          <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
-            The structured intake for this idea. The ⚑ fields are gate-critical: a card cannot pass
-            its review gates while they are blank or hand-wavy — a named demand_evidence (not &ldquo;a
-            market&rdquo;), build-vs-buy architecture, lane + distributor (Rule&nbsp;15), and the
-            go/no-go decisions.
-          </p>
-          <dl className="space-y-3">
-            {IDEA_CARD_FIELDS.filter((f) => card.idea_card?.[f.key]).map((f) => (
-              <div
-                key={f.key}
-                className={`rounded-lg border p-4 ${
-                  f.critical ? 'border-accent/30 bg-accent/5' : 'border-gray-border bg-gray-dark/40'
-                }`}
-              >
-                <dt className="text-xs uppercase tracking-wider text-accent font-medium mb-1">
-                  {f.critical && <span title="Gate-critical">⚑ </span>}
-                  {f.label}
-                </dt>
-                <dd className="text-sm text-gray-light whitespace-pre-wrap">{card.idea_card![f.key]}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
+      {/* Idea card — the structured intake one-pager, EDITABLE (office-hours produces/refines it). */}
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-2">Idea card (intake one-pager)</h2>
+        <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
+          The structured intake for this idea, set at the door and refined as office-hours produces
+          it. The ⚑ fields are gate-critical: a card cannot pass its review gates while they are blank
+          or hand-wavy — a named demand_evidence (not &ldquo;a market&rdquo;), build-vs-buy
+          architecture, lane + distributor (Rule&nbsp;15), and the go/no-go decisions.
+        </p>
+        <IdeaCardEditor
+          slug={card.product_slug}
+          initialBuildType={card.build_type}
+          initialIdeaCard={card.idea_card}
+        />
+      </section>
 
       {/* Hypothesis rows */}
       <section className="mb-10">

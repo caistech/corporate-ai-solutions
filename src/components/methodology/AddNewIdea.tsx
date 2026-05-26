@@ -6,6 +6,27 @@ import { IntakeOverrideField } from './IntakeOverrideField'
 
 const NAME_MAX = 80
 
+type BuildType = 'product' | 'shared-service' | 'infra-product-candidate'
+
+// The FIRST gate — this choice routes the whole gate path (BUSINESS_MODEL §6).
+const BUILD_TYPE_OPTIONS: { value: BuildType; label: string; help: string }[] = [
+  {
+    value: 'product',
+    label: 'Product',
+    help: 'Client-facing, revenue-bearing. Full path → office-hours → CEO/eng/design → Gate-2 demand (a named distributor is required, Rule 15).',
+  },
+  {
+    value: 'shared-service',
+    label: 'Shared service',
+    help: 'I need it; it won’t be a product — @caistech infra. Lighter path → feasibility + eng (fork-check) → publish to the hub. No demand gate.',
+  },
+  {
+    value: 'infra-product-candidate',
+    label: 'Infra · product-candidate',
+    help: 'I need it AND it could be a product. Builds on the infra path now; re-enters the product path at Gate-1/2 when a distributor/demand emerges (deferred Rule 15).',
+  },
+]
+
 function slugify(s: string): string {
   return s
     .trim()
@@ -33,6 +54,7 @@ export function AddNewIdea({
   const router = useRouter()
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
+  const [buildType, setBuildType] = useState<BuildType>('product')
   const [overrideReason, setOverrideReason] = useState('')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -69,6 +91,8 @@ export function AddNewIdea({
             pipeline_stage: 'ideation',
             build_status: 'none',
             mvp_ready: false,
+            build_type: buildType, // the first gate — routes the path
+            idea_card: desc.trim() ? { one_liner: desc.trim() } : undefined,
             // Manual cockpit intake — subject to the Rule 16 WIP gate.
             cockpit_intake: true,
             intake_source: 'operator',
@@ -82,6 +106,7 @@ export function AddNewIdea({
         }
         setName('')
         setDesc('')
+        setBuildType('product')
         setOverrideReason('')
         router.refresh()
       } catch (e) {
@@ -140,6 +165,36 @@ export function AddNewIdea({
           />
         </label>
       </div>
+
+      {/* The FIRST gate — build type routes the whole path. Required at the door. */}
+      <fieldset className="mt-4">
+        <legend className="text-sm uppercase tracking-wider text-gray-light/70 mb-2">
+          Build type — the first gate
+        </legend>
+        <div className="grid gap-2 md:grid-cols-3">
+          {BUILD_TYPE_OPTIONS.map((opt) => {
+            const active = buildType === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setBuildType(opt.value)}
+                aria-pressed={active}
+                className={`flex min-h-[44px] flex-col items-start rounded-lg border p-3 text-left transition-colors ${
+                  active
+                    ? 'border-accent bg-accent/10'
+                    : 'border-gray-border bg-black/20 hover:border-gray-500'
+                }`}
+              >
+                <span className={`text-sm font-medium ${active ? 'text-white' : 'text-gray-light'}`}>
+                  {opt.label}
+                </span>
+                <span className="mt-1 text-xs leading-snug text-gray-light/60">{opt.help}</span>
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
 
       {blocked && (
         <IntakeOverrideField untriaged={untriaged} value={overrideReason} onChange={setOverrideReason} />

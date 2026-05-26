@@ -51,6 +51,12 @@ const CardCreateSchema = z.object({
   build_status: z.enum(['none', 'thin-mvp', 'fat-mvp', 'full']).optional(),
   mvp_url: z.string().url().max(500).optional(),
   mvp_ready: z.boolean().optional(),
+  // The FIRST gate — routes the card down a different gate path (product vs
+  // shared-service vs infra-product-candidate). Captured at the front door.
+  build_type: z.enum(['product', 'shared-service', 'infra-product-candidate']).optional(),
+  // The structured intake one-pager (gate-critical fields inside). Free-form
+  // key→text; the office-hours interview typically PRODUCES this post-intake.
+  idea_card: z.record(z.string(), z.string().max(8000)).optional(),
   // Intake WIP gate (Rule 16). `cockpit_intake` marks a fresh MANUAL operator add
   // from the cockpit — the only thing the gate blocks (dialogue re-posts + agent
   // deposits are exempt). `intake_source` records origin; an 'ideation-agent'
@@ -140,6 +146,8 @@ export async function POST(request: NextRequest) {
     if (parsed.data.build_status !== undefined) upsertRow.build_status = parsed.data.build_status
     if (parsed.data.mvp_url !== undefined) upsertRow.mvp_url = parsed.data.mvp_url
     if (parsed.data.mvp_ready !== undefined) upsertRow.mvp_ready = parsed.data.mvp_ready
+    if (parsed.data.build_type !== undefined) upsertRow.build_type = parsed.data.build_type
+    if (parsed.data.idea_card !== undefined) upsertRow.idea_card = parsed.data.idea_card
 
     const { data, error } = await supabase
       .from('methodology_hypothesis_cards')

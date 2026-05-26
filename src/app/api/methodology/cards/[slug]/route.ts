@@ -68,6 +68,11 @@ const PatchSchema = z
     build_status: z.enum(['none', 'thin-mvp', 'fat-mvp', 'full']).optional(),
     mvp_url: z.string().url().max(500).nullable().optional(),
     mvp_ready: z.boolean().optional(),
+    // The first gate (editable post-intake) + the structured idea-card (office-hours
+    // produces/refines it) + the Gate-2 GO that unlocks scale-infra provisioning.
+    build_type: z.enum(['product', 'shared-service', 'infra-product-candidate']).optional(),
+    idea_card: z.record(z.string(), z.string().max(8000)).optional(),
+    gate2_go: z.boolean().optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, { message: 'No fields to update' })
 
@@ -97,6 +102,9 @@ export async function PATCH(
     if (d.build_status !== undefined) updatePayload.build_status = d.build_status
     if (d.mvp_url !== undefined) updatePayload.mvp_url = d.mvp_url
     if (d.mvp_ready !== undefined) updatePayload.mvp_ready = d.mvp_ready
+    if (d.build_type !== undefined) updatePayload.build_type = d.build_type
+    if (d.idea_card !== undefined) updatePayload.idea_card = d.idea_card
+    if (d.gate2_go !== undefined) updatePayload.gate2_go = d.gate2_go
     if (d.archived !== undefined) {
       updatePayload.archived_at = d.archived ? new Date().toISOString() : null
     }
