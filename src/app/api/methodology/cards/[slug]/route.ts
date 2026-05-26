@@ -74,6 +74,11 @@ const PatchSchema = z
     build_type: z.enum(['product', 'shared-service', 'infra-product-candidate']).optional(),
     idea_card: z.record(z.string(), z.string().max(8000)).optional(),
     gate2_go: z.boolean().optional(),
+    // Which conditional features this product has — drives the readiness scorer's
+    // applicability (a CONDITIONAL-* check is N/A when its feature isn't here).
+    features: z
+      .array(z.enum(['voice', 'auth', 'supabase', 'third-party-content', 'address-or-abn-fields', 'email']))
+      .optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, { message: 'No fields to update' })
 
@@ -131,6 +136,7 @@ export async function PATCH(
     if (d.build_type !== undefined) updatePayload.build_type = d.build_type
     if (d.idea_card !== undefined) updatePayload.idea_card = d.idea_card
     if (d.gate2_go !== undefined) updatePayload.gate2_go = d.gate2_go
+    if (d.features !== undefined) updatePayload.features = d.features
     if (d.archived !== undefined) {
       updatePayload.archived_at = d.archived ? new Date().toISOString() : null
     }

@@ -8,7 +8,9 @@ import { DecisionControls } from '@/components/methodology/DecisionControls'
 import { CockpitControls } from '@/components/methodology/CockpitControls'
 import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
 import { IdeaCardEditor } from '@/components/methodology/IdeaCardEditor'
+import { ReadinessPanel } from '@/components/methodology/ReadinessPanel'
 import { gateCriticalStatus } from '@/lib/methodology/gate-critical'
+import { loadCardScore } from '@/lib/methodology/readiness'
 import type { CardClarifierState } from '@/lib/methodology/clarifier-context'
 
 interface PageProps {
@@ -45,6 +47,7 @@ interface Card {
   build_type: string | null
   gate2_go: boolean | null
   idea_card: Record<string, string> | null
+  features: string[] | null
 }
 
 interface GateRecord {
@@ -179,6 +182,9 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
     .order('created_at', { ascending: false })
 
   const gateRecords = (gateData ?? []) as GateRecord[]
+
+  // Gate-1 readiness — computed from the rubric + the card's recorded per-check verdicts.
+  const readiness = await loadCardScore(params.slug)
 
   const { data: campaignsData } = await supabase
     .from('methodology_campaigns')
@@ -372,6 +378,9 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
         )}
       </section>
 
+      {/* Gate-1 readiness score — the harness's verdict (rubric + recorded audits). */}
+      <ReadinessPanel data={readiness} />
+
       {/* Pipeline & kick-off */}
       <section className="mb-10">
         <h2 className="text-xl font-bold mb-4">Pipeline &amp; kick-off</h2>
@@ -384,6 +393,7 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
             build_status: card.build_status,
             mvp_url: card.mvp_url,
             mvp_ready: card.mvp_ready,
+            features: card.features,
           }}
         />
       </section>

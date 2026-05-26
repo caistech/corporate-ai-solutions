@@ -11,6 +11,7 @@ interface CardFields {
   build_status: string | null
   mvp_url: string | null
   mvp_ready: boolean | null
+  features: string[] | null
 }
 
 interface Props {
@@ -28,6 +29,17 @@ const LANES = [
 ]
 const BUILDS = ['none', 'thin-mvp', 'fat-mvp', 'full']
 const CAMPAIGN_TYPES = ['target-user', 'distributor-candidate'] as const
+// Conditional features — which the product has drives the readiness scorer's applicability
+// (a CONDITIONAL-* check reads N/A when its feature isn't selected here).
+const FEATURES = ['voice', 'auth', 'supabase', 'third-party-content', 'address-or-abn-fields', 'email'] as const
+const FEATURE_LABEL: Record<(typeof FEATURES)[number], string> = {
+  voice: 'Voice agent',
+  auth: 'Auth',
+  supabase: 'Supabase',
+  'third-party-content': '3rd-party content',
+  'address-or-abn-fields': 'Address / ABN fields',
+  email: 'Sends email',
+}
 
 export function CockpitControls({ productSlug, initial }: Props) {
   const router = useRouter()
@@ -39,6 +51,9 @@ export function CockpitControls({ productSlug, initial }: Props) {
   const [build, setBuild] = useState(initial.build_status ?? 'none')
   const [mvpUrl, setMvpUrl] = useState(initial.mvp_url ?? '')
   const [mvpReady, setMvpReady] = useState(Boolean(initial.mvp_ready))
+  const [features, setFeatures] = useState<string[]>(initial.features ?? [])
+  const toggleFeature = (f: string) =>
+    setFeatures((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))
   const [savePending, startSave] = useTransition()
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saveErr, setSaveErr] = useState<string | null>(null)
@@ -60,6 +75,7 @@ export function CockpitControls({ productSlug, initial }: Props) {
             build_status: build,
             mvp_url: mvpUrl || null,
             mvp_ready: mvpReady,
+            features,
           }),
         })
         const json = await res.json().catch(() => ({}))
@@ -161,6 +177,27 @@ export function CockpitControls({ productSlug, initial }: Props) {
           />
           Thin MVP ready (Gate 1)
         </label>
+        <fieldset className="mt-4">
+          <legend className="text-sm uppercase tracking-wider text-gray-light/70 mb-2">
+            Features (drives the readiness scorer&rsquo;s conditional checks)
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {FEATURES.map((f) => (
+              <label
+                key={f}
+                className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-gray-border bg-black/20 px-3 py-2 text-base text-gray-light"
+              >
+                <input
+                  type="checkbox"
+                  checked={features.includes(f)}
+                  onChange={() => toggleFeature(f)}
+                  className="h-5 w-5 rounded border-gray-700 bg-gray-900 accent-accent"
+                />
+                {FEATURE_LABEL[f]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             type="button"
