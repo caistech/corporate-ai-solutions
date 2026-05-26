@@ -40,6 +40,22 @@ interface Card {
   build_status: string | null
   mvp_url: string | null
   mvp_ready: boolean | null
+  build_type: string | null
+  gate2_go: boolean | null
+  idea_card: Record<string, string> | null
+}
+
+interface GateRecord {
+  id: string
+  gate: string
+  status: 'pass' | 'fail'
+  deployment_id: string | null
+  commit_sha: string | null
+  artifact_ref: string | null
+  reason: string | null
+  is_override: boolean
+  recorded_by: string
+  created_at: string
 }
 
 interface Campaign {
@@ -111,6 +127,36 @@ const CARD_STATUS_COLOR: Record<string, string> = {
   kill: 'bg-red-500/20 text-red-300',
 }
 
+// The first gate — the build-type tick-box routes the whole gate path.
+const BUILD_TYPE_LABEL: Record<string, string> = {
+  'product': 'Product',
+  'shared-service': 'Shared service',
+  'infra-product-candidate': 'Infra · product-candidate',
+}
+const BUILD_TYPE_COLOR: Record<string, string> = {
+  'product': 'bg-accent/20 text-accent',
+  'shared-service': 'bg-blue-500/20 text-blue-300',
+  'infra-product-candidate': 'bg-purple-500/20 text-purple-300',
+}
+
+// The idea-card fields, in display order. ⚑ = gate-critical (a card can't pass the
+// relevant gate while these are blank/hand-wavy — see THIN_MVP/BUSINESS_MODEL §5).
+const IDEA_CARD_FIELDS: { key: string; label: string; critical?: boolean }[] = [
+  { key: 'problem', label: 'Problem' },
+  { key: 'demand_evidence', label: 'Demand evidence', critical: true },
+  { key: 'wedge', label: 'Wedge' },
+  { key: 'scope', label: 'Scope' },
+  { key: 'architecture', label: 'Architecture (build vs buy)', critical: true },
+  { key: 'build_sequence', label: 'Build sequence' },
+  { key: 'shared_layers', label: 'Shared layers' },
+  { key: 'lane', label: 'Lane' },
+  { key: 'distributor', label: 'Distributor', critical: true },
+  { key: 'risks_open_questions', label: 'Risks & open questions' },
+  { key: 'decisions_needed', label: 'Decisions needed', critical: true },
+  { key: 'commercial_structure', label: 'Commercial structure' },
+  { key: 'source_artifact', label: 'Source' },
+]
+
 export default async function HypothesisCardDetailPage({ params }: PageProps) {
   noStore()
   const supabase = supabaseAdmin()
@@ -140,6 +186,15 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
     .order('sort_order', { ascending: true })
 
   const promiseAttributes = (promiseData ?? []) as PromiseAttribute[]
+
+  // The gate ledger for this product — the PASS/FAIL record the execution actions read.
+  const { data: gateData } = await supabase
+    .from('pipeline_gates')
+    .select('*')
+    .eq('product_slug', params.slug)
+    .order('created_at', { ascending: false })
+
+  const gateRecords = (gateData ?? []) as GateRecord[]
 
   const { data: campaignsData } = await supabase
     .from('methodology_campaigns')
@@ -225,6 +280,16 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
           >
             {card.status}
           </span>
+          {card.build_type && (
+            <span
+              className={`text-sm px-2 py-1 rounded uppercase tracking-wider ${
+                BUILD_TYPE_COLOR[card.build_type] ?? 'bg-gray-mid/40 text-gray-light'
+              }`}
+              title="Build type — the first gate. It routes the whole gate path."
+            >
+              {BUILD_TYPE_LABEL[card.build_type] ?? card.build_type}
+            </span>
+          )}
         </div>
         <p className="mt-2 text-sm text-gray-light/70">
           Last updated {new Date(card.updated_at).toLocaleString()}
@@ -254,6 +319,35 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
               <span className="text-gray-light">{card.original_end_user}</span>
             </p>
           )}
+        </section>
+      )}
+
+      {/* Idea card — the structured intake one-pager (gate-critical fields marked ⚑). */}
+      {card.idea_card && Object.keys(card.idea_card).length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-xl font-bold mb-2">Idea card (intake one-pager)</h2>
+          <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
+            The structured intake for this idea. The ⚑ fields are gate-critical: a card cannot pass
+            its review gates while they are blank or hand-wavy — a named demand_evidence (not &ldquo;a
+            market&rdquo;), build-vs-buy architecture, lane + distributor (Rule&nbsp;15), and the
+            go/no-go decisions.
+          </p>
+          <dl className="space-y-3">
+            {IDEA_CARD_FIELDS.filter((f) => card.idea_card?.[f.key]).map((f) => (
+              <div
+                key={f.key}
+                className={`rounded-lg border p-4 ${
+                  f.critical ? 'border-accent/30 bg-accent/5' : 'border-gray-border bg-gray-dark/40'
+                }`}
+              >
+                <dt className="text-xs uppercase tracking-wider text-accent font-medium mb-1">
+                  {f.critical && <span title="Gate-critical">⚑ </span>}
+                  {f.label}
+                </dt>
+                <dd className="text-sm text-gray-light whitespace-pre-wrap">{card.idea_card![f.key]}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       )}
 
@@ -305,6 +399,80 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
             mvp_ready: card.mvp_ready,
           }}
         />
+      </section>
+
+      {/* Gate ledger — the PASS/FAIL record the EXECUTION actions read + refuse against. */}
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-2">Gate ledger</h2>
+        <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
+          The recorded gate results for this product — the single source of truth the execution path
+          reads. The thin-MVP creator runs freely; <strong className="text-white">scale-infra</strong>{' '}
+          (multi-tenant / billing / white-label / domain) is refused until a Gate-2 GO, and{' '}
+          <strong className="text-white">sharing a product URL</strong> is refused until a{' '}
+          <code className="text-accent">naive-tester</code> PASS is bound to what production is serving now.
+        </p>
+        {/* Derived "what's unlocked" summary from the card flags. */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-4">
+            <p className="text-xs uppercase tracking-wider text-gray-light/70 mb-1">Scale-infra (multi-tenant / domain)</p>
+            <p className={`text-sm font-semibold ${card.gate2_go ? 'text-emerald-300' : 'text-red-300'}`}>
+              {card.gate2_go ? 'UNLOCKED — Gate-2 GO recorded' : 'BLOCKED — no Gate-2 GO'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-border bg-gray-dark/40 p-4">
+            <p className="text-xs uppercase tracking-wider text-gray-light/70 mb-1">Thin-MVP build &amp; deploy</p>
+            <p className="text-sm font-semibold text-emerald-300">
+              Always allowed — its live link is the Gate-1 outreach payload
+            </p>
+          </div>
+        </div>
+        {gateRecords.length === 0 ? (
+          <p className="rounded-lg border border-gray-border bg-gray-dark/40 p-4 text-sm text-gray-light/70">
+            No gate results recorded yet. Each gate writes its PASS/FAIL here as the card advances
+            (office-hours design doc, CEO/eng/design review logs, the thin-MVP Gate-1, the Gate-2 GO,
+            and the <code className="text-accent">naive-tester</code> Standards Check).
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {gateRecords.map((g) => (
+              <div
+                key={g.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gray-border bg-gray-dark/40 px-4 py-3"
+              >
+                <span className="text-sm font-mono text-white">{g.gate}</span>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded uppercase tracking-wider ${
+                    g.status === 'pass' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+                  }`}
+                >
+                  {g.status}
+                </span>
+                {g.is_override && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 uppercase tracking-wider">
+                    override
+                  </span>
+                )}
+                {g.deployment_id && (
+                  <span className="text-xs text-gray-light/60 font-mono" title="Bound to this production deployment">
+                    {g.deployment_id.slice(0, 16)}…
+                  </span>
+                )}
+                {g.commit_sha && (
+                  <span className="text-xs text-gray-light/60 font-mono">{g.commit_sha.slice(0, 7)}</span>
+                )}
+                <span className="ml-auto text-xs text-gray-light/50">
+                  {new Date(g.created_at).toLocaleString()} · {g.recorded_by}
+                </span>
+                {(g.artifact_ref || g.reason) && (
+                  <p className="w-full text-xs text-gray-light/70 mt-1">
+                    {g.artifact_ref && <span className="font-mono">{g.artifact_ref}</span>}
+                    {g.reason && <span className="italic"> — {g.reason}</span>}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Promise bars — the ratified "I want that" definition (THIN_MVP_RUBRIC v2 §7,

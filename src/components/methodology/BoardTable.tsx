@@ -16,6 +16,33 @@ export interface BoardCard {
   mvp_ready: boolean | null
   mvp_url: string | null
   archived_at: string | null
+  build_type: string | null
+}
+
+// The first gate — short labels for the board (full labels on the detail page).
+const BUILD_TYPE_SHORT: Record<string, string> = {
+  'product': 'Product',
+  'shared-service': 'Shared',
+  'infra-product-candidate': 'Infra/PC',
+}
+const BUILD_TYPE_COLOR: Record<string, string> = {
+  'product': 'bg-accent/20 text-accent',
+  'shared-service': 'bg-blue-500/20 text-blue-300',
+  'infra-product-candidate': 'bg-purple-500/20 text-purple-300',
+}
+
+function BuildTypeBadge({ buildType }: { buildType: string | null }) {
+  if (!buildType) return <span className="text-sm text-gray-light/40">—</span>
+  return (
+    <span
+      className={`text-sm px-2 py-1 rounded uppercase tracking-wider ${
+        BUILD_TYPE_COLOR[buildType] ?? 'bg-gray-mid/40 text-gray-light'
+      }`}
+      title="Build type — the first gate; it routes the gate path."
+    >
+      {BUILD_TYPE_SHORT[buildType] ?? buildType}
+    </span>
+  )
 }
 
 interface Props {
@@ -148,6 +175,7 @@ export function BoardTable({ cards }: Props) {
             <thead>
               <tr className="border-b border-gray-border text-left text-sm uppercase tracking-wider text-gray-light/70">
                 <th className="py-3 px-3">Product</th>
+                <th className="py-3 px-3">Type</th>
                 <th className="py-3 px-3">Stage</th>
                 <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-3">Build</th>
@@ -221,6 +249,7 @@ function BoardRowDesktop({ card, onArchiveChange }: { card: BoardCard; onArchive
           <span className="ml-2 font-mono text-sm text-gray-light/60">{card.product_slug}</span>
         </Link>
       </td>
+      <td className="py-3 px-3"><BuildTypeBadge buildType={card.build_type} /></td>
       <td className="py-3 px-3 text-sm text-gray-light">{card.pipeline_stage ?? 'ideation'}</td>
       <td className="py-3 px-3">
         <span className="text-sm px-2 py-1 rounded bg-accent/10 text-accent uppercase tracking-wider">
@@ -262,6 +291,7 @@ function BoardRowDesktop({ card, onArchiveChange }: { card: BoardCard; onArchive
 function BoardCardMobile({ card, onArchiveChange }: { card: BoardCard; onArchiveChange: () => void }) {
   const { pending, err, archived, toggle } = useArchive(card, onArchiveChange)
   const rows: { label: string; value: React.ReactNode }[] = [
+    { label: 'Type', value: <BuildTypeBadge buildType={card.build_type} /> },
     { label: 'Stage', value: card.pipeline_stage ?? 'ideation' },
     {
       label: 'Status',

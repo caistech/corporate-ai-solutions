@@ -33,6 +33,7 @@ interface HypothesisCard {
   archived_at: string | null
   intake_source: string | null
   inbox: boolean | null
+  build_type: string | null
 }
 
 export default async function MethodologyIndexPage() {
@@ -41,7 +42,7 @@ export default async function MethodologyIndexPage() {
   const { data, error } = await supabase
     .from('methodology_hypothesis_cards')
     .select(
-      'id, product_slug, origin_summary, status, hypothesis_rows, updated_at, build_status, mvp_ready, mvp_url, monetisation_lane, pipeline_stage, archived_at, intake_source, inbox'
+      'id, product_slug, origin_summary, status, hypothesis_rows, updated_at, build_status, mvp_ready, mvp_url, monetisation_lane, pipeline_stage, archived_at, intake_source, inbox, build_type'
     )
     .order('updated_at', { ascending: false })
 
@@ -102,6 +103,7 @@ export default async function MethodologyIndexPage() {
     mvp_ready: c.mvp_ready,
     mvp_url: c.mvp_url,
     archived_at: c.archived_at,
+    build_type: c.build_type,
   }))
 
   // RULE 16 — the intake WIP gate. Computed from the on-board cards (inbox
