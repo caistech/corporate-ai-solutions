@@ -139,3 +139,7 @@ CLAUDE.local.md
 # Never commit anything in this folder.
 # ===========================================
 docs/dennis cmmahon future files/
+.gstack/
+
+# Generated QA / naive-tester walkthrough reports
+naive-tester-reports/
