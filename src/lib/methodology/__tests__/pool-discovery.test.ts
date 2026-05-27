@@ -138,6 +138,52 @@ describe('deriveStreamSpec', () => {
     expect(end.campaign_type).toBe('target-user')
     expect(dist.questions).toEqual(['q1', 'q2'])
   })
+
+  // Resilience — a single transient hiccup must not throw (it would 502 the whole dual-stream
+  // launch, since pools/launch derives both streams via Promise.all). Observed failure mode:
+  // ECONNRESET on the Anthropic fetch (~21% on a home network), plus rare unparseable output.
+  it('retries a transient LLM network failure, then succeeds', async () => {
+    let calls = 0
+    const flaky: PoolDiscoveryDeps = {
+      search: async () => [],
+      complete: async () => {
+        calls++
+        if (calls === 1) throw new Error('fetch failed: ECONNRESET')
+        return '{"icp_description":"Owners of singing academies in AU","questions":["q1","q2"]}'
+      },
+    }
+    const spec = await deriveStreamSpec('distributor', 'singing schools', flaky)
+    expect(calls).toBe(2) // first attempt threw, second succeeded
+    expect(spec.campaign_type).toBe('distributor-candidate')
+    expect(spec.questions).toEqual(['q1', 'q2'])
+  })
+
+  it('retries an unparseable generation, then succeeds', async () => {
+    let calls = 0
+    const flaky: PoolDiscoveryDeps = {
+      search: async () => [],
+      complete: async () => {
+        calls++
+        return calls === 1 ? 'no json here at all' : '{"icp_description":"Owners of singing academies in AU","questions":["q1"]}'
+      },
+    }
+    const spec = await deriveStreamSpec('end-user', 'amateur singers', flaky)
+    expect(calls).toBe(2)
+    expect(spec.campaign_type).toBe('target-user')
+  })
+
+  it('throws after exhausting retries on a persistent failure (degrade, don\'t hang)', async () => {
+    let calls = 0
+    const broken: PoolDiscoveryDeps = {
+      search: async () => [],
+      complete: async () => {
+        calls++
+        throw new Error('ECONNRESET')
+      },
+    }
+    await expect(deriveStreamSpec('distributor', 'x', broken)).rejects.toThrow(/ECONNRESET/)
+    expect(calls).toBe(3) // capped at 3 attempts
+  })
 })
 
 describe('summariseAssessment', () => {

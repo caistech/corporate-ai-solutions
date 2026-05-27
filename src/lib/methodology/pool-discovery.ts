@@ -219,6 +219,34 @@ async function defaultComplete(prompt: string): Promise<string> {
   return text
 }
 
+/**
+ * Run an LLM produce→parse with retries. Covers BOTH a transient network throw (ECONNRESET on
+ * the Anthropic fetch — the dominant observed failure) AND a rare unparseable generation. Without
+ * this a single hiccup throws, and since pools/launch derives both streams via Promise.all, one
+ * hiccup 502s the entire dual-stream launch. Returns the parsed value, or throws the LAST error
+ * (wording preserved: `Failed to parse <label>. Raw: …`) after `attempts` tries.
+ */
+async function completeAndParse<T>(
+  produce: () => Promise<string>,
+  parse: (raw: string) => T | null,
+  label: string,
+  attempts = 3
+): Promise<T> {
+  let lastErr = `Failed to parse ${label}.`
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const raw = await produce()
+      const parsed = parse(raw)
+      if (parsed) return parsed
+      lastErr = `Failed to parse ${label}. Raw: ${raw.slice(0, 400)}`
+    } catch (e) {
+      lastErr = (e as Error).message
+    }
+    if (i < attempts) await new Promise((r) => setTimeout(r, 250 * i)) // brief backoff between tries
+  }
+  throw new Error(lastErr)
+}
+
 // ── orchestration ───────────────────────────────────────────────────────────
 
 /** Gather web evidence for a pool hypothesis (deduped by URL). */
@@ -240,9 +268,12 @@ export async function gatherPoolEvidence(hypothesis: string, deps?: PoolDiscover
 export async function assessPool(kind: PoolKind, hypothesis: string, deps?: PoolDiscoveryDeps): Promise<PoolAssessment> {
   const complete = deps?.complete ?? defaultComplete
   const evidence = await gatherPoolEvidence(hypothesis, deps)
-  const raw = await complete(buildAssessPrompt(kind, hypothesis, evidence))
-  const parsed = parsePoolAssessment(raw)
-  if (!parsed) throw new Error(`Failed to parse pool assessment. Raw: ${raw.slice(0, 400)}`)
+  // Retry only the LLM call+parse — evidence is gathered once, outside the retry.
+  const parsed = await completeAndParse(
+    () => complete(buildAssessPrompt(kind, hypothesis, evidence)),
+    parsePoolAssessment,
+    'pool assessment'
+  )
   return { kind, hypothesis, ...parsed, evidence, evidence_count: evidence.length }
 }
 
@@ -261,9 +292,11 @@ export async function assessBothPools(
 /** Phase 3 — derive an InvestorPilot stream spec (ICP + questions) from an agreed pool. */
 export async function deriveStreamSpec(kind: PoolKind, hypothesis: string, deps?: PoolDiscoveryDeps): Promise<StreamSpec> {
   const complete = deps?.complete ?? defaultComplete
-  const raw = await complete(buildStreamSpecPrompt(kind, hypothesis))
-  const parsed = parseStreamSpec(raw)
-  if (!parsed) throw new Error(`Failed to parse stream spec. Raw: ${raw.slice(0, 400)}`)
+  const parsed = await completeAndParse(
+    () => complete(buildStreamSpecPrompt(kind, hypothesis)),
+    parseStreamSpec,
+    'stream spec'
+  )
   return { campaign_type: POOL_TO_CAMPAIGN[kind], ...parsed }
 }
 
