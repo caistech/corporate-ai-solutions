@@ -195,7 +195,7 @@ export function PoolDiscoveryPanel({
             type="button"
             onClick={() => setConfirmOpen(true)}
             disabled={!poolsCaptured || launching}
-            className="min-h-[44px] w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+            className="min-h-[44px] w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:bg-gray-border disabled:text-gray-light/60 disabled:cursor-not-allowed sm:w-auto"
           >
             {launching ? 'Launching…' : 'Launch both streams'}
           </button>
