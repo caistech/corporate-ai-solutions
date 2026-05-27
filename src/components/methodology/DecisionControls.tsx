@@ -108,6 +108,11 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
 
   // Prefer the evidence (Gate 2) proposal when present; else the hypothesis (Gate 0) baseline.
   const shown: Proposal | null = proposal ? proposal.evidence ?? proposal.hypothesis : null
+  // The cockpit decision the proposal pre-fills — its label is what the operator must see as the
+  // recommendation, so the headline agrees with the highlighted "proposed" button (the proposer's
+  // own `suggested.label` is demoted to band rationale; a REDESIGN band maps to KEEP VALIDATING,
+  // NOT the terminally-named "GO (redesign to fit)" button — surfacing the raw label contradicted it).
+  const recommendedDecision = recommended ? DECISIONS.find((d) => d.value === recommended) ?? null : null
 
   const runPropose = () => {
     setProposeErr(null)
@@ -243,8 +248,11 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm text-white">{d.label}</span>
                       <span className="text-sm font-mono text-accent">
-                        {d.missing ? '—' : `${d.score}/10`}
+                        {d.missing ? 'not scored' : `${d.score}/10`}
                         {d.key !== 'onsell' && <span className="text-gray-light/40"> · w{d.weight}</span>}
+                        {!d.missing && j?.confidence && (
+                          <span className="text-gray-light/40"> · {j.confidence} conf</span>
+                        )}
                       </span>
                     </div>
                     {j?.rationale && <p className="mt-1 text-sm text-gray-light/70">{j.rationale}</p>}
@@ -253,10 +261,27 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
               })}
             </ul>
 
+            <p className="text-sm text-gray-light/50">
+              Composite = weighted average of pain · gap · reach · build-fit (the weights shown). Onsell
+              is the §5 hard gate (pass/fail), scored but not folded into the composite. A dimension shown
+              as &ldquo;not scored&rdquo; was counted as 0 (prove, don&rsquo;t assume), not skipped.
+            </p>
+
             <p className="text-sm text-gray-light">
               <span className="text-gray-light/60">Recommends:</span>{' '}
-              <span className="text-white">{shown.suggested.label}</span>
-              {recommended && ' — pre-filled below; review the reason, then confirm.'}
+              {recommendedDecision ? (
+                <>
+                  <span className="text-white">{recommendedDecision.label}</span>
+                  <span className="text-gray-light/60">
+                    {' '}— {shown.score.band} band ({shown.suggested.label}). Pre-filled below; review the reason, then confirm.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-white">{shown.suggested.label}</span>
+                  <span className="text-gray-light/60"> — no matching decision button; choose one below.</span>
+                </>
+              )}
             </p>
           </div>
         )}
