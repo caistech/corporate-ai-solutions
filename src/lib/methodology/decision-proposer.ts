@@ -251,9 +251,25 @@ async function defaultJudge(prompt: string): Promise<string> {
  */
 export async function proposeDecision(input: ProposerInput, deps?: ProposerDeps): Promise<DecisionProposal> {
   const judge = deps?.judge ?? defaultJudge
-  const raw = await judge(buildJudgePrompt(input))
-  const judged = parseJudgedDimensions(raw, input.mode)
-  if (!judged) throw new Error(`Failed to parse judged dimensions. Raw: ${raw.slice(0, 400)}`)
+  const prompt = buildJudgePrompt(input)
+
+  // Retry the judge call+parse — a single transient hiccup (ECONNRESET on the Anthropic fetch,
+  // or a rare unparseable generation) must not fail the proposal. Same resilience pattern as
+  // pool-discovery's completeAndParse (measured: ~21% ECONNRESET per call on a home network).
+  let judged: JudgedDimensions | null = null
+  let lastErr = 'Failed to parse judged dimensions.'
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const raw = await judge(prompt)
+      judged = parseJudgedDimensions(raw, input.mode)
+      if (judged) break
+      lastErr = `Failed to parse judged dimensions. Raw: ${raw.slice(0, 400)}`
+    } catch (e) {
+      lastErr = (e as Error).message
+    }
+    if (attempt < 3) await new Promise((r) => setTimeout(r, 250 * attempt)) // brief backoff
+  }
+  if (!judged) throw new Error(lastErr)
 
   const carried = input.mode === 'evidence' ? { build_fit: input.buildFit } : undefined
   const dimensions = judgedToDimensionInputs(judged, carried)

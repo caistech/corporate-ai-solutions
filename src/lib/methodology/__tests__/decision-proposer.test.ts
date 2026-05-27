@@ -178,4 +178,31 @@ describe('proposeDecision (orchestration with an injected judge)', () => {
   it('throws when the judge returns unparseable output', async () => {
     await expect(proposeDecision(evidenceInput(), judgeReturning('no json'))).rejects.toThrow(/Failed to parse/)
   })
+
+  it('retries a transient judge failure, then succeeds (a hiccup must not fail the proposal)', async () => {
+    let calls = 0
+    const flaky = {
+      judge: async () => {
+        calls++
+        if (calls === 1) throw new Error('fetch failed: ECONNRESET')
+        return fourDims({ pain: 9, gap: 8, onsell: 8, reach: 8 })
+      },
+    }
+    const proposal = await proposeDecision(evidenceInput(), flaky)
+    expect(calls).toBe(2) // first attempt threw, second succeeded
+    expect(proposal.score.band).toBe('GO')
+  })
+
+  it('retries an unparseable judge generation, then succeeds', async () => {
+    let calls = 0
+    const flaky = {
+      judge: async () => {
+        calls++
+        return calls === 1 ? 'no json here' : fourDims({ pain: 9, gap: 8, onsell: 8, reach: 8 })
+      },
+    }
+    const proposal = await proposeDecision(evidenceInput(), flaky)
+    expect(calls).toBe(2)
+    expect(proposal.score.band).toBe('GO')
+  })
 })

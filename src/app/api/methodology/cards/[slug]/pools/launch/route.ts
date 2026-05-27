@@ -89,7 +89,9 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
     try {
       const r = await fetch(`${appUrl}/api/methodology/cards/${params.slug}/validate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // Forward the operator's session cookie — validate is now operator-gated by middleware,
+        // and this server-to-server call would otherwise arrive without auth and self-401.
+        headers: { 'Content-Type': 'application/json', Cookie: request.headers.get('cookie') ?? '' },
         body: JSON.stringify({
           campaign_type: spec.campaign_type,
           icp_description: spec.icp_description,
