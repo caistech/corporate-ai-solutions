@@ -27,7 +27,7 @@
       "url": "",
       "steps": [
         "Confirm ANTHROPIC_API_KEY is present (it is — pool-discovery uses it): node ~/PycharmProjects/cais-shared-services/scripts/feature-preflight.mjs --feature evidence-decision.",
-        "No package install, no dashboard registration, no migration required for the logic-first foundation. A snapshot/persist table for the proposal (if we persist proposals) is decided at the route-wiring step, not the foundation."
+        "No package install, no dashboard registration. The proposal IS persisted (decided + done at the route-wiring step): migration supabase/migrations/20260527100000_methodology_proposals.sql adds the methodology_proposals snapshot table (RLS on, service-role only, applied via CLI). It uses the existing service-role key — no new env var. The card detail loads the latest snapshot server-side so the LLM pass survives reload + leaves an audit trail; re-scoring is on-demand with stale-marking (THIN_MVP_RUBRIC §6 #7)."
       ]
     }
   ]

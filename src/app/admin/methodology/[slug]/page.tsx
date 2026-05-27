@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
-import { DecisionControls } from '@/components/methodology/DecisionControls'
+import { DecisionControls, type ProposeResponse, type ProposalMeta } from '@/components/methodology/DecisionControls'
 import { CockpitControls } from '@/components/methodology/CockpitControls'
 import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
 import { IdeaCardEditor } from '@/components/methodology/IdeaCardEditor'
@@ -202,6 +202,26 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
     .order('response_received_at', { ascending: false })
 
   const responses = (responsesData ?? []) as Response[]
+
+  // Build #3 — the latest persisted proposal snapshot, loaded server-side so the LLM pass
+  // survives reload (no re-billing). Stale when more interviews have landed since it was scored.
+  const { data: proposalSnap } = await supabase
+    .from('methodology_proposals')
+    .select('payload, created_at, interview_total')
+    .eq('product_slug', params.slug)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const initialProposal = (proposalSnap?.payload as ProposeResponse | undefined) ?? null
+  const initialProposalMeta: ProposalMeta | null = proposalSnap
+    ? {
+        createdAt: proposalSnap.created_at as string,
+        stale: (proposalSnap.interview_total as number) !== responses.length,
+        snapshotInterviewTotal: proposalSnap.interview_total as number,
+        currentInterviewTotal: responses.length,
+      }
+    : null
 
   const hypothesisRows = card.hypothesis_rows ?? []
   const responsesByCampaign = new Map<string, Response[]>()
@@ -680,6 +700,8 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
           productSlug={card.product_slug}
           currentStatus={card.status}
           currentReason={card.decision_reason}
+          initialProposal={initialProposal}
+          initialProposalMeta={initialProposalMeta}
         />
       </section>
 

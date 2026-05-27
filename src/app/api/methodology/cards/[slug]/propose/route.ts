@@ -85,6 +85,41 @@ function withRecommendedStatus(p: DecisionProposal) {
   return { ...p, recommended_status: ACTION_TO_STATUS[p.suggested.action] }
 }
 
+type ProposalWithStatus = ReturnType<typeof withRecommendedStatus>
+interface ProposePayload {
+  hypothesis: ProposalWithStatus
+  evidence: ProposalWithStatus | null
+  evidence_error?: string
+  interview_counts: { distributor: number; end_user: number }
+}
+
+/**
+ * Persist the proposal as a snapshot (Build #3 — methodology_proposals). The card detail loads
+ * the latest snapshot so the LLM pass survives reload + leaves an audit trail; re-scoring is
+ * on-demand (THIN_MVP_RUBRIC §6 #7). Best-effort: a persist failure must NOT fail the operator's
+ * scoring — the proposal is still returned; we just log the miss.
+ */
+async function persistProposal(
+  supabase: ReturnType<typeof supabaseAdmin>,
+  card: { id: string; product_slug: string },
+  payload: ProposePayload,
+  interviewTotal: number
+): Promise<void> {
+  const shown = payload.evidence ?? payload.hypothesis
+  const { error } = await supabase.from('methodology_proposals').insert({
+    card_id: card.id,
+    product_slug: card.product_slug,
+    shown_mode: shown.mode,
+    band: shown.score.band,
+    composite: shown.score.composite,
+    onsell_gate_passed: shown.score.gate.passed,
+    recommended_status: shown.recommended_status ?? null,
+    interview_total: interviewTotal,
+    payload,
+  })
+  if (error) console.error('[propose] snapshot persist failed (non-fatal):', error)
+}
+
 export async function POST(_request: NextRequest, { params }: { params: { slug: string } }) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
@@ -180,21 +215,22 @@ export async function POST(_request: NextRequest, { params }: { params: { slug: 
     } catch (e) {
       console.error('[propose] evidence pass failed:', e)
       // The hypothesis proposal still stands — surface it, flag the evidence failure.
-      return NextResponse.json(
-        {
-          hypothesis: withRecommendedStatus(hypothesis),
-          evidence: null,
-          evidence_error: `Evidence scoring failed: ${(e as Error).message}`,
-          interview_counts: { distributor: distResponses.length, end_user: euResponses.length },
-        },
-        { status: 207 }
-      )
+      const payload: ProposePayload = {
+        hypothesis: withRecommendedStatus(hypothesis),
+        evidence: null,
+        evidence_error: `Evidence scoring failed: ${(e as Error).message}`,
+        interview_counts: { distributor: distResponses.length, end_user: euResponses.length },
+      }
+      await persistProposal(supabase, card, payload, totalResponses)
+      return NextResponse.json(payload, { status: 207 })
     }
   }
 
-  return NextResponse.json({
+  const payload: ProposePayload = {
     hypothesis: withRecommendedStatus(hypothesis),
     evidence: evidence ? withRecommendedStatus(evidence) : null,
     interview_counts: { distributor: distResponses.length, end_user: euResponses.length },
-  })
+  }
+  await persistProposal(supabase, card, payload, totalResponses)
+  return NextResponse.json(payload)
 }

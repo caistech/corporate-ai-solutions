@@ -8,6 +8,9 @@ interface Props {
   productSlug: string
   currentStatus: string
   currentReason: string | null
+  /** The latest persisted proposal (Build #3) — loaded server-side so it survives reload. */
+  initialProposal?: ProposeResponse | null
+  initialProposalMeta?: ProposalMeta | null
 }
 
 type Decision =
@@ -32,11 +35,20 @@ interface Proposal {
   suggested: { gate: string; action: string; label: string }
   recommended_status: string
 }
-interface ProposeResponse {
+export interface ProposeResponse {
   hypothesis: Proposal
   evidence: Proposal | null
   evidence_error?: string
   interview_counts: { distributor: number; end_user: number }
+}
+
+/** Snapshot metadata the server passes alongside a persisted proposal (Build #3 persistence). */
+export interface ProposalMeta {
+  createdAt: string
+  /** True when more interviews have landed since the snapshot was scored — prompts a re-score. */
+  stale: boolean
+  snapshotInterviewTotal: number
+  currentInterviewTotal: number
 }
 
 const BAND_STYLE: Record<Band, string> = {
@@ -61,6 +73,13 @@ function proposalReason(p: Proposal): string {
     .join(', ')
   const gate = `onsell ${p.score.gate.score}/10 ${p.score.gate.passed ? 'pass' : 'FAIL'}${p.score.gate.overridden ? ' (overridden)' : ''}`
   return `[${p.mode} · ${p.score.band} ${p.score.composite}/10] ${gate}; ${dims}.`
+}
+
+/** The cockpit decision a proposal recommends, if its recommended_status maps to a button. */
+function recommendedFrom(json: ProposeResponse): Decision | null {
+  const p = json.evidence ?? json.hypothesis
+  const rec = p?.recommended_status as Decision | undefined
+  return rec && VALID_DECISIONS.has(rec) ? rec : null
 }
 
 const DECISIONS: { value: Decision; label: string; description: string; terminal: boolean }[] = [
@@ -90,21 +109,35 @@ const DECISIONS: { value: Decision; label: string; description: string; terminal
   },
 ]
 
-export function DecisionControls({ productSlug, currentStatus, currentReason }: Props) {
+export function DecisionControls({
+  productSlug,
+  currentStatus,
+  currentReason,
+  initialProposal,
+  initialProposalMeta,
+}: Props) {
   const router = useRouter()
-  const [reason, setReason] = useState(currentReason ?? '')
+  // Pre-fill the reason from the persisted proposal only when the operator hasn't recorded one.
+  const [reason, setReason] = useState(
+    currentReason ?? (initialProposal ? proposalReason(initialProposal.evidence ?? initialProposal.hypothesis) : '')
+  )
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   // The terminal decision awaiting confirmation (null = no dialog open).
   const [pendingDecision, setPendingDecision] = useState<Decision | null>(null)
 
-  // Build #3 — harness proposal state.
+  // Build #3 — harness proposal state. Hydrated from the latest persisted snapshot so the LLM
+  // pass survives reload (no re-billing) and shows the operator what the machine last proposed.
   const [proposing, setProposing] = useState(false)
   const [proposeErr, setProposeErr] = useState<string | null>(null)
-  const [proposal, setProposal] = useState<ProposeResponse | null>(null)
+  const [proposal, setProposal] = useState<ProposeResponse | null>(initialProposal ?? null)
   // The decision the proposal recommends — highlighted, and used to pre-fill the reason.
-  const [recommended, setRecommended] = useState<Decision | null>(null)
+  const [recommended, setRecommended] = useState<Decision | null>(
+    initialProposal ? recommendedFrom(initialProposal) : null
+  )
+  // Snapshot metadata (when scored + staleness) — null until a proposal exists.
+  const [meta, setMeta] = useState<ProposalMeta | null>(initialProposalMeta ?? null)
 
   // Prefer the evidence (Gate 2) proposal when present; else the hypothesis (Gate 0) baseline.
   const shown: Proposal | null = proposal ? proposal.evidence ?? proposal.hypothesis : null
@@ -119,6 +152,7 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
     setProposing(true)
     setProposal(null)
     setRecommended(null)
+    setMeta(null)
     ;(async () => {
       try {
         const res = await fetch(`/api/methodology/cards/${productSlug}/propose`, { method: 'POST' })
@@ -128,9 +162,12 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
           return
         }
         setProposal(json)
+        // A fresh score is current — persisted server-side; mirror that here so the panel reflects it.
+        const total = (json.interview_counts?.distributor ?? 0) + (json.interview_counts?.end_user ?? 0)
+        setMeta({ createdAt: new Date().toISOString(), stale: false, snapshotInterviewTotal: total, currentInterviewTotal: total })
         const p = json.evidence ?? json.hypothesis
-        const rec = p?.recommended_status as Decision | undefined
-        if (rec && VALID_DECISIONS.has(rec)) {
+        const rec = recommendedFrom(json)
+        if (rec) {
           setRecommended(rec)
           setReason(proposalReason(p)) // pre-fill — the operator still confirms
         }
@@ -209,7 +246,7 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
             title="Run the §5 demand scorer over recorded evidence and propose a decision (incurs LLM cost; fires no outreach)."
             className="min-h-[44px] shrink-0 rounded-lg border border-accent/50 bg-accent/10 px-4 py-2 text-sm text-accent hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {proposing ? 'Scoring…' : 'Propose decision'}
+            {proposing ? 'Scoring…' : proposal ? (meta?.stale ? 'Re-score (stale)' : 'Re-score') : 'Propose decision'}
           </button>
         </div>
 
@@ -222,6 +259,18 @@ export function DecisionControls({ productSlug, currentStatus, currentReason }: 
 
         {shown && (
           <div className="mt-4 space-y-3">
+            {meta && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-gray-light/50">Scored {new Date(meta.createdAt).toLocaleString()}</span>
+                {meta.stale ? (
+                  <span className="rounded bg-yellow-500/15 px-2 py-0.5 text-yellow-200">
+                    Stale — {meta.currentInterviewTotal} interviews now vs {meta.snapshotInterviewTotal} when scored; re-score to refresh.
+                  </span>
+                ) : (
+                  <span className="rounded bg-gray-mid/30 px-2 py-0.5 text-gray-light/50">saved · survives reload</span>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm uppercase tracking-wider text-gray-light/60">
                 {shown.mode === 'evidence' ? 'Gate 2 · evidence' : 'Gate 0 · desk hypothesis'}
