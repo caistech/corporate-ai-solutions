@@ -45,6 +45,14 @@ function BuildTypeBadge({ buildType }: { buildType: string | null }) {
   )
 }
 
+// Operator-facing labels for the raw status values — "dialogue-complete" read as insider
+// jargon to a first-time operator (naive-tester nitpick, 2026-05-27). Display only; the stored
+// status value is unchanged.
+const STATUS_LABEL: Record<string, string> = {
+  'dialogue-complete': 'intake complete',
+}
+const statusLabel = (status: string): string => STATUS_LABEL[status] ?? status
+
 interface Props {
   cards: BoardCard[]
 }
@@ -255,7 +263,7 @@ function BoardRowDesktop({ card, onArchiveChange }: { card: BoardCard; onArchive
       <td className="py-3 px-3 text-sm text-gray-light">{card.pipeline_stage ?? 'ideation'}</td>
       <td className="py-3 px-3">
         <span className="text-sm px-2 py-1 rounded bg-accent/10 text-accent uppercase tracking-wider">
-          {card.status}
+          {statusLabel(card.status)}
         </span>
       </td>
       <td className="py-3 px-3 text-sm text-gray-light">{card.build_status ?? 'none'}</td>
@@ -299,7 +307,7 @@ function BoardCardMobile({ card, onArchiveChange }: { card: BoardCard; onArchive
       label: 'Status',
       value: (
         <span className="text-sm px-2 py-0.5 rounded bg-accent/10 text-accent uppercase tracking-wider">
-          {card.status}
+          {statusLabel(card.status)}
         </span>
       ),
     },

@@ -53,6 +53,16 @@ export function PoolDiscoveryPanel({
   const euOk = (endUserPool ?? '').trim().length >= MIN
   const poolsCaptured = distOk && euOk
 
+  // Per-button hint surfaced as a native tooltip + aria-label, so a disabled button says WHY
+  // (naive-tester finding: disabled buttons were silent on hover), and the live ones state their
+  // consequence at the point of action — not only in the header 200px up.
+  const gateHint = poolsCaptured
+    ? null
+    : "Capture both pools on the idea card first — a product can't validate without them."
+  const assessHint = gateHint ?? 'Gather web evidence and assess whether each pool is real and reachable (incurs Brave + LLM API cost; no outreach).'
+  const previewHint = gateHint ?? 'Derive each stream’s ICP + questions from the agreed pools — preview only, fires nothing.'
+  const launchHint = gateHint ?? 'Fires REAL InvestorPilot outreach + API cost — you confirm first.'
+
   const [assessing, startAssess] = useTransition()
   const [assessment, setAssessment] = useState<AssessResponse | null>(null)
   const [previewing, startPreview] = useTransition()
@@ -143,7 +153,7 @@ export function PoolDiscoveryPanel({
     <section className="mb-10">
       <h2 className="text-xl font-bold mb-2">Pool discovery</h2>
       {/* Explanatory header — what / do / why. */}
-      <p className="mb-4 text-sm text-gray-light/80 max-w-2xl">
+      <p className="mb-4 text-base md:text-sm text-gray-light/80 max-w-2xl">
         The two research pools (captured above via the office-hours dialogue) are pressure-tested
         here: assess checks each is a real, reachable population and proposes a sharper one if not;
         launch then derives each stream&rsquo;s ICP + questions from the agreed pools and creates both
@@ -159,8 +169,8 @@ export function PoolDiscoveryPanel({
             ['end-user', 'End-user pool (who would use)', endUserPool, euOk],
           ] as const).map(([kind, label, value, ok]) => (
             <div key={kind} className="rounded border border-gray-border/60 bg-black/20 p-3">
-              <p className="text-xs uppercase tracking-wider text-accent font-medium mb-1">{label}</p>
-              <p className={`text-sm ${ok ? 'text-white' : 'text-yellow-300/90'}`}>
+              <p className="text-sm uppercase tracking-wider text-accent font-medium mb-1">{label}</p>
+              <p className={`text-base md:text-sm ${ok ? 'text-white' : 'text-yellow-300/90'}`}>
                 {ok ? value : 'Not captured — run the office-hours dialogue (Talk to Morgan) and save it on the idea card above.'}
               </p>
             </div>
@@ -168,7 +178,7 @@ export function PoolDiscoveryPanel({
         </div>
 
         {!poolsCaptured && (
-          <p className="rounded border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
+          <p className="rounded border border-yellow-500/30 bg-yellow-500/10 p-3 text-base md:text-sm text-yellow-200">
             Capture both pools on the idea card before assessing — a product can&rsquo;t validate without them.
           </p>
         )}
@@ -179,6 +189,8 @@ export function PoolDiscoveryPanel({
             type="button"
             onClick={runAssess}
             disabled={!poolsCaptured || assessing}
+            title={assessHint}
+            aria-label={assessHint}
             className="min-h-[44px] w-full rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
           >
             {assessing && !acceptingKind ? 'Assessing…' : 'Assess pools (Brave + LLM)'}
@@ -187,6 +199,8 @@ export function PoolDiscoveryPanel({
             type="button"
             onClick={runPreview}
             disabled={!poolsCaptured || previewing}
+            title={previewHint}
+            aria-label={previewHint}
             className="min-h-[44px] w-full rounded-lg border border-gray-border bg-black/20 px-4 py-2 text-sm hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
           >
             {previewing ? 'Deriving…' : 'Preview derived streams'}
@@ -195,11 +209,18 @@ export function PoolDiscoveryPanel({
             type="button"
             onClick={() => setConfirmOpen(true)}
             disabled={!poolsCaptured || launching}
+            title={launchHint}
+            aria-label={launchHint}
             className="min-h-[44px] w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black hover:bg-accent/90 transition-colors disabled:bg-gray-border disabled:text-gray-light/60 disabled:cursor-not-allowed sm:w-auto"
           >
             {launching ? 'Launching…' : 'Launch both streams'}
           </button>
         </div>
+        {/* Consequence at the point of action (not only in the header) — naive-tester finding. */}
+        <p className="text-sm text-gray-light/60">
+          <span className="text-yellow-300/90">Launch</span> fires real InvestorPilot outreach + API cost — you confirm first.
+          Assess + Preview cost only a little API and fire no outreach.
+        </p>
         {err && <p className="text-sm text-red-300">Error: {err}</p>}
 
         {/* Assessment results */}

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { CorporateHeader } from '@/components/corporate/CorporateHeader'
 import { CorporateFooter } from '@/components/corporate/CorporateFooter'
 import { VoiceAgent } from '@/components/voice/VoiceAgent'
+import { SiteChrome } from '@/components/layout/SiteChrome'
 import { NAV_ITEMS, FOOTER_LINKS } from '@/lib/constants'
 import '@/styles/globals.css'
 
@@ -29,20 +30,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <CorporateHeader
-          productName="Corporate AI Solutions"
-          productAcronym="CA"
-          navItems={NAV_ITEMS}
-          theme="dark"
-          LinkComponent={Link}
-        />
+        <SiteChrome>
+          <CorporateHeader
+            productName="Corporate AI Solutions"
+            productAcronym="CA"
+            navItems={NAV_ITEMS}
+            theme="dark"
+            LinkComponent={Link}
+          />
+        </SiteChrome>
         <main className="flex-grow">{children}</main>
-        <CorporateFooter
-          productName="Corporate AI Solutions"
-          theme="dark"
-          extraLinks={FOOTER_LINKS}
-        />
-        <VoiceAgent />
+        <SiteChrome>
+          <CorporateFooter
+            productName="Corporate AI Solutions"
+            theme="dark"
+            extraLinks={FOOTER_LINKS}
+          />
+          <VoiceAgent />
+        </SiteChrome>
       </body>
     </html>
   )
