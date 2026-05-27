@@ -12,7 +12,9 @@
 //   shared-service           → justified on leverage, not demand (no distributor/demand gate)
 
 export const GATE_CRITICAL_BY_TYPE: Record<string, string[]> = {
-  'product': ['demand_evidence', 'architecture', 'distributor', 'decisions_needed'],
+  // `distributor` + `end_user_pool` are the TWO research-pool hypotheses (build #4): a product
+  // cannot reach validation without BOTH — they are what the dual-stream outreach sources against.
+  'product': ['demand_evidence', 'architecture', 'distributor', 'end_user_pool', 'decisions_needed'],
   'infra-product-candidate': ['demand_evidence', 'architecture', 'decisions_needed'],
   'shared-service': ['architecture', 'decisions_needed'],
 }
@@ -20,8 +22,21 @@ export const GATE_CRITICAL_BY_TYPE: Record<string, string[]> = {
 const LABELS: Record<string, string> = {
   demand_evidence: 'Demand evidence',
   architecture: 'Architecture (build vs buy)',
-  distributor: 'Distributor',
+  distributor: 'Distributor pool (who would onsell)',
+  end_user_pool: 'End-user pool (who would use)',
   decisions_needed: 'Decisions needed',
+}
+
+/** The two research-pool hypothesis fields the dual-stream outreach sources against. */
+export const POOL_FIELDS = ['distributor', 'end_user_pool'] as const
+
+/**
+ * True when BOTH pool hypotheses are substantively captured on the card — the signal that the
+ * phase-1 office-hours pool-discovery dialogue has concluded (used to record the office-hours gate).
+ */
+export function poolsCaptured(ideaCard: Record<string, string> | null | undefined): boolean {
+  const ic = ideaCard ?? {}
+  return POOL_FIELDS.every((k) => typeof ic[k] === 'string' && ic[k].trim().length >= MIN_LEN)
 }
 
 const STAGE_ORDER = ['ideation', 'feasibility', 'validation', 'go-no-go', 'build', 'ship']

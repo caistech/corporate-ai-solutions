@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
-import { advancesPastReview, missingGateCritical, missingLabels } from '@/lib/methodology/gate-critical'
+import { advancesPastReview, missingGateCritical, missingLabels, poolsCaptured } from '@/lib/methodology/gate-critical'
+import { hasPassedGate, recordGate } from '@/lib/methodology/pipeline-gates'
 
 /**
  * GET /api/methodology/cards/[slug] — fetch a single Hypothesis Card by product slug
@@ -159,6 +160,25 @@ export async function PATCH(
     if (error) {
       console.error('methodology_hypothesis_cards update failed:', error)
       return NextResponse.json({ error: 'Failed to update card' }, { status: 500 })
+    }
+
+    // Build #4 phase 1: when the idea-card edit lands BOTH pool hypotheses, the office-hours
+    // pool-discovery dialogue has concluded — record the (long-stubbed) office-hours gate PASS.
+    // Once-only (guarded by hasPassedGate) and non-blocking (a gate-write hiccup never fails the PATCH).
+    if (d.idea_card !== undefined && poolsCaptured((data?.idea_card ?? null) as Record<string, string> | null)) {
+      try {
+        if (!(await hasPassedGate(params.slug, 'office-hours'))) {
+          await recordGate({
+            slug: params.slug,
+            gate: 'office-hours',
+            status: 'pass',
+            artifactRef: 'pool-discovery: distributor + end_user_pool captured on the idea card',
+            recordedBy: 'cockpit:pool-discovery',
+          })
+        }
+      } catch (e) {
+        console.warn('[PATCH card] office-hours gate record skipped:', (e as Error).message)
+      }
     }
 
     return NextResponse.json({ card: data })

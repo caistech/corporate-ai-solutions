@@ -43,6 +43,21 @@ THE DECISIONS (Gate 2 outcomes)
 - KILL: no credible distributor and no override. Archive it.
 - KEEP-VALIDATING: not enough signal yet — let more interview evidence land before deciding.
 
+POOL DISCOVERY — the office-hours forcing questions (run BEFORE a card can validate)
+Every product card carries TWO research-pool hypotheses that the dual-stream outreach sources
+against: the DISTRIBUTOR pool (operators who already have a book of customers and would onsell)
+and the END-USER pool (who would actually use it). A card cannot advance to validation until both
+are captured. When get_card_state shows a pool "(not captured)", walk the operator through the six
+forcing questions to articulate it, then have them save it onto the idea card:
+1. Demand reality — who feels this pain acutely enough to pay/switch today (a named cohort, not "a market")?
+2. Status quo — what do they use instead right now, and why is it not good enough?
+3. Desperate specificity — name the most specific group that has this problem worst.
+4. Narrowest wedge — the single smallest group worth serving first.
+5. Observation — where do these people already congregate (associations, directories, marketplaces) — i.e. are they REACHABLE?
+6. Future-fit — who onsells to them already, and would that operator put this in front of their book?
+The distributor pool answers Q6; the end-user pool answers Q1–Q5. Keep it conversational; when the
+operator has a crisp, reachable cohort for each, suggest they save it and run pool assessment.
+
 THE DISTRIBUTOR GATE (the hard one)
 - We sell to DISTRIBUTORS who already have a book of customers (a singing school, a VC
   accelerator, an accountancy firm), never to end users. CAS clips ~$10-20 per active
@@ -73,6 +88,9 @@ export interface CardClarifierState {
   mvp_ready: boolean | null
   origin_summary: string | null
   original_end_user: string | null
+  /** The two research-pool hypotheses (build #4). Null/blank → the office-hours dialogue is owed. */
+  distributor_pool: string | null
+  end_user_pool: string | null
   hypotheses: { field: string; status: string }[]
   campaigns: { type: string; status: string; responses: number; expected: number }[]
   response_counts: Record<string, number>
@@ -100,6 +118,18 @@ export function formatCardState(state: CardClarifierState): string {
   )
   if (state.origin_summary) lines.push(`Origin: ${state.origin_summary}`)
   if (state.original_end_user) lines.push(`Original end-user: ${state.original_end_user}`)
+  const distSet = (state.distributor_pool ?? '').trim().length >= 12
+  const euSet = (state.end_user_pool ?? '').trim().length >= 12
+  lines.push(
+    `Research pools — Distributor pool: ${distSet ? state.distributor_pool : '(not captured)'} · End-user pool: ${
+      euSet ? state.end_user_pool : '(not captured)'
+    }`
+  )
+  if (!distSet || !euSet) {
+    lines.push(
+      'POOLS INCOMPLETE — run the office-hours forcing questions with the operator to capture the missing pool(s) before this card can validate.'
+    )
+  }
   if (state.hypotheses.length) {
     lines.push(
       `Hypotheses (${state.hypotheses.length}): ` +
@@ -140,10 +170,11 @@ YOU HAVE TWO TOOLS — ALWAYS USE THEM, NEVER GUESS:
 - get_card_state: returns the CURRENT card's authoritative state (status, Gate-1 readiness, MVP link, hypotheses, validation streams + responses, lane). Call this whenever the operator's question depends on where this specific card stands. Never invent or assume card values.
 - get_methodology_context: returns the definitions of the two gates, what "Launch real research" actually does, the Gate-2 decision options, the distributor gate, and the four monetisation lanes. Call this to ground any methodology question.
 
-The three places operators hesitate, and what to help with:
-1. Gate 1 — "is the thin MVP ready?" Pull get_card_state; if there's no MVP link or it isn't marked ready, explain that launch embeds that link and a dead link returns a false NO-GO.
-2. "Launch real research" — explain it fires real dual-stream discovery + outbound + API cost BEFORE they click, using get_methodology_context.
-3. The decision (GO / REDESIGN-TO-FIT / PERSONAL-INTEREST-OVERRIDE / KILL / KEEP-VALIDATING) — pull both tools, weigh this card's actual evidence against the definitions, and talk through which fits. The distributor gate is hard: no credible distributor defaults to NO-GO unless they consciously override.
+The places operators hesitate, and what to help with:
+1. Pool discovery (at ingestion) — pull get_card_state; if either research pool is "(not captured)", run the six office-hours forcing questions (in get_methodology_context) to help the operator articulate the DISTRIBUTOR pool + END-USER pool, then have them save each onto the idea card. Both pools must be captured before the card can validate.
+2. Gate 1 — "is the thin MVP ready?" Pull get_card_state; if there's no MVP link or it isn't marked ready, explain that launch embeds that link and a dead link returns a false NO-GO.
+3. "Launch real research" — explain it fires real dual-stream discovery + outbound + API cost BEFORE they click, using get_methodology_context.
+4. The decision (GO / REDESIGN-TO-FIT / PERSONAL-INTEREST-OVERRIDE / KILL / KEEP-VALIDATING) — pull both tools, weigh this card's actual evidence against the definitions, and talk through which fits. The distributor gate is hard: no credible distributor defaults to NO-GO unless they consciously override.
 
 Be concise and conversational. When the operator has what they need, suggest they close the assistant and act ("sounds like you're ready to set Gate 1 / record the decision"). Do not claim to remember past sessions — you are a fresh clarifier each time.`
 }

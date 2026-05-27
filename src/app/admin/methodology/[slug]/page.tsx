@@ -227,6 +227,8 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
     mvp_ready: readiness.mvpReady,
     origin_summary: card.origin_summary,
     original_end_user: card.original_end_user,
+    distributor_pool: (card.idea_card as Record<string, string> | null)?.distributor ?? null,
+    end_user_pool: (card.idea_card as Record<string, string> | null)?.end_user_pool ?? null,
     hypotheses: hypothesisRows.map((h) => ({
       field: h.field,
       status: h.validation_status ?? 'pending',

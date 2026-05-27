@@ -19,6 +19,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@caistech/brave-search": "^0.1.0",
     "@caistech/corporate-components": "^0.3.0",
     "@caistech/elevenlabs-convai": "^0.4.0",
     "@elevenlabs/client": "^0.11.0",
