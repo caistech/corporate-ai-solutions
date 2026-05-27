@@ -1,0 +1,81 @@
+{
+  "name": "Hybrid pool-discovery (distributor + end-user)",
+  "description": "Build #4 of the methodology harness. At ingestion, capture the candidate distributor + end-user pools as hypotheses (the idea card already has `distributor`; add `end_user_pool`). The /office-hours forcing questions (promoted from ad-hoc to a MANDATORY ingestion gate — also wires the long-stubbed `office-hours` slot in pipeline_gates) drive the dialogue half. The evidence half composes @caistech/brave-search (does a population of these operators/users exist + is it reachable?) + @caistech/ai-client (an LLM assesses, REJECTS weak pools, and PROPOSES better-fit ones with rationale — a back-and-forth, not one-shot). The agreed pools become the LLM-derived ICP + search query that pre-fills / auto-creates BOTH InvestorPilot streams — replacing today's operator-typed ICP + IP's raw 180-char-truncated Brave query. Compose, don't build bespoke (decision locked 2026-05-27).",
+  "introduced_at": "2026-05-27",
+  "env_vars": [
+    {
+      "name": "GITHUB_PACKAGES_TOKEN",
+      "required": true,
+      "description": "read:packages token to install @caistech/brave-search + @caistech/ai-client (+ optionally @caistech/hunter-email) from GitHub Packages (consumed as NODE_AUTH_TOKEN by .npmrc).",
+      "scope": "local+vercel",
+      "where": "shell env + Vercel build env"
+    },
+    {
+      "name": "ANTHROPIC_API_KEY",
+      "required": true,
+      "description": "The LLM (via @caistech/ai-client) that assesses pool hypotheses against the gathered evidence, rejects weak pools, proposes better-fit ones, and derives the validated ICP + the Brave search query handed to InvestorPilot.",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel"
+    },
+    {
+      "name": "BRAVE_API_KEY",
+      "required": true,
+      "description": "@caistech/brave-search — gathers supporting/contradicting evidence that a candidate distributor archetype / end-user segment is a real, reachable population (the 'is this pool real?' half).",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel",
+      "generator": null
+    },
+    {
+      "name": "HUNTER_API_KEY",
+      "required": false,
+      "description": "@caistech/hunter-email — optional reachability signal (are contactable people findable in this pool). IP already does deep enrichment at activation, so the cockpit pre-validation can run without it; include only if we want a reachability score pre-launch.",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel"
+    },
+    {
+      "name": "NEXT_PUBLIC_APP_URL",
+      "required": false,
+      "description": "App public URL — already present; used for callbacks/links if the discovery step surfaces results back to the card.",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel"
+    }
+  ],
+  "external_setup": [
+    {
+      "id": "install-pool-discovery-packages",
+      "type": "cli",
+      "title": "Install the @caistech discovery packages (consume the hub, never fork)",
+      "description": "The evidence half reuses the hub primitives InvestorPilot already uses (braveWebSearch / findContactByDomain) rather than re-implementing them.",
+      "url": "https://github.com/caistech/cais-shared-services",
+      "steps": [
+        "Ensure GITHUB_PACKAGES_TOKEN is set + .npmrc has @caistech:registry=https://npm.pkg.github.com.",
+        "From the project root: npm install @caistech/brave-search @caistech/ai-client --legacy-peer-deps  (add @caistech/hunter-email only if pre-launch reachability scoring is wanted).",
+        "Confirm the fork-check stays clean (preflight runs check-shared-forks.mjs) — do NOT vendor a local braveWebSearch."
+      ]
+    },
+    {
+      "id": "brave-api-key",
+      "type": "secret",
+      "title": "Brave Search API key (harvest from the portfolio if it already exists)",
+      "description": "InvestorPilot already uses Brave for discovery, so a portfolio Brave key likely exists — harvest it rather than minting a new one.",
+      "url": "https://brave.com/search/api/",
+      "steps": [
+        "Check siblings: node ~/PycharmProjects/cais-shared-services/scripts/harvest-secrets.mjs --dry-run (looks for BRAVE_API_KEY across the portfolio).",
+        "If found, harvest it to this project's .env.local + Vercel; if not, mint one at the Brave API dashboard and set it local + Vercel (sensitive, prod+preview).",
+        "Verify @caistech/brave-search can call it with a smoke query before wiring the discovery flow."
+      ]
+    },
+    {
+      "id": "office-hours-ingestion-gate",
+      "type": "process",
+      "title": "Promote /office-hours to the mandatory ingestion dialogue (the 'dialogue half')",
+      "description": "The /office-hours six forcing questions (demand reality / status quo / desperate specificity / narrowest wedge / observation / future-fit) produce the distributor + end-user pool hypotheses at intake. Promoting it from ad-hoc to a required step also wires the long-stubbed `office-hours` slot in pipeline_gates (recorded via gate-check.mjs).",
+      "url": "",
+      "steps": [
+        "Decide where the dialogue runs: the /office-hours skill (CLI/session) producing the pool hypotheses + design doc, vs porting its question framework into the cockpit ingestion flow (likely voice-clarifier-driven).",
+        "Capture the agreed pools on the card (idea_card.distributor + new idea_card.end_user_pool).",
+        "Record the office-hours PASS in pipeline_gates (gate-check.mjs record <slug> office-hours pass --artifact <design-doc>)."
+      ]
+    }
+  ]
+}

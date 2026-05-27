@@ -14,6 +14,11 @@ const BUILD_TYPES: { value: BuildType; label: string }[] = [
 // The idea-card fields, in order. ⚑ = gate-critical (a card can't pass its review
 // gates while these are blank/hand-wavy — named demand, build-vs-buy, lane+distributor,
 // the go/no-go decisions).
+//
+// `distributor` + `end_user_pool` are the TWO research-pool hypotheses (build #4): the
+// candidate pool to onsell through, and the candidate pool of end users. The pool-discovery
+// loop reads them — the LLM evidence-checks each (real? reachable?), rejects weak ones and
+// proposes better-fit pools, and the agreed pools become the ICP for the two validation streams.
 const FIELDS: { key: string; label: string; critical?: boolean }[] = [
   { key: 'one_liner', label: 'One-liner' },
   { key: 'problem', label: 'Problem' },
@@ -24,7 +29,8 @@ const FIELDS: { key: string; label: string; critical?: boolean }[] = [
   { key: 'build_sequence', label: 'Build sequence' },
   { key: 'shared_layers', label: 'Shared layers' },
   { key: 'lane', label: 'Lane' },
-  { key: 'distributor', label: 'Distributor', critical: true },
+  { key: 'distributor', label: 'Distributor pool (who would onsell)', critical: true },
+  { key: 'end_user_pool', label: 'End-user pool (who would use — the research pool)' },
   { key: 'risks_open_questions', label: 'Risks & open questions' },
   { key: 'decisions_needed', label: 'Decisions needed', critical: true },
   { key: 'commercial_structure', label: 'Commercial structure' },
