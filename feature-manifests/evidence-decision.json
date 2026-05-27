@@ -1,0 +1,34 @@
+{
+  "name": "Evidence-proposed triage + decision (Gate 0 + Gate 2)",
+  "description": "Build #3 of the methodology harness. Today the Gate-0 triage state (CockpitControls) and the Gate-2 go/no-go (DecisionControls) are 100% manual operator gut. This build makes the harness PROPOSE both from evidence, with the operator confirming (human-in-the-loop, per the locked engine policy). Composes the pieces already built: the §5 demand scorer (lib/methodology/demand-score.ts — pure, tested), the validation roll-up (lib/methodology/rollup.ts), and the Gate-1 readiness score (#1). The new glue is the BRIDGE from two-stream interview evidence -> the five §5 dimension scores (pain/gap/onsell/reach/build_fit): an LLM judge reads the recorded interview evidence + summaries and emits 0-10 + confidence per dimension (the in-repo classify.ts direct-fetch pattern, NOT the SDK — same call shape as pool-discovery). scoreDemand() then produces GO/REDESIGN/NO-GO with the onsell hard gate; the cockpit renders it as a PROPOSAL the operator confirms or overrides with a logged reason. Hypothesis-mode (desk research) proposal works day one; evidence-mode is only as real as the interview evidence flowing (Build #4 front-leg + a completed voice interview).",
+  "introduced_at": "2026-05-27",
+  "env_vars": [
+    {
+      "name": "ANTHROPIC_API_KEY",
+      "required": true,
+      "description": "The LLM judge that reads the two-stream interview evidence + summaries and scores the five §5 demand dimensions (0-10 + confidence + rationale) per stream, feeding the pure scoreDemand(). Same key + direct-fetch call shape as pool-discovery (no SDK). Already present on this project.",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel"
+    },
+    {
+      "name": "NEXT_PUBLIC_APP_URL",
+      "required": false,
+      "description": "App public URL — already present; used only if the proposer surfaces links back onto the card.",
+      "scope": "local+vercel",
+      "where": ".env.local + Vercel"
+    }
+  ],
+  "external_setup": [
+    {
+      "id": "no-new-external-setup",
+      "type": "process",
+      "title": "No new external setup — composes already-provisioned pieces",
+      "description": "Build #3 reads the validation roll-up + readiness score (existing Supabase tables, already migrated) and calls Anthropic with the existing ANTHROPIC_API_KEY (already used by pool-discovery). The new surface is in-repo logic (the evidence->dimensions judge bridge) + a route + the cockpit proposal UI. No new key, dashboard, or package.",
+      "url": "",
+      "steps": [
+        "Confirm ANTHROPIC_API_KEY is present (it is — pool-discovery uses it): node ~/PycharmProjects/cais-shared-services/scripts/feature-preflight.mjs --feature evidence-decision.",
+        "No package install, no dashboard registration, no migration required for the logic-first foundation. A snapshot/persist table for the proposal (if we persist proposals) is decided at the route-wiring step, not the foundation."
+      ]
+    }
+  ]
+}
