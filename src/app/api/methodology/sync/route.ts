@@ -96,6 +96,94 @@ function verifySignature(rawBody: string, headerSig: string | null, secret: stri
   return crypto.timingSafeEqual(Buffer.from(sigHex), Buffer.from(expectedHex))
 }
 
+// ─── InvestorPilot relay ─────────────────────────────────────────────
+//
+// After CAS records a Connexions interview's evidence, mark the matching
+// InvestorPilot partner as interviewed by forwarding the intake to IP's
+// existing receiver (POST /api/webhooks/connexions-intake). This replaces
+// the retired legacy Connexions→IP direct feed: CAS becomes a second
+// authorized caller on the SAME contract (HMAC-SHA256 of the body with the
+// shared CONNEXIONS_INTAKE_WEBHOOK_SECRET, X-Connexions-Signature header).
+// IP dedups on external_intake_id = intake_id, so during the cutover window
+// both the legacy forwarder and this relay can fire for one interview with
+// no double-count.
+//
+// Non-blocking by contract: this function never throws — every failure is
+// caught and logged so the /sync 201 is never affected by relay outcome.
+async function relayInterviewedToInvestorPilot(
+  data: z.infer<typeof ConnexionsPayloadSchema>
+): Promise<void> {
+  const url = process.env.INVESTORPILOT_INTAKE_WEBHOOK_URL
+  const secret = process.env.CONNEXIONS_INTAKE_WEBHOOK_SECRET
+  if (!url || !secret) {
+    console.log(
+      '[/api/methodology/sync] IP relay skipped: env missing (INVESTORPILOT_INTAKE_WEBHOOK_URL / CONNEXIONS_INTAKE_WEBHOOK_SECRET)'
+    )
+    return
+  }
+
+  const prospect = data.prospect ?? {}
+  // Map the Connexions methodology payload → IP's IntakePayload. Keep
+  // intake_id identical (it is IP's dedup key) and pass ref through (the IP
+  // partner UUID IP resolves the partner from). answers stays [] in v1 to
+  // match the legacy feed.
+  const body = JSON.stringify({
+    intake_id: data.intake_id,
+    ref: data.ref ?? null,
+    src: data.src ?? null,
+    intake_slug: data.cas_product_slug ?? null,
+    completed_at: data.completed_at ?? null,
+    prospect: {
+      name: prospect.name ?? null,
+      email: prospect.email ?? null,
+      company: prospect.company ?? null,
+      linkedin_url: prospect.linkedin_url ?? null,
+    },
+    summary: data.extraction?.summary ?? null,
+    answers: [],
+    duration_seconds: data.duration_seconds ?? null,
+  })
+
+  const signature = 'sha256=' + crypto.createHmac('sha256', secret).update(body).digest('hex')
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-connexions-signature': signature,
+      },
+      body,
+    })
+    let detail: unknown = null
+    try {
+      detail = await res.json()
+    } catch {
+      /* IP may return a non-JSON body on some errors — ignore */
+    }
+    if (res.ok) {
+      const deduplicated = !!(detail as { deduplicated?: boolean } | null)?.deduplicated
+      console.log(
+        `[/api/methodology/sync] IP relay ok: intake_id=${data.intake_id} status=${res.status}` +
+          (deduplicated ? ' deduplicated=true (IP already had this interview)' : '')
+      )
+    } else {
+      console.error(
+        `[/api/methodology/sync] IP relay failed: intake_id=${data.intake_id} status=${res.status}` +
+          (res.status === 401
+            ? ' (401 = CONNEXIONS_INTAKE_WEBHOOK_SECRET mismatch between CAS and IP)'
+            : '') +
+          ` body=${JSON.stringify(detail)}`
+      )
+    }
+  } catch (e) {
+    console.error(
+      `[/api/methodology/sync] IP relay threw (non-blocking — sync still succeeds): intake_id=${data.intake_id}`,
+      e
+    )
+  }
+}
+
 // ─── Handler ─────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
@@ -149,6 +237,9 @@ export async function POST(request: NextRequest) {
 
   let normalised: NormalisedResponse
   let questionsOverride: string[] | null = null
+  // Carried to the tail so the IP relay (Connexions branch only) can map
+  // the validated payload after the rollup + card-status update.
+  let connexionsData: z.infer<typeof ConnexionsPayloadSchema> | null = null
 
   if (isConnexions) {
     const parsed = ConnexionsPayloadSchema.safeParse(parsedBody)
@@ -158,6 +249,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    connexionsData = parsed.data
     const prospect = parsed.data.prospect ?? {}
     const hasTranscript = !!parsed.data.transcript_excerpt && parsed.data.transcript_excerpt.length > 0
     const placeholderText = `(transcript unavailable — Connexions interview ${parsed.data.intake_id}; completed ${parsed.data.completed_at ?? '(no timestamp)'}. Prospect: ${prospect.name ?? '(unnamed)'}${prospect.company ? ` @ ${prospect.company}` : ''}. Re-fetch from ElevenLabs once Session 3.5 ships.)`
@@ -312,6 +404,16 @@ export async function POST(request: NextRequest) {
 
   if (cardUpdateErr) {
     console.error('[/api/methodology/sync] card update failed:', cardUpdateErr)
+  }
+
+  // Relay to InvestorPilot — mark the matching partner as interviewed.
+  // Connexions branch only (the mock/debug path has no IP partner ref).
+  // Awaited but self-contained: relayInterviewedToInvestorPilot never
+  // throws, so the 201 below is never affected by the relay outcome.
+  // (Use waitUntil from @vercel/functions if it gets added to the repo;
+  // until then the awaited call is the safe fallback.)
+  if (isConnexions && connexionsData) {
+    await relayInterviewedToInvestorPilot(connexionsData)
   }
 
   return NextResponse.json(
