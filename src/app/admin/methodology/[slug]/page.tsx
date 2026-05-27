@@ -9,6 +9,7 @@ import { CockpitControls } from '@/components/methodology/CockpitControls'
 import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
 import { IdeaCardEditor } from '@/components/methodology/IdeaCardEditor'
 import { ReadinessPanel } from '@/components/methodology/ReadinessPanel'
+import { PoolDiscoveryPanel } from '@/components/methodology/PoolDiscoveryPanel'
 import { gateCriticalStatus } from '@/lib/methodology/gate-critical'
 import { loadCardScore } from '@/lib/methodology/readiness'
 import type { CardClarifierState } from '@/lib/methodology/clarifier-context'
@@ -345,6 +346,13 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
           initialIdeaCard={card.idea_card}
         />
       </section>
+
+      {/* Pool discovery (build #4) — assess the two pools, then auto-derive + launch both streams. */}
+      <PoolDiscoveryPanel
+        slug={card.product_slug}
+        distributorPool={(card.idea_card as Record<string, string> | null)?.distributor ?? null}
+        endUserPool={(card.idea_card as Record<string, string> | null)?.end_user_pool ?? null}
+      />
 
       {/* Hypothesis rows */}
       <section className="mb-10">
