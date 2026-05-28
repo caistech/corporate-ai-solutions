@@ -22,11 +22,31 @@ export async function GET(
   try {
     const productId = params.productId;
 
-    // Direct Supabase query as reference
+    // Direct Supabase queries as reference
     const supabase = createClient(dbUrl, dbKey);
+
+    // Query 1: product_validation_status
     const { data: rawData, error: rawError } = await supabase
       .from('product_validation_status')
       .select('*');
+
+    // Query 2: another table (organisations) to verify connection works
+    const { data: orgData, error: orgError } = await supabase
+      .from('organisations')
+      .select('id')
+      .limit(1);
+
+    // Query 3: auth users to verify service_role key
+    const { data: authData, error: authError } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .limit(1);
+
+    // Query with filter
+    const { data: filteredData, error: filteredError } = await supabase
+      .from('product_validation_status')
+      .select('product_slug')
+      .eq('product_slug', 'pipeline');
 
     // Using scanPortfolio
     const portfolio = await scanPortfolio();
