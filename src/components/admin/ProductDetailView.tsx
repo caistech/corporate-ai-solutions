@@ -13,6 +13,7 @@ import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
 import ProductResearchVoice from './ProductResearchVoice';
+import ValidationTestResults from './ValidationTestResults';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -132,6 +133,12 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             : `Fill ${product.gaps.length} gap${product.gaps.length !== 1 ? 's' : ''} to enable outreach.`}
         </p>
       </div>
+
+      {/* Validation Test Results */}
+      <ValidationTestResults
+        validation={product.validation}
+        productName={product.manifest?.name || productId}
+      />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

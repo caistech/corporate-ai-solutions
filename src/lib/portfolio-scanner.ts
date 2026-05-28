@@ -48,6 +48,15 @@ export interface ProductValidationStatus {
   notes: string | null;
   is_draft: boolean;
   is_paused: boolean;
+  // Validation test fields (added 2026-05-28)
+  test_part_a_admin_portal?: 'passed' | 'warning' | 'failed' | 'not_run';
+  test_part_b_user_portal?: 'passed' | 'warning' | 'failed' | 'not_run';
+  test_part_c_auth_flows?: 'passed' | 'warning' | 'failed' | 'not_run';
+  test_part_d_scaffold?: 'passed' | 'warning' | 'failed' | 'not_run';
+  validation_test_status?: 'passed' | 'warning' | 'failed' | 'not_run';
+  validation_test_findings?: string[];
+  last_validation_test_run?: string | null;
+  last_validation_test_by?: string | null;
 }
 
 export interface EnrichedProduct {
@@ -187,22 +196,44 @@ function identifyGaps(validation: ProductValidationStatus | null): string[] {
     gaps.push(`Weighted score ${validation.weighted_score_percent || 0}% (need ≥80%)`);
   }
 
+  // Validation test gaps
+  const testStatus = validation.validation_test_status;
+  if (!testStatus || testStatus === 'not_run') {
+    gaps.push('Validation tests not yet run (naive-tester / voice-auditor / gtm-auditor / QA)');
+  } else if (testStatus === 'failed') {
+    gaps.push('Validation tests failed — review findings');
+  } else if (testStatus === 'warning') {
+    gaps.push('Validation tests passed with warnings');
+  }
+
   return gaps;
 }
 
+function scoreTestPart(status: string | undefined | null): number {
+  if (status === 'passed') return 5;
+  if (status === 'warning') return 4;
+  return 0;
+}
+
 /**
- * Calculate readiness score (0-100) for outreach
+ * Calculate readiness score (0-100) for outreach.
+ * Breakdown:
+ * - Hard gates: 30 points
+ * - Weighted score: 30 points
+ * - Validation fields: 20 points (5 each)
+ * - Validation tests: 20 points (5 each for Parts A-D)
+ * - Methodology commitment: bonus 10 points (capped at 100)
  */
 function calculateReadinessScore(validation: ProductValidationStatus | null, gaps: string[]): number {
   if (!validation) return 0;
 
   let score = 0;
 
-  // Hard gates: 40 points
-  score += (validation.hard_gates_passed / validation.hard_gates_total) * 40;
+  // Hard gates: 30 points
+  score += (validation.hard_gates_passed / validation.hard_gates_total) * 30;
 
-  // Weighted score: 40 points
-  score += ((validation.weighted_score_percent || 0) / 100) * 40;
+  // Weighted score: 30 points
+  score += ((validation.weighted_score_percent || 0) / 100) * 30;
 
   // Validation fields: 20 points (5 each)
   const fieldsPresent =
@@ -211,6 +242,12 @@ function calculateReadinessScore(validation: ProductValidationStatus | null, gap
     (validation.has_end_user ? 5 : 0) +
     (validation.has_friction ? 5 : 0);
   score += fieldsPresent;
+
+  // Validation tests: 20 points (5 each for Parts A-D)
+  score += scoreTestPart(validation.test_part_a_admin_portal);
+  score += scoreTestPart(validation.test_part_b_user_portal);
+  score += scoreTestPart(validation.test_part_c_auth_flows);
+  score += scoreTestPart(validation.test_part_d_scaffold);
 
   // Methodology commitment: bonus 10 points (capped at 100)
   if (validation.has_methodology_commitment) score = Math.min(100, score + 10);
@@ -253,7 +290,17 @@ function generateActionItems(validation: ProductValidationStatus | null, gaps: s
     actions.push(`Pass ${remaining} remaining hard gate${remaining === 1 ? '' : 's'}`);
   }
 
-  // Priority 4: Improve score
+  // Priority 4: Run validation tests
+  const testStatus = validation.validation_test_status;
+  if (!testStatus || testStatus === 'not_run') {
+    actions.push('Run validation tests (naive-tester, voice-auditor, gtm-auditor, QA)');
+  } else if (testStatus === 'failed') {
+    actions.push('Address validation test failures and re-run');
+  } else if (testStatus === 'warning') {
+    actions.push('Address validation test warnings');
+  }
+
+  // Priority 5: Improve score
   if ((validation.weighted_score_percent || 0) < 80) {
     actions.push('Improve validation score to ≥80%');
   }

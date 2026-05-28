@@ -124,6 +124,36 @@ export default function PipelineTable({
     return 'bg-gray-100 text-gray-600';
   };
 
+  const getTestBadge = (product: EnrichedProduct) => {
+    const testStatus = product.validation?.validation_test_status;
+    if (!testStatus || testStatus === 'not_run') {
+      return (
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+          Not Run
+        </span>
+      );
+    }
+    if (testStatus === 'passed') {
+      return (
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" title="All validation tests passed">
+          ✓ Passed
+        </span>
+      );
+    }
+    if (testStatus === 'warning') {
+      return (
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700" title="Validation tests passed with warnings">
+          ⚠ Warnings
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Validation tests failed">
+        ✗ Failed
+      </span>
+    );
+  };
+
   if (sorted.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -140,6 +170,7 @@ export default function PipelineTable({
             <tr>
               <th className="px-6 py-4 text-left font-semibold text-gray-900">Product</th>
               <th className="px-6 py-4 text-center font-semibold text-gray-900">Status</th>
+              <th className="px-6 py-4 text-center font-semibold text-gray-900">Tests</th>
               <th className="px-6 py-4 text-center font-semibold text-gray-900">Readiness</th>
               <th className="px-6 py-4 text-left font-semibold text-gray-900">Gaps</th>
               <th className="px-6 py-4 text-left font-semibold text-gray-900">Next Step</th>
@@ -164,6 +195,9 @@ export default function PipelineTable({
 
                 {/* Status Badge */}
                 <td className="px-6 py-4 text-center">{getStatusBadge(product)}</td>
+
+                {/* Validation Tests */}
+                <td className="px-6 py-4 text-center">{getTestBadge(product)}</td>
 
                 {/* Readiness Score */}
                 <td className="px-6 py-4 text-center">
