@@ -26,6 +26,19 @@ interface EnrichedProduct {
   readiness_score: number;
   can_run_outreach_now: boolean;
   action_items: string[];
+  // NEW: 7-Stage House-Building Lifecycle
+  current_stage: number;
+  stage_name: string;
+  certificate_of_occupancy: {
+    status: 'valid' | 'expired' | 'missing' | 'pending_review' | 'issues_reported';
+    valid_until?: string;
+    readiness_score?: number;
+  };
+  smart_sensors: {
+    health: 'ok' | 'warning' | 'down';
+    security: 'ok' | 'warning';
+    cost: 'ok' | 'warning' | 'over_budget';
+  };
 }
 
 interface PipelineTableProps {
@@ -128,28 +141,83 @@ export default function PipelineTable({
     const testStatus = product.validation?.validation_test_status;
     if (!testStatus || testStatus === 'not_run') {
       return (
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
           Not Run
         </span>
       );
     }
     if (testStatus === 'passed') {
       return (
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" title="All validation tests passed">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" title="All validation tests passed">
           ✓ Passed
         </span>
       );
     }
     if (testStatus === 'warning') {
       return (
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700" title="Validation tests passed with warnings">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700" title="Validation tests passed with warnings">
           ⚠ Warnings
         </span>
       );
     }
     return (
-      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Validation tests failed">
+      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Validation tests failed">
         ✗ Failed
+      </span>
+    );
+  };
+
+  const getCertificateBadge = (cert: EnrichedProduct['certificate_of_occupancy']) => {
+    if (cert.status === 'valid') {
+      return (
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" title={`Valid until ${cert.valid_until}`}>
+          🏠 Valid
+        </span>
+      );
+    }
+    if (cert.status === 'expired') {
+      return (
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Certificate expired">
+          ⏰ Expired
+        </span>
+      );
+    }
+    if (cert.status === 'issues_reported') {
+      return (
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Issues reported - human review required">
+          ❌ Issues
+        </span>
+      );
+    }
+    if (cert.status === 'pending_review') {
+      return (
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700" title="Pending review">
+          ⏳ Pending
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500" title="No certificate">
+        ❌ None
+      </span>
+    );
+  };
+
+  const getSensorsBadge = (sensors: EnrichedProduct['smart_sensors']) => {
+    const issues = [];
+    if (sensors.health === 'down') issues.push('🔴');
+    else if (sensors.health === 'warning') issues.push('🟡');
+    else issues.push('🟢');
+    
+    if (sensors.security === 'warning') issues.push('🟡');
+    
+    if (sensors.cost === 'over_budget') issues.push('🔴');
+    else if (sensors.cost === 'warning') issues.push('🟡');
+    
+    const title = `Health: ${sensors.health} | Security: ${sensors.security} | Cost: ${sensors.cost}`;
+    return (
+      <span className="text-lg" title={title}>
+        {issues.join('')}
       </span>
     );
   };
@@ -169,9 +237,12 @@ export default function PipelineTable({
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left font-semibold text-gray-900">Product</th>
+              <th className="px-6 py-4 text-center font-semibold text-gray-900">Stage</th>
               <th className="px-6 py-4 text-center font-semibold text-gray-900">Status</th>
               <th className="px-6 py-4 text-center font-semibold text-gray-900">Tests</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Readiness</th>
+              <th className="px-6 py-4 text-center font-semibold text-gray-900">Cert</th>
+              <th className="px-6 py-4 text-center font-semibold text-gray-900">Sensors</th>
+              <th className="px-6 py-4 text-center font-semibold text-gray-900">Score</th>
               <th className="px-6 py-4 text-left font-semibold text-gray-900">Gaps</th>
               <th className="px-6 py-4 text-left font-semibold text-gray-900">Next Step</th>
               <th className="px-6 py-4 text-center font-semibold text-gray-900">Actions</th>

@@ -66,6 +66,102 @@ export interface EnrichedProduct {
   readiness_score: number;  // 0-100: how ready for outreach?
   can_run_outreach_now: boolean;  // GREEN: ready to start outreach
   action_items: string[];  // What needs to happen next?
+  // NEW: 7-Stage House-Building Lifecycle
+  current_stage: number;  // 1-7 or 0 if not started
+  stage_name: string;
+  certificate_of_occupancy: {
+    status: 'valid' | 'expired' | 'missing' | 'pending_review' | 'issues_reported';
+    valid_until?: string;
+    readiness_score?: number;
+  };
+  smart_sensors: {
+    health: 'ok' | 'warning' | 'down';
+    security: 'ok' | 'warning';
+    cost: 'ok' | 'warning' | 'over_budget';
+  };
+}
+
+// 7-Stage Lifecycle mapping based on validation state
+const STAGE_MAPPING = [
+  { minScore: 0, stage: 0, name: 'Not Started' },
+  { minScore: 5, stage: 1, name: 'Pre-Development' },
+  { minScore: 20, stage: 2, name: 'Design & Planning' },
+  { minScore: 40, stage: 3, name: 'Compliance & Standards' },
+  { minScore: 60, stage: 4, name: 'Construction' },
+  { minScore: 80, stage: 5, name: 'Certification & Sign-off' },
+  { minScore: 90, stage: 6, name: 'Handover & Launch' },
+  { minScore: 100, stage: 7, name: 'Operations & Maintenance' },
+];
+
+function determineStage(validation: ProductValidationStatus | null, readinessScore: number): { stage: number; name: string } {
+  if (!validation) return { stage: 0, name: 'Not Started' };
+  
+  // Check if passed all validation tests (Stage 5+)
+  const testStatus = validation.validation_test_status;
+  if (testStatus === 'passed') {
+    return { stage: 5, name: 'Certification & Sign-off' };
+  }
+  
+  // Check if has all fields filled (Stage 2-3)
+  if (validation.has_promise && validation.has_distributor && validation.has_end_user && validation.has_friction) {
+    return { stage: 3, name: 'Compliance & Standards' };
+  }
+  
+  // Check if has promise started (Stage 1-2)
+  if (validation.has_promise || validation.has_distributor) {
+    return { stage: 2, name: 'Design & Planning' };
+  }
+  
+  return { stage: 1, name: 'Pre-Development' };
+}
+
+function getCertificateStatus(validation: ProductValidationStatus | null): EnrichedProduct['certificate_of_occupancy'] {
+  if (!validation) {
+    return { status: 'missing' };
+  }
+  
+  const testStatus = validation.validation_test_status;
+  const score = validation.weighted_score_percent || 0;
+  
+  if (testStatus === 'passed' && score >= 80) {
+    return { 
+      status: 'valid', 
+      valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      readiness_score: score 
+    };
+  }
+  
+  if (testStatus === 'failed') {
+    return { status: 'issues_reported' };
+  }
+  
+  if (testStatus === 'warning') {
+    return { status: 'pending_review' };
+  }
+  
+  return { status: 'missing' };
+}
+
+function getSmartSensorsStatus(validation: ProductValidationStatus | null): EnrichedProduct['smart_sensors'] {
+  // In Phase 1, we derive sensor status from existing validation data
+  // Real implementation would read from sensor-data files
+  const defaultStatus = { health: 'ok' as const, security: 'ok' as const, cost: 'ok' as const };
+  
+  if (!validation) {
+    return { ...defaultStatus, health: 'down' };
+  }
+  
+  // If tests failed, mark health as warning
+  if (validation.validation_test_status === 'failed') {
+    return { health: 'warning', security: 'ok', cost: 'ok' };
+  }
+  
+  // If score is low, cost might be a concern
+  if ((validation.weighted_score_percent || 0) < 50) {
+    return { health: 'ok', security: 'ok', cost: 'warning' };
+  }
+  
+  return defaultStatus;
 }
 
 /**
@@ -332,6 +428,11 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     const can_run_outreach_now = readiness_score >= 80 && gaps.length === 0;
     const action_items = generateActionItems(validation, gaps);
 
+    // NEW: 7-Stage Lifecycle fields
+    const { stage, name } = determineStage(validation, readiness_score);
+    const certificate_of_occupancy = getCertificateStatus(validation);
+    const smart_sensors = getSmartSensorsStatus(validation);
+
     return {
       manifest: product,
       validation,
@@ -339,6 +440,11 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
       readiness_score,
       can_run_outreach_now,
       action_items,
+      // NEW: 7-Stage House-Building Lifecycle
+      current_stage: stage,
+      stage_name: name,
+      certificate_of_occupancy,
+      smart_sensors,
     };
   });
 
