@@ -106,14 +106,14 @@ export default function PipelineDashboard() {
          {/* Controls */}
          <div className="mb-6 bg-white rounded-lg shadow p-4">
            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-             {/* Status Filter */}
-             <div>
-               <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-               <select
-                 value={filterStatus}
-                 onChange={(e) => setFilterStatus(e.target.value as any)}
-                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-               >
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
                  <option value="all">All ({data.summary.total})</option>
                  <option value="ready">Ready for Outreach ({data.summary.ready_for_outreach})</option>
                  <option value="in-progress">In Progress ({data.summary.in_progress})</option>
@@ -122,30 +122,30 @@ export default function PipelineDashboard() {
                </select>
              </div>
 
-             {/* Category Filter */}
-             <div>
-               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-               <select
-                 value={filterCategory}
-                 onChange={(e) => setFilterCategory(e.target.value as any)}
-                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-               >
-                 <option value="all">All</option>
-                 <option value="infrastructure">Infrastructure</option>
-                 <option value="own-tools">Own Tools</option>
-                 <option value="product">Products (Client/Distributor)</option>
-               </select>
-             </div>
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value as any)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="infrastructure">Infrastructure</option>
+                  <option value="own-tools">Own Tools</option>
+                  <option value="product">Products (Client/Distributor)</option>
+                </select>
+              </div>
 
             {/* Sort */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
               <div className="flex gap-2">
                 <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
+                   value={sortBy}
+                   onChange={(e) => setSortBy(e.target.value as any)}
+                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 >
                   <option value="readiness">Readiness Score</option>
                   <option value="name">Product Name</option>
                   <option value="updated">Last Updated</option>
