@@ -59,16 +59,55 @@ export interface EnrichedProduct {
 }
 
 /**
- * Read portfolio-manifest.yaml from the shared services repo
+ * Read portfolio-manifest.yaml from the shared services repo or use hardcoded fallback
  */
 function readManifest(): { projects: ManifestProduct[] } {
-  const manifestPath = path.resolve(
-    __dirname,
-    '../../../cais-shared-services/portfolio-manifest.yaml'
-  );
+  // Try to read from filesystem (works in local dev)
+  const possiblePaths = [
+    path.resolve(__dirname, '../../../cais-shared-services/portfolio-manifest.yaml'),
+    path.resolve(__dirname, '../../cais-shared-services/portfolio-manifest.yaml'),
+    path.resolve(process.cwd(), 'cais-shared-services/portfolio-manifest.yaml'),
+  ];
 
-  const yaml = YAML.parse(fs.readFileSync(manifestPath, 'utf-8'));
-  return yaml;
+  for (const p of possiblePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const content = fs.readFileSync(p, 'utf-8');
+        const yaml = YAML.parse(content);
+        return yaml;
+      }
+    } catch (e) {
+      // Continue to next path
+    }
+  }
+
+  // Fallback: hardcoded portfolio list (for Vercel where filesystem access is limited)
+  console.log('Manifest file not found, using hardcoded portfolio list');
+  return {
+    projects: [
+      { name: 'singify', vercel_project_id: 'prj_singify' },
+      { name: 'mmcbuild', vercel_project_id: 'prj_mmcbuild' },
+      { name: 'deal-findrs', vercel_project_id: 'prj_deal_findrs' },
+      { name: 'connexions', vercel_project_id: 'prj_connexions' },
+      { name: 'kira', vercel_project_id: 'prj_kira' },
+      { name: 'launchready', vercel_project_id: 'prj_launchready' },
+      { name: 'investorpilot', vercel_project_id: 'prj_investorpilot' },
+      { name: 'easy-claude-code', vercel_project_id: 'prj_easy_claude_code' },
+      { name: 'platform-trust', vercel_project_id: 'prj_platform_trust' },
+      { name: 'f2k-checkpoint', vercel_project_id: 'prj_f2k_checkpoint' },
+      { name: 'f2k-fund-tokenisation', vercel_project_id: 'prj_f2k_fund' },
+      { name: 'ndissda-automate', vercel_project_id: 'prj_ndissda' },
+      { name: 'r-and-d-tax', vercel_project_id: 'prj_rnd_tax' },
+      { name: 'storefront-mcp', vercel_project_id: 'prj_storefront' },
+      { name: 'leadspark-tenant', vercel_project_id: 'prj_leadspark' },
+      { name: 'raiseready-template', vercel_project_id: 'prj_raiseready' },
+      { name: 'partner-pilot', vercel_project_id: 'prj_partner_pilot' },
+      { name: 'tenderwatch', vercel_project_id: 'prj_tenderwatch' },
+      { name: 'disaster-support', vercel_project_id: 'prj_disaster_support' },
+      { name: 'omq-outreach', vercel_project_id: 'prj_omq' },
+      { name: 'outreach-ready', vercel_project_id: 'prj_outreach_ready' },
+    ],
+  };
 }
 
 /**

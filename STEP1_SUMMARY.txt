@@ -1,0 +1,90 @@
+================================================================================
+STEP 1: APPLY SUPABASE MIGRATIONS — EXECUTION SUMMARY
+================================================================================
+
+OBJECTIVE: Create two database tables needed for Phase 2 factory
+
+TIME REQUIRED: ~5 minutes (+ 2 minutes verification)
+
+CRITICAL: These tables MUST exist before code can run
+
+================================================================================
+WHAT YOU'RE DOING
+================================================================================
+
+You're creating two PostgreSQL tables in Supabase:
+
+1. product_validation_status (110 lines)
+   - Stores validation readiness for each of 29 portfolio products
+   - Tracks: scores, gates, gaps, fields, commitment
+
+2. validation_events (131 lines)
+   - Immutable audit trail of all changes
+   - Logs: who changed what, when, why
+
+================================================================================
+STEP-BY-STEP INSTRUCTIONS
+================================================================================
+
+1. Open Supabase SQL Editor
+   URL: https://supabase.com/dashboard/project/tfgtfhwvrswjvkyeyvsp/sql/new
+
+2. Copy entire Migration 1 SQL (see STEP1_APPLY_MIGRATIONS.md)
+   Paste into editor → Click "Run" → Wait for ✅ "Success"
+
+3. Clear editor, copy entire Migration 2 SQL
+   Paste into editor → Click "Run" → Wait for ✅ "Success"
+
+4. Verify (see MIGRATION_VERIFICATION_CHECKLIST.md)
+   Run 6 SQL queries to confirm both tables created correctly
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+✅ Query says: "Success. No rows returned"
+✅ Tables are empty (0 rows) — correct, you haven't populated them yet
+✅ Indexes created (10 total)
+✅ RLS enabled on both tables
+✅ RLS policies installed (5 total)
+
+================================================================================
+IF SOMETHING GOES WRONG
+================================================================================
+
+Error: "Relation already exists"
+→ OK! Table exists from previous run. Proceed to next migration.
+
+Error: "Syntax error"
+→ Re-paste more carefully. Line breaks matter in SQL.
+
+Error: "Permission denied"
+→ Verify correct Supabase account + project permissions.
+
+Blank screen / no response
+→ Click "Run" again. Check browser console for errors.
+
+================================================================================
+AFTER MIGRATIONS SUCCEED
+================================================================================
+
+Proceed immediately to:
+Step 2: Set Vercel Environment Variables (2 min)
+
+See: PHASE_2_DEPLOYMENT_INSTRUCTIONS.md Step 2
+
+================================================================================
+CRITICAL REMINDERS
+================================================================================
+
+✓ Copy the ENTIRE SQL block (all lines)
+✓ Run Migration 1 first, then Migration 2 (order matters for dependencies)
+✓ Wait for ✅ "Success" message before proceeding
+✓ Verify with the 6 verification queries
+✓ Contact if any check fails
+
+================================================================================
+READY?
+
+Go to: https://supabase.com/dashboard/project/tfgtfhwvrswjvkyeyvsp/sql/new
+See: STEP1_APPLY_MIGRATIONS.md for exact SQL to copy
