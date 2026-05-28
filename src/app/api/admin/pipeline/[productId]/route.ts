@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { scanPortfolio } from '@/lib/portfolio-scanner';
 
 export async function GET(
   request: NextRequest,
@@ -18,23 +18,17 @@ export async function GET(
   try {
     const productId = params.productId;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const portfolio = await scanPortfolio();
+    const product = portfolio.find((p) => p.manifest.name === productId) || null;
 
-    const { data, error } = await supabase
-      .from('product_validation_status')
-      .select('*')
-      .eq('product_slug', productId);
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json({
-      productId,
-      data: data || [],
-      error: error ? `${error.code}: ${error.message}` : null,
-      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    }, {
+    return NextResponse.json(product, {
       status: 200,
       headers: {
         'Cache-Control': 'no-store, max-age=0',
@@ -47,7 +41,6 @@ export async function GET(
       {
         error: 'Failed to fetch product details',
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : null,
       },
       { status: 500 }
     );
