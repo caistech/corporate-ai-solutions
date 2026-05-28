@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getProductPipeline } from '@/lib/portfolio-scanner';
+import { scanPortfolio } from '@/lib/portfolio-scanner';
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +18,9 @@ export async function GET(
   try {
     const productId = params.productId;
 
-    const product = await getProductPipeline(productId);
+    const portfolio = await scanPortfolio();
+
+    const product = portfolio.find((p) => p.manifest.name === productId) || null;
 
     if (!product) {
       return NextResponse.json(
