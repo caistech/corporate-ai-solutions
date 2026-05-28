@@ -1,14 +1,77 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, CheckCircle, Settings, Users, Target, FileText, Play, Shield } from 'lucide-react';
 
 interface GapsSectionProps {
   gaps: string[];
   actionItems: string[];
+  productSlug?: string;
 }
 
-export default function GapsSection({ gaps, actionItems }: GapsSectionProps) {
+const gapToAction: Record<string, { label: string; href: string; icon: React.ReactNode }> = {
+  'Missing product promise': { 
+    label: 'Add promise', 
+    href: '#validation-fields',
+    icon: <FileText size={14} />
+  },
+  'Missing distributor hypothesis': { 
+    label: 'Add distributor', 
+    href: '#validation-fields',
+    icon: <Users size={14} />
+  },
+  'Missing end-user definition': { 
+    label: 'Add end user', 
+    href: '#validation-fields',
+    icon: <Target size={14} />
+  },
+  'Missing friction/pain point': { 
+    label: 'Add friction', 
+    href: '#validation-fields',
+    icon: <AlertCircle size={14} />
+  },
+  'No founder commitment to validate': { 
+    label: 'Add commitment', 
+    href: '#methodology',
+    icon: <Shield size={14} />
+  },
+  'hard gates': { 
+    label: 'Run compliance', 
+    href: '#compliance-audit',
+    icon: <CheckCircle size={14} />
+  },
+  'Validation tests not yet run': { 
+    label: 'Run tests', 
+    href: '#validation-tests',
+    icon: <Play size={14} />
+  },
+  'Validation tests failed': { 
+    label: 'Review failures', 
+    href: '#validation-tests',
+    icon: <AlertCircle size={14} />
+  },
+  'Validation tests passed with warnings': { 
+    label: 'Review warnings', 
+    href: '#validation-tests',
+    icon: <AlertCircle size={14} />
+  },
+  'Not yet added to validation pipeline': { 
+    label: 'Initialize product', 
+    href: '#initialize',
+    icon: <Settings size={14} />
+  },
+};
+
+export default function GapsSection({ gaps, actionItems, productSlug }: GapsSectionProps) {
+  const getActionForGap = (gap: string) => {
+    for (const [key, action] of Object.entries(gapToAction)) {
+      if (gap.includes(key)) {
+        return action;
+      }
+    }
+    return null;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Gaps & Action Items</h2>
@@ -25,26 +88,52 @@ export default function GapsSection({ gaps, actionItems }: GapsSectionProps) {
               Gaps to Fill ({gaps.length})
             </h3>
             <ul className="space-y-2">
-              {gaps.map((gap, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm">
-                  <span className="text-yellow-600 font-bold mt-0.5">•</span>
-                  <span className="text-gray-700">{gap}</span>
-                </li>
-              ))}
+              {gaps.map((gap, i) => {
+                const action = getActionForGap(gap);
+                return (
+                  <li key={i} className="flex items-start gap-3 text-sm">
+                    <span className="text-yellow-600 font-bold mt-0.5">•</span>
+                    <span className="text-gray-700 flex-1">{gap}</span>
+                    {action && (
+                      <a
+                        href={action.href}
+                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      >
+                        {action.icon}
+                        {action.label}
+                        <ArrowRight size={12} />
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
           <div className="border-t border-gray-200 pt-4">
             <h3 className="font-medium text-gray-700 mb-3">Next Steps</h3>
             <ol className="space-y-2">
-              {actionItems.map((item, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm">
-                  <span className="bg-blue-100 text-blue-700 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                    {i + 1}
-                  </span>
-                  <span className="text-gray-700 mt-0.5">{item}</span>
-                </li>
-              ))}
+              {actionItems.map((item, i) => {
+                const action = getActionForGap(item);
+                return (
+                  <li key={i} className="flex items-start gap-3 text-sm">
+                    <span className="bg-blue-100 text-blue-700 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="text-gray-700 mt-0.5 flex-1">{item}</span>
+                    {action && (
+                      <a
+                        href={action.href}
+                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      >
+                        {action.icon}
+                        Fix
+                        <ArrowRight size={12} />
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ol>
           </div>
         </div>

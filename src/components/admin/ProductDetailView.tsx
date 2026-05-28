@@ -144,27 +144,33 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: Gaps + Actions */}
         <div className="lg:col-span-2 space-y-8">
-          <GapsSection gaps={product.gaps} actionItems={product.action_items} />
-          <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
+          <div id="gaps">
+            <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
+          </div>
+          <div id="validation-fields">
+            <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
+          </div>
         </div>
 
         {/* Right: Quick Actions + Category + Research Voice + Audit */}
         <div>
-          <QuickActionsPanel product={product} onRefresh={handleRefresh} />
-          <div className="mt-8">
+          <div id="quick-actions">
+            <QuickActionsPanel product={product} onRefresh={handleRefresh} />
+          </div>
+          <div className="mt-8" id="category">
             <CategoryEditor 
               productId={productId} 
               currentCategory={product.manifest.category} 
               onRefresh={handleRefresh} 
             />
           </div>
-          <div className="mt-8">
+          <div className="mt-8" id="methodology">
             <ProductResearchVoice 
               productId={productId}
               productName={product.manifest?.name || productId}
             />
           </div>
-          <div className="mt-8">
+          <div className="mt-8" id="audit">
             <AuditTrailPanel productId={productId} />
           </div>
         </div>
