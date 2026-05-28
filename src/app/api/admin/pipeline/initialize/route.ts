@@ -46,11 +46,45 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fallback: hardcoded portfolio list (for Vercel where filesystem access is limited)
     if (!manifest?.projects) {
-      return NextResponse.json(
-        { error: 'Could not read portfolio-manifest.yaml' },
-        { status: 500 }
-      );
+      console.log('Manifest file not found, using hardcoded portfolio list');
+      manifest = {
+        projects: [
+          { name: 'platform-trust', display_name: 'Platform Trust' },
+          { name: 'property-services', display_name: 'Property Services' },
+          { name: 'storefront-mcp', display_name: 'Storefront MCP' },
+          { name: 'preflight', display_name: 'Preflight' },
+          { name: 'mmcbuild', display_name: 'MMC Build' },
+          { name: 'pipeline', display_name: 'Pipeline' },
+          { name: 'deal-findrs', display_name: 'DealFindrs' },
+          { name: 'f2k-checkpoint-new', display_name: 'F2K Checkpoint' },
+          { name: 'investorpilot', display_name: 'InvestorPilot' },
+          { name: 'ndissda-automate', display_name: 'NDIS SDAA Automate' },
+          { name: 'r-and-d-tax', display_name: 'R&D Tax' },
+          { name: 'tenderwatch', display_name: 'TenderWatch' },
+          { name: 'f2k-fund-tokenisation', display_name: 'F2K Fund Tokenisation' },
+          { name: 'easy-claude-code', display_name: 'Easy Claude Code' },
+          { name: 'sayfix', display_name: 'SayFix' },
+          { name: 'connexions', display_name: 'Connexions' },
+          { name: 'kira', display_name: 'Kira' },
+          { name: 'launchready', display_name: 'LaunchReady' },
+          { name: 'universal-interviews', display_name: 'Universal Interviews' },
+          { name: 'raiseready-template', display_name: 'RaiseReady' },
+          { name: 'partner-pilot', display_name: 'PartnerPilot' },
+          { name: 'outreach-ready', display_name: 'Outreach Ready' },
+          { name: 'smart-board', display_name: 'Smart Board' },
+          { name: 'hair-stylist-ai', display_name: 'Hair Stylist AI' },
+          { name: 'lessonslearned', display_name: 'Lessons Learned' },
+          { name: 'community-question-responder', display_name: 'Community Question Responder' },
+          { name: 'disaster-support', display_name: 'Disaster Support' },
+          { name: 'lingo-pure-ai', display_name: 'Lingo Pure AI' },
+          { name: 'mova', display_name: 'Mova' },
+          { name: 'rehearsals-ai', display_name: 'RehearsalsAI' },
+          { name: 'tourlingo', display_name: 'TourLingo' },
+          { name: 'universal-lingo', display_name: 'Universal Lingo' },
+        ]
+      };
     }
 
     // Get existing products
