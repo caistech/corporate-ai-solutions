@@ -10,6 +10,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { scanPortfolio } from '@/lib/portfolio-scanner';
+import { createClient } from '@supabase/supabase-js';
+
+const dbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const dbKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function GET(
   request: NextRequest,
@@ -18,6 +22,13 @@ export async function GET(
   try {
     const productId = params.productId;
 
+    // Direct Supabase query as reference
+    const supabase = createClient(dbUrl, dbKey);
+    const { data: rawData, error: rawError } = await supabase
+      .from('product_validation_status')
+      .select('*');
+
+    // Using scanPortfolio
     const portfolio = await scanPortfolio();
     const product = portfolio.find((p) => p.manifest.name === productId) || null;
 
@@ -28,7 +39,15 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(product, {
+    return NextResponse.json({
+      ...product,
+      _debug: {
+        portfolioCount: portfolio.length,
+        rawCount: rawData?.length || 0,
+        rawError: rawError ? `${rawError.code}: ${rawError.message}` : null,
+        pipelineInRaw: (rawData || []).some((r: any) => r.product_slug === productId),
+      },
+    }, {
       status: 200,
       headers: {
         'Cache-Control': 'no-store, max-age=0',
