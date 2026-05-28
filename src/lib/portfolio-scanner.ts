@@ -429,6 +429,63 @@ function generateActionItems(validation: ProductValidationStatus | null, gaps: s
 }
 
 /**
+ * Fetch lifecycle stages from new product_lifecycle_stage table
+ */
+async function fetchLifecycleStages(supabase: any): Promise<Map<string, { stage: number; name: string }>> {
+  const { data, error } = await supabase
+    .from('product_lifecycle_stage')
+    .select('product_slug, current_stage, stage_name');
+
+  const map = new Map<string, { stage: number; name: string }>();
+  (data || []).forEach((row: any) => {
+    map.set(row.product_slug, { stage: row.current_stage, name: row.stage_name });
+  });
+  return map;
+}
+
+/**
+ * Fetch certificates from new certificate_of_occupancy table
+ */
+async function fetchCertificates(supabase: any): Promise<Map<string, any>> {
+  const { data } = await supabase
+    .from('certificate_of_occupancy')
+    .select('product_slug, status, valid_until, readiness_score, user_feedback_flag');
+
+  const map = new Map<string, any>();
+  (data || []).forEach((row: any) => {
+    map.set(row.product_slug, {
+      status: row.user_feedback_flag === 'no_issues' ? 'valid' : 
+             row.user_feedback_flag === 'issues_reported' ? 'issues_reported' : 'missing',
+      valid_until: row.valid_until,
+      readiness_score: row.readiness_score,
+    });
+  });
+  return map;
+}
+
+/**
+ * Fetch sensor data from new smart_sensors table
+ */
+async function fetchSensors(supabase: any): Promise<Map<string, any>> {
+  const { data } = await supabase
+    .from('smart_sensors')
+    .select('product_slug, sensor_type, status')
+    .order('checked_at', { ascending: false });
+
+  const map = new Map<string, any>();
+  (data || []).forEach((row: any) => {
+    if (!map.has(row.product_slug)) {
+      map.set(row.product_slug, { health: 'ok', security: 'ok', cost: 'ok' });
+    }
+    const current = map.get(row.product_slug);
+    if (row.sensor_type === 'health') current.health = row.status;
+    if (row.sensor_type === 'security') current.security = row.status;
+    if (row.sensor_type === 'cost') current.cost = row.status;
+  });
+  return map;
+}
+
+/**
  * Scan entire portfolio: Read manifest + enrich with DB state
  */
 export async function scanPortfolio(): Promise<EnrichedProduct[]> {
@@ -439,6 +496,9 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
 
   const manifest = readManifest();
   const validationStatuses = await fetchValidationStatuses(supabase);
+  const lifecycleStages = await fetchLifecycleStages(supabase);
+  const certificates = await fetchCertificates(supabase);
+  const sensors = await fetchSensors(supabase);
 
   const enriched: EnrichedProduct[] = manifest.projects.map((product) => {
     const validation = validationStatuses.get(product.name) || null;
@@ -447,10 +507,17 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     const can_run_outreach_now = readiness_score >= 80 && gaps.length === 0;
     const action_items = generateActionItems(validation, gaps);
 
-    // NEW: 7-Stage Lifecycle fields
-    const { stage, name } = determineStage(validation, readiness_score);
-    const certificate_of_occupancy = getCertificateStatus(validation);
-    const smart_sensors = getSmartSensorsStatus(validation);
+    // Check new tables first, fall back to calculated values
+    const dbStage = lifecycleStages.get(product.name);
+    const { stage, name } = dbStage 
+      ? { stage: dbStage.stage, name: dbStage.name }
+      : determineStage(validation, readiness_score);
+
+    const dbCert = certificates.get(product.name);
+    const certificate_of_occupancy = dbCert || getCertificateStatus(validation);
+
+    const dbSensors = sensors.get(product.name);
+    const smart_sensors = dbSensors || getSmartSensorsStatus(validation);
 
     return {
       manifest: product,
