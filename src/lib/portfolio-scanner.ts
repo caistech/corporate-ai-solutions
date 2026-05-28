@@ -96,23 +96,42 @@ const STAGE_MAPPING = [
 function determineStage(validation: ProductValidationStatus | null, readinessScore: number): { stage: number; name: string } {
   if (!validation) return { stage: 0, name: 'Not Started' };
   
-  // Check if passed all validation tests (Stage 5+)
+  // Count how many fields are filled
+  const fieldsFilled = [
+    validation.has_promise,
+    validation.has_distributor,
+    validation.has_end_user,
+    validation.has_friction
+  ].filter(Boolean).length;
+  
+  // Stage 5+: Passed validation tests (Certification & Sign-off)
   const testStatus = validation.validation_test_status;
   if (testStatus === 'passed') {
     return { stage: 5, name: 'Certification & Sign-off' };
   }
   
-  // Check if has all fields filled (Stage 2-3)
-  if (validation.has_promise && validation.has_distributor && validation.has_end_user && validation.has_friction) {
+  // Stage 4: Construction - has all methodology fields + high score but not tested
+  if (fieldsFilled >= 4 && readinessScore >= 60) {
+    return { stage: 4, name: 'Construction' };
+  }
+  
+  // Stage 3: Compliance & Standards - has all 4 fields filled
+  if (fieldsFilled >= 4) {
     return { stage: 3, name: 'Compliance & Standards' };
   }
   
-  // Check if has promise started (Stage 1-2)
-  if (validation.has_promise || validation.has_distributor) {
+  // Stage 2: Design & Planning - has 2-3 fields filled
+  if (fieldsFilled >= 2) {
     return { stage: 2, name: 'Design & Planning' };
   }
   
-  return { stage: 1, name: 'Pre-Development' };
+  // Stage 1: Pre-Development - has at least 1 field or some validation started
+  if (fieldsFilled >= 1 || validation.promise || validation.distributor) {
+    return { stage: 1, name: 'Pre-Development' };
+  }
+  
+  // Stage 0: Not Started - no meaningful data
+  return { stage: 0, name: 'Not Started' };
 }
 
 function getCertificateStatus(validation: ProductValidationStatus | null): EnrichedProduct['certificate_of_occupancy'] {
