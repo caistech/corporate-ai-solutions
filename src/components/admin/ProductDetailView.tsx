@@ -11,6 +11,7 @@ import GapsSection from './GapsSection';
 import ValidationFieldsEditor from './ValidationFieldsEditor';
 import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
+import CategoryEditor from './CategoryEditor';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -139,9 +140,16 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
         </div>
 
-        {/* Right: Quick Actions */}
+        {/* Right: Quick Actions + Category Editor */}
         <div>
           <QuickActionsPanel product={product} onRefresh={handleRefresh} />
+          <div className="mt-8">
+            <CategoryEditor 
+              productId={productId} 
+              currentCategory={product.manifest.category} 
+              onRefresh={handleRefresh} 
+            />
+          </div>
           <div className="mt-8">
             <AuditTrailPanel productId={productId} />
           </div>

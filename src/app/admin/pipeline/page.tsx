@@ -37,7 +37,7 @@ export default function PipelineDashboard() {
   const [sortBy, setSortBy] = useState<'readiness' | 'name' | 'updated'>('readiness');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [filterStatus, setFilterStatus] = useState<'all' | 'ready' | 'in-progress' | 'draft' | 'paused'>('all');
-  const [filterCategory, setFilterCategory] = useState<'all' | 'infrastructure' | 'own-tools' | 'product'>('all');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'infrastructure' | 'own-tools' | 'product' | 'client-product'>('all');
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -130,10 +130,11 @@ export default function PipelineDashboard() {
                   onChange={(e) => setFilterCategory(e.target.value as any)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">All</option>
-                  <option value="infrastructure">Infrastructure</option>
-                  <option value="own-tools">Own Tools</option>
-                  <option value="product">Products (Client/Distributor)</option>
+                   <option value="all">All</option>
+                   <option value="infrastructure">Infrastructure</option>
+                   <option value="own-tools">Own Tools</option>
+                   <option value="client-product">Client Products</option>
+                   <option value="product">Products (Distributor SaaS)</option>
                 </select>
               </div>
 

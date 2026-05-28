@@ -19,7 +19,7 @@ export interface ManifestProduct {
   name: string;
   vercel_project_id: string;
   supabase_project_ref?: string;
-  category?: 'infrastructure' | 'own-tools' | 'product';
+  category?: 'infrastructure' | 'own-tools' | 'product' | 'client-product';
 }
 
 export interface ProductValidationStatus {
@@ -92,16 +92,18 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'storefront-mcp', vercel_project_id: 'prj_7fXPw71NH0cwx5xHHov1OM5dhAr3', category: 'infrastructure' },
       
       // ============ OWN-TOOLS (internal factory use) ============
-      { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
-      
-      // ============ PRODUCTS (Lane 1: Paid Distributor SaaS) ============
-      // Pipeline: validation engine for distributors (sales agencies, marketing agencies, dev shops, accountants, consultants)
-      // Currently hosted in corporate-ai-solutions repo, will be separated later
-      { name: 'pipeline', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'product' },
-      
-      // ============ PRODUCTS (client/distributor production) ============
-      // Lane 1: Paid Distributor SaaS (primary revenue)
-      { name: 'mmcbuild', vercel_project_id: 'prj_qKKLAkGGGVH5KocDfoGZQOqIZGvj', category: 'product' },
+       { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
+       
+       // ============ CLIENT PRODUCTS (paid custom builds for specific clients) ============
+       { name: 'mmcbuild', vercel_project_id: 'prj_qKKLAkGGGVH5KocDfoGZQOqIZGvj', category: 'client-product' },
+       
+       // ============ PRODUCTS (Lane 1: Paid Distributor SaaS) ============
+       // Pipeline: validation engine for distributors (sales agencies, marketing agencies, dev shops, accountants, consultants)
+       // Currently hosted in corporate-ai-solutions repo, will be separated later
+       { name: 'pipeline', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'product' },
+       
+       // ============ PRODUCTS (distributor production) ============
+       // Lane 1: Paid Distributor SaaS (primary revenue)
       { name: 'deal-findrs', vercel_project_id: 'prj_B0pKJM1fTAD5FtbZudh4kUEhaqQM', category: 'product' },
       { name: 'f2k-checkpoint-new', vercel_project_id: 'prj_XPELCzoIwOY5NoHGJxd4Ah6w59G9', category: 'product' },
       { name: 'investorpilot', vercel_project_id: 'prj_investorpilot', category: 'product' },

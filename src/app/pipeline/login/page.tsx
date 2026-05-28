@@ -359,7 +359,7 @@ export default function LoginPage() {
               />
             </div>
             <p className="text-xs text-[#5C6B7A]">
-              We'll send you a link to reset your password. The link expires in 1 hour.
+              We&apos;ll send you a link to reset your password. The link expires in 1 hour.
             </p>
             <button
               type="submit"
