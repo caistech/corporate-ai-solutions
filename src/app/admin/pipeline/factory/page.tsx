@@ -154,7 +154,7 @@ export default function ProductFactoryDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Product Factory — 7-Stage Lifecycle</h1>
           <p className="text-gray-400">
-            Portfolio view through the "building a house" analogy. 
+            Portfolio view through the &quot;building a house&quot; analogy. 
             Certificate of Occupancy required for launch and ongoing operations.
           </p>
         </div>
