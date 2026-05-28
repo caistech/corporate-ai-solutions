@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       .filter((p: any) => !existingSlugs.has(p.name))
       .map((p: any) => ({
         product_slug: p.name,
-        display_name: p.display_name || p.name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        display_name: p.display_name || p.name.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
         has_promise: false,
         has_distributor: false,
         has_end_user: false,
