@@ -19,6 +19,7 @@ export interface ManifestProduct {
   name: string;
   vercel_project_id: string;
   supabase_project_ref?: string;
+  category?: 'infrastructure' | 'own-tools' | 'product';
 }
 
 export interface ProductValidationStatus {
