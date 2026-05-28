@@ -7,7 +7,7 @@ interface ValidationTestData {
   test_part_a_admin_portal?: 'passed' | 'warning' | 'failed' | 'not_run';
   test_part_b_user_portal?: 'passed' | 'warning' | 'failed' | 'not_run';
   test_part_c_auth_flows?: 'passed' | 'warning' | 'failed' | 'not_run';
-  test_part_d_scaffold?: 'passed' | 'warning' | 'failed' | 'not_run';
+  test_part_d_scaffold_verify?: 'passed' | 'warning' | 'failed' | 'not_run';
   validation_test_status?: 'passed' | 'warning' | 'failed' | 'not_run';
   validation_test_findings?: string[];
   last_validation_test_run?: string | null;
@@ -22,14 +22,14 @@ const partLabels: Record<string, string> = {
   test_part_a_admin_portal: 'A. Admin Portal',
   test_part_b_user_portal: 'B. User Portal',
   test_part_c_auth_flows: 'C. Auth Flows',
-  test_part_d_scaffold: 'D. Scaffold & Metadata',
+  test_part_d_scaffold_verify: 'D. Scaffold & Metadata',
 };
 
 const partDescriptions: Record<string, string> = {
   test_part_a_admin_portal: 'Admin control panel: login, team management, product administration',
   test_part_b_user_portal: 'User-facing functional UI: core product experience',
   test_part_c_auth_flows: 'Sign-up, login, password reset, magic link — all four paths work',
-  test_part_d_scaffold: 'Metadata, OG tags, favicon, responsive design, voice agent, settings page',
+  test_part_d_scaffold_verify: 'Metadata, OG tags, favicon, responsive design, voice agent, settings page',
 };
 
 function PartBadge({ status, label }: { status: string | undefined; label: string }) {

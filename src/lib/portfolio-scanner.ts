@@ -52,7 +52,7 @@ export interface ProductValidationStatus {
   test_part_a_admin_portal?: 'passed' | 'warning' | 'failed' | 'not_run';
   test_part_b_user_portal?: 'passed' | 'warning' | 'failed' | 'not_run';
   test_part_c_auth_flows?: 'passed' | 'warning' | 'failed' | 'not_run';
-  test_part_d_scaffold?: 'passed' | 'warning' | 'failed' | 'not_run';
+  test_part_d_scaffold_verify?: 'passed' | 'warning' | 'failed' | 'not_run';
   validation_test_status?: 'passed' | 'warning' | 'failed' | 'not_run';
   validation_test_findings?: string[];
   last_validation_test_run?: string | null;
@@ -247,7 +247,7 @@ function calculateReadinessScore(validation: ProductValidationStatus | null, gap
   score += scoreTestPart(validation.test_part_a_admin_portal);
   score += scoreTestPart(validation.test_part_b_user_portal);
   score += scoreTestPart(validation.test_part_c_auth_flows);
-  score += scoreTestPart(validation.test_part_d_scaffold);
+  score += scoreTestPart(validation.test_part_d_scaffold_verify);
 
   // Methodology commitment: bonus 10 points (capped at 100)
   if (validation.has_methodology_commitment) score = Math.min(100, score + 10);
