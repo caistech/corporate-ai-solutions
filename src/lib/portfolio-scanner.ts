@@ -91,9 +91,12 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'storefront-mcp', vercel_project_id: 'prj_7fXPw71NH0cwx5xHHov1OM5dhAr3', category: 'infrastructure' },
       
       // ============ OWN-TOOLS (internal factory use) ============
-      // Note: corporate-ai-solutions IS this project — it contains the pipeline itself
-      { name: 'corporate-ai-solutions', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'own-tools' },
       { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
+      
+      // ============ PRODUCTS (Lane 1: Paid Distributor SaaS) ============
+      // Pipeline: validation engine for distributors (sales agencies, marketing agencies, dev shops, accountants, consultants)
+      // Currently hosted in corporate-ai-solutions repo, will be separated later
+      { name: 'pipeline', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'product' },
       
       // ============ PRODUCTS (client/distributor production) ============
       // Lane 1: Paid Distributor SaaS (primary revenue)
