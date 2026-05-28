@@ -91,7 +91,8 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'storefront-mcp', vercel_project_id: 'prj_7fXPw71NH0cwx5xHHov1OM5dhAr3', category: 'infrastructure' },
       
       // ============ OWN-TOOLS (internal factory use) ============
-      { name: 'corporate-ai-solutions', vercel_project_id: 'prj_corporate_ai_solutions', category: 'own-tools' },
+      // Note: corporate-ai-solutions IS this project — it contains the pipeline itself
+      { name: 'corporate-ai-solutions', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'own-tools' },
       { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
       
       // ============ PRODUCTS (client/distributor production) ============
