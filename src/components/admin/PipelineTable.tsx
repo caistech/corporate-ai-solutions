@@ -30,6 +30,7 @@ interface EnrichedProduct {
 interface PipelineTableProps {
   products: EnrichedProduct[];
   filterStatus: 'all' | 'ready' | 'in-progress' | 'draft' | 'paused';
+  filterCategory: 'all' | 'infrastructure' | 'own-tools' | 'product';
   sortBy: 'readiness' | 'name' | 'updated';
   sortOrder: 'desc' | 'asc';
 }
@@ -37,18 +38,27 @@ interface PipelineTableProps {
 export default function PipelineTable({
   products,
   filterStatus,
+  filterCategory,
   sortBy,
   sortOrder,
 }: PipelineTableProps) {
   // Filter products
   const filtered = products.filter((p) => {
-    if (filterStatus === 'all') return true;
-    if (filterStatus === 'ready') return p.can_run_outreach_now;
-    if (filterStatus === 'in-progress')
-      return !p.can_run_outreach_now && p.validation && !p.validation.is_draft;
-    if (filterStatus === 'draft') return p.validation?.is_draft;
-    if (filterStatus === 'paused') return p.validation?.is_paused;
-    return false;
+    // Status filter
+    let statusMatch = true;
+    if (filterStatus === 'ready') statusMatch = p.can_run_outreach_now;
+    else if (filterStatus === 'in-progress')
+      statusMatch = !p.can_run_outreach_now && p.validation && !p.validation.is_draft;
+    else if (filterStatus === 'draft') statusMatch = p.validation?.is_draft;
+    else if (filterStatus === 'paused') statusMatch = p.validation?.is_paused;
+
+    // Category filter
+    let categoryMatch = true;
+    if (filterCategory !== 'all') {
+      categoryMatch = (p.manifest as any).category === filterCategory;
+    }
+
+    return statusMatch && categoryMatch;
   });
 
   // Sort products

@@ -37,6 +37,7 @@ export default function PipelineDashboard() {
   const [sortBy, setSortBy] = useState<'readiness' | 'name' | 'updated'>('readiness');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [filterStatus, setFilterStatus] = useState<'all' | 'ready' | 'in-progress' | 'draft' | 'paused'>('all');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'infrastructure' | 'own-tools' | 'product'>('all');
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -102,24 +103,39 @@ export default function PipelineDashboard() {
         {/* Summary Stats */}
         <PipelineSummary summary={data.summary} />
 
-        {/* Controls */}
-        <div className="mb-6 bg-white rounded-lg shadow p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            {/* Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All ({data.summary.total})</option>
-                <option value="ready">Ready for Outreach ({data.summary.ready_for_outreach})</option>
-                <option value="in-progress">In Progress ({data.summary.in_progress})</option>
-                <option value="draft">Draft ({data.summary.draft})</option>
-                <option value="paused">Paused ({data.summary.paused})</option>
-              </select>
-            </div>
+         {/* Controls */}
+         <div className="mb-6 bg-white rounded-lg shadow p-4">
+           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+             {/* Status Filter */}
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+               <select
+                 value={filterStatus}
+                 onChange={(e) => setFilterStatus(e.target.value as any)}
+                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+               >
+                 <option value="all">All ({data.summary.total})</option>
+                 <option value="ready">Ready for Outreach ({data.summary.ready_for_outreach})</option>
+                 <option value="in-progress">In Progress ({data.summary.in_progress})</option>
+                 <option value="draft">Draft ({data.summary.draft})</option>
+                 <option value="paused">Paused ({data.summary.paused})</option>
+               </select>
+             </div>
+
+             {/* Category Filter */}
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+               <select
+                 value={filterCategory}
+                 onChange={(e) => setFilterCategory(e.target.value as any)}
+                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+               >
+                 <option value="all">All</option>
+                 <option value="infrastructure">Infrastructure</option>
+                 <option value="own-tools">Own Tools</option>
+                 <option value="product">Products (Client/Distributor)</option>
+               </select>
+             </div>
 
             {/* Sort */}
             <div>
@@ -146,11 +162,12 @@ export default function PipelineDashboard() {
           </div>
         </div>
 
-        {/* Table */}
-        <PipelineTable
-          products={data.portfolio}
-          filterStatus={filterStatus}
-          sortBy={sortBy}
+         {/* Table */}
+         <PipelineTable
+           products={data.portfolio}
+           filterStatus={filterStatus}
+           filterCategory={filterCategory}
+           sortBy={sortBy}
           sortOrder={sortOrder}
         />
       </div>

@@ -85,27 +85,50 @@ function readManifest(): { projects: ManifestProduct[] } {
   console.log('Manifest file not found, using hardcoded portfolio list');
   return {
     projects: [
-      { name: 'singify', vercel_project_id: 'prj_singify' },
-      { name: 'mmcbuild', vercel_project_id: 'prj_mmcbuild' },
-      { name: 'deal-findrs', vercel_project_id: 'prj_deal_findrs' },
-      { name: 'connexions', vercel_project_id: 'prj_connexions' },
-      { name: 'kira', vercel_project_id: 'prj_kira' },
-      { name: 'launchready', vercel_project_id: 'prj_launchready' },
-      { name: 'investorpilot', vercel_project_id: 'prj_investorpilot' },
-      { name: 'easy-claude-code', vercel_project_id: 'prj_easy_claude_code' },
-      { name: 'platform-trust', vercel_project_id: 'prj_platform_trust' },
-      { name: 'f2k-checkpoint', vercel_project_id: 'prj_f2k_checkpoint' },
-      { name: 'f2k-fund-tokenisation', vercel_project_id: 'prj_f2k_fund' },
-      { name: 'ndissda-automate', vercel_project_id: 'prj_ndissda' },
-      { name: 'r-and-d-tax', vercel_project_id: 'prj_rnd_tax' },
-      { name: 'storefront-mcp', vercel_project_id: 'prj_storefront' },
-      { name: 'leadspark-tenant', vercel_project_id: 'prj_leadspark' },
-      { name: 'raiseready-template', vercel_project_id: 'prj_raiseready' },
-      { name: 'partner-pilot', vercel_project_id: 'prj_partner_pilot' },
-      { name: 'tenderwatch', vercel_project_id: 'prj_tenderwatch' },
-      { name: 'disaster-support', vercel_project_id: 'prj_disaster_support' },
-      { name: 'omq-outreach', vercel_project_id: 'prj_omq' },
-      { name: 'outreach-ready', vercel_project_id: 'prj_outreach_ready' },
+      // ============ INFRASTRUCTURE (shared @caistech services & platform) ============
+      { name: 'platform-trust', vercel_project_id: 'prj_NTvBNN6cBAoAOoIgp84dYvxZCNtf', category: 'infrastructure' },
+      { name: 'property-services', vercel_project_id: 'prj_bzS0HfyExXQXMsQAK9bH6SkrwQb0', category: 'infrastructure' },
+      { name: 'storefront-mcp', vercel_project_id: 'prj_7fXPw71NH0cwx5xHHov1OM5dhAr3', category: 'infrastructure' },
+      
+      // ============ OWN-TOOLS (internal factory use) ============
+      { name: 'corporate-ai-solutions', vercel_project_id: 'prj_corporate_ai_solutions', category: 'own-tools' },
+      { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
+      
+      // ============ PRODUCTS (client/distributor production) ============
+      // Lane 1: Paid Distributor SaaS (primary revenue)
+      { name: 'mmcbuild', vercel_project_id: 'prj_qKKLAkGGGVH5KocDfoGZQOqIZGvj', category: 'product' },
+      { name: 'deal-findrs', vercel_project_id: 'prj_B0pKJM1fTAD5FtbZudh4kUEhaqQM', category: 'product' },
+      { name: 'f2k-checkpoint-new', vercel_project_id: 'prj_XPELCzoIwOY5NoHGJxd4Ah6w59G9', category: 'product' },
+      { name: 'investorpilot', vercel_project_id: 'prj_investorpilot', category: 'product' },
+      { name: 'ndissda-automate', vercel_project_id: 'prj_ndissda_automate', category: 'product' },
+      { name: 'r-and-d-tax', vercel_project_id: 'prj_r_and_d_tax', category: 'product' },
+      { name: 'tenderwatch', vercel_project_id: 'prj_tenderwatch', category: 'product' },
+      { name: 'f2k-fund-tokenisation', vercel_project_id: 'prj_f2k_fund_tokenisation', category: 'product' },
+      
+      // Lane 4: Free BYOK Products (awareness/marketing)
+      { name: 'easy-claude-code', vercel_project_id: 'prj_sedjiKhnHUBginSeK2jP555u4wAp', category: 'product' },
+      { name: 'sayfix', vercel_project_id: 'prj_7N65GURc3slhs5QL013Bo95AxD7i', category: 'product' },
+      
+      // Lane 2/3: Studio-in-Residence & Contract Builds (some revenue, validation in progress)
+      { name: 'connexions', vercel_project_id: 'prj_pG5gak2uSAQQCKLvf39G72wcaqnG', category: 'product' },
+      { name: 'kira', vercel_project_id: 'prj_itVurDE9CD77K9rGWEQZNDmn33yz', category: 'product' },
+      { name: 'launchready', vercel_project_id: 'prj_DQS8A4CW2yVam1eJycDTiIZbGYUl', category: 'product' },
+      { name: 'universal-interviews', vercel_project_id: 'prj_j9Xv0a6A0eU7naa8Ciw3jprYKlnL', category: 'product' },
+      { name: 'raiseready-template', vercel_project_id: 'prj_fKuIr7tWjKyWTgXDMCJYuhKQIylD', category: 'product' },
+      { name: 'partner-pilot', vercel_project_id: 'prj_partner_pilot', category: 'product' },
+      { name: 'outreach-ready', vercel_project_id: 'prj_outreach_ready', category: 'product' },
+      
+      // Unaudited/In-Progress (will be categorized after manifest audit)
+      { name: 'smart-board', vercel_project_id: 'prj_BUzAZzsnUyARewFEpO6OpXV7zqac', category: 'product' },
+      { name: 'hair-stylist-ai', vercel_project_id: 'prj_sJ6UwGIaO05WnortzlLP5cIx9Azi', category: 'product' },
+      { name: 'lessonslearned', vercel_project_id: 'prj_f6efDw4g7FfXG0hnKVGR5Mv2202n', category: 'product' },
+      { name: 'community-question-responder', vercel_project_id: 'prj_2VGX4tqLk3WtwSfl3Lawp2TQ6jyL', category: 'product' },
+      { name: 'disaster-support', vercel_project_id: 'prj_disaster_support', category: 'product' },
+      { name: 'lingo-pure-ai', vercel_project_id: 'prj_lingo_pure_ai', category: 'product' },
+      { name: 'mova', vercel_project_id: 'prj_mova', category: 'product' },
+      { name: 'rehearsals-ai', vercel_project_id: 'prj_rehearsals_ai', category: 'product' },
+      { name: 'tourlingo', vercel_project_id: 'prj_tourlingo', category: 'product' },
+      { name: 'universal-lingo', vercel_project_id: 'prj_universal_lingo', category: 'product' },
     ],
   };
 }
