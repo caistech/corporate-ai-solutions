@@ -100,8 +100,32 @@ export default function PipelineDashboard() {
            <p className="text-slate-600">The validation pipeline decides what to build next and ensures each product has market demand before investing in scale.</p>
          </div>
 
-        {/* Summary Stats */}
+         {/* Summary Stats */}
         <PipelineSummary summary={data.summary} />
+
+        {/* Initialize Button - show if many products not in pipeline */}
+        {data.portfolio.filter((p: any) => !p.validation).length > 5 && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/admin/pipeline/initialize', { method: 'POST' });
+                  const result = await res.json();
+                  if (result.success) {
+                    window.location.reload();
+                  } else {
+                    alert('Failed: ' + result.error);
+                  }
+                } catch (e) {
+                  alert('Error: ' + e);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              Initialize All Products ({data.portfolio.length - data.portfolio.filter((p: any) => p.validation).length} missing)
+            </button>
+          </div>
+        )}
 
          {/* Controls */}
          <div className="mb-6 bg-white rounded-lg shadow p-4">
