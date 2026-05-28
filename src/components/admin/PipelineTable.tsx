@@ -19,6 +19,7 @@ interface EnrichedProduct {
   manifest: {
     name: string;
     vercel_project_id: string;
+    category?: 'infrastructure' | 'own-tools' | 'product';
   };
   validation: any;
   gaps: string[];
