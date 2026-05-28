@@ -25,24 +25,23 @@ export async function GET(
     // Direct Supabase queries as reference
     const supabase = createClient(dbUrl, dbKey);
 
-    // Query 1: product_validation_status
+    // Query 1: product_validation_status with explicit columns
     const { data: rawData, error: rawError } = await supabase
       .from('product_validation_status')
-      .select('*');
+      .select('id,product_slug,is_draft,validation_test_status');
 
-    // Query 2: another table (organisations) to verify connection works
-    const { data: orgData, error: orgError } = await supabase
-      .from('organisations')
-      .select('id')
+    // Query 2: schema check
+    const { data: schemaCheck, error: schemaError } = await supabase
+      .from('product_validation_status')
+      .select('*')
       .limit(1);
 
-    // Query 3: auth users to verify service_role key
-    const { data: authData, error: authError } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .limit(1);
+    // Query 3: raw table count
+    const { count: tableCount, error: countError } = await supabase
+      .from('product_validation_status')
+      .select('*', { count: 'exact', head: true });
 
-    // Query with filter
+    // Query with filter (baseline)
     const { data: filteredData, error: filteredError } = await supabase
       .from('product_validation_status')
       .select('product_slug')
@@ -66,6 +65,10 @@ export async function GET(
         rawCount: rawData?.length || 0,
         rawError: rawError ? `${rawError.code}: ${rawError.message}` : null,
         pipelineInRaw: (rawData || []).some((r: any) => r.product_slug === productId),
+        schemaCount: schemaCheck?.length || 0,
+        schemaError: schemaError ? `${schemaError.code}: ${schemaError.message}` : null,
+        tableCount: tableCount ?? 0,
+        countError: countError ? `${countError.code}: ${countError.message}` : null,
         orgCount: orgData?.length || 0,
         orgError: orgError ? `${orgError.code}: ${orgError.message}` : null,
         authCount: authData?.length || 0,
