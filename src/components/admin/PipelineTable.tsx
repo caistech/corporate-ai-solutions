@@ -19,7 +19,7 @@ interface EnrichedProduct {
   manifest: {
     name: string;
     vercel_project_id: string;
-    category?: 'infrastructure' | 'own-tools' | 'product';
+    category?: 'infrastructure' | 'own-tools' | 'product' | 'client-product';
   };
   validation: any;
   gaps: string[];
@@ -31,7 +31,7 @@ interface EnrichedProduct {
 interface PipelineTableProps {
   products: EnrichedProduct[];
   filterStatus: 'all' | 'ready' | 'in-progress' | 'draft' | 'paused';
-  filterCategory: 'all' | 'infrastructure' | 'own-tools' | 'product';
+  filterCategory: 'all' | 'infrastructure' | 'own-tools' | 'product' | 'client-product';
   sortBy: 'readiness' | 'name' | 'updated';
   sortOrder: 'desc' | 'asc';
 }

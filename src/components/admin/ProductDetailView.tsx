@@ -12,6 +12,7 @@ import ValidationFieldsEditor from './ValidationFieldsEditor';
 import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
+import ProductResearchVoice from './ProductResearchVoice';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -140,7 +141,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
         </div>
 
-        {/* Right: Quick Actions + Category Editor */}
+        {/* Right: Quick Actions + Category + Research Voice + Audit */}
         <div>
           <QuickActionsPanel product={product} onRefresh={handleRefresh} />
           <div className="mt-8">
@@ -148,6 +149,12 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               productId={productId} 
               currentCategory={product.manifest.category} 
               onRefresh={handleRefresh} 
+            />
+          </div>
+          <div className="mt-8">
+            <ProductResearchVoice 
+              productId={productId}
+              productName={product.manifest?.name || productId}
             />
           </div>
           <div className="mt-8">

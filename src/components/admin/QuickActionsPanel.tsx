@@ -107,7 +107,7 @@ export default function QuickActionsPanel({ product, onRefresh }: QuickActionsPa
             <div>
               <p className="text-gray-600 font-medium">Gaps to Fill:</p>
               <ul className="text-gray-500 space-y-1 mt-1">
-                {gaps.slice(0, 3).map((gap, i) => (
+                {gaps.slice(0, 3).map((gap: string, i: number) => (
                   <li key={i}>• {gap}</li>
                 ))}
                 {gaps.length > 3 && <li className="text-gray-400">+ {gaps.length - 3} more</li>}
