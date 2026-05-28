@@ -28,6 +28,7 @@ export default function AdminReviewsPage() {
   
   useEffect(() => {
     loadReviews()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
   
   async function loadReviews() {
