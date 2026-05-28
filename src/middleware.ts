@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
 
   if (isLogin && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/pipeline/today'
+    url.pathname = '/pipeline/welcome'
     return NextResponse.redirect(url)
   }
 

@@ -9,11 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { scanPortfolio } from '@/lib/portfolio-scanner';
-import { createClient } from '@supabase/supabase-js';
-
-const dbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const dbKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { getProductPipeline } from '@/lib/portfolio-scanner';
 
 export async function GET(
   request: NextRequest,
@@ -22,34 +18,7 @@ export async function GET(
   try {
     const productId = params.productId;
 
-    // Direct Supabase queries as reference
-    const supabase = createClient(dbUrl, dbKey);
-
-    // Query 1: product_validation_status with explicit columns
-    const { data: rawData, error: rawError } = await supabase
-      .from('product_validation_status')
-      .select('id,product_slug,is_draft,validation_test_status');
-
-    // Query 2: schema check
-    const { data: schemaCheck, error: schemaError } = await supabase
-      .from('product_validation_status')
-      .select('*')
-      .limit(1);
-
-    // Query 3: raw table count
-    const { count: tableCount, error: countError } = await supabase
-      .from('product_validation_status')
-      .select('*', { count: 'exact', head: true });
-
-    // Query with filter (baseline)
-    const { data: filteredData, error: filteredError } = await supabase
-      .from('product_validation_status')
-      .select('product_slug')
-      .eq('product_slug', 'pipeline');
-
-    // Using scanPortfolio
-    const portfolio = await scanPortfolio();
-    const product = portfolio.find((p) => p.manifest.name === productId) || null;
+    const product = await getProductPipeline(productId);
 
     if (!product) {
       return NextResponse.json(
@@ -57,6 +26,25 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    return NextResponse.json(product, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching product:', error);
+
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch product details',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
 
     return NextResponse.json({
       ...product,

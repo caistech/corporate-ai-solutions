@@ -157,7 +157,7 @@ async function fetchValidationStatuses(
 ): Promise<Map<string, ProductValidationStatus>> {
   const { data, error } = await client
     .from('product_validation_status')
-    .select('*');
+    .select('id,product_slug,display_name,gate1_ready,gate1_score_percent,hard_gates_passed,hard_gates_total,weighted_score_percent,can_run_outreach,outreach_blocker,promise,distributor,end_user,friction,has_promise,has_distributor,has_end_user,has_friction,has_methodology_commitment,last_validation_update,last_outreach_attempt,last_scoring_run,created_at,updated_at,updated_by,notes,is_draft,is_paused,validation_test_results,test_part_a_admin_portal,test_part_b_user_portal,test_part_c_auth_flows,test_part_d_scaffold_verify,validation_test_status,validation_test_findings,last_validation_test_run,last_validation_test_by');
 
   if (error) {
     console.error('Error fetching validation statuses:', error);
