@@ -65,11 +65,14 @@ export async function middleware(request: NextRequest) {
 
   const isLogin = pathname === '/pipeline/login'
   const isCallback = pathname.startsWith('/pipeline/auth/')
+  const isAdminCallback = pathname.startsWith('/admin/pipeline/auth/')
   const isAdmin = pathname.startsWith('/admin')
 
   // Unauthenticated → login. Covers /admin/* + /pipeline/* (the methodology cockpit
   // fires real outreach + API cost, so an open surface is a live exposure).
-  if (!isLogin && !isCallback && !user) {
+  // Callbacks (/pipeline/auth/*, /admin/pipeline/auth/*) are exempt — they handle
+  // the magic-link code exchange before the user session exists.
+  if (!isLogin && !isCallback && !isAdminCallback && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/pipeline/login'
     return NextResponse.redirect(url)
