@@ -18,14 +18,7 @@ export async function POST(
     }
     
     const productSlug = params.productId;
-    let body;
-    try {
-      body = await request.json();
-    } catch (e) {
-      const text = await request.text();
-      console.error('Failed to parse request body:', text);
-      return NextResponse.json({ error: 'Invalid request body', received: text }, { status: 400 });
-    }
+    const body = await request.json();
     const { fields, productDetails } = body;
 
     if (!fields || !Array.isArray(fields) || fields.length === 0) {
@@ -93,17 +86,7 @@ Only include the fields requested: ${fields.join(', ')}`;
       return NextResponse.json({ error: 'AI generation failed', minimaxError: err }, { status: 500 });
     }
 
-    const rawData = await response.text();
-    console.log('Minimax raw response:', rawData.substring(0, 500));
-    
-    let data;
-    try {
-      data = JSON.parse(rawData);
-    } catch (e) {
-      console.error('Failed to parse minimax response:', e);
-      return NextResponse.json({ error: 'Invalid JSON from AI', raw: rawData.substring(0, 200) }, { status: 500 });
-    }
-    
+    const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '{}';
 
     // Extract JSON from response

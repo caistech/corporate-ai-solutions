@@ -44,10 +44,20 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     try {
       const slug = getProductSlug();
       console.log('Generating for slug:', slug);
+      
+      // Get idea_card data for LLM context
+      const productDetails = {
+        name: product.manifest?.name || slug,
+        problem: product.ideaCard?.problem || '',
+        solution: product.ideaCard?.solution || '',
+        targetAudience: product.ideaCard?.end_user_pool || product.ideaCard?.distributor || '',
+        oneLiner: product.ideaCard?.one_liner || '',
+      };
+      
       const res = await fetch(`/api/admin/pipeline/${slug}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: [field] }),
+        body: JSON.stringify({ fields: [field], productDetails }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -77,10 +87,18 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     
     setGenerating('all');
     try {
+      const productDetails = {
+        name: product.manifest?.name || product.product_slug,
+        problem: product.ideaCard?.problem || '',
+        solution: product.ideaCard?.solution || '',
+        targetAudience: product.ideaCard?.end_user_pool || product.ideaCard?.distributor || '',
+        oneLiner: product.ideaCard?.one_liner || '',
+      };
+      
       const res = await fetch(`/api/admin/pipeline/${product.id}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: missing }),
+        body: JSON.stringify({ fields: missing, productDetails }),
       });
       if (res.ok) {
         const data = await res.json();
