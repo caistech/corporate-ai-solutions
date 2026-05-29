@@ -260,6 +260,7 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'rehearsals-ai', vercel_project_id: 'prj_rehearsals_ai', category: 'product' },
       { name: 'tourlingo', vercel_project_id: 'prj_tourlingo', category: 'product' },
       { name: 'universal-lingo', vercel_project_id: 'prj_universal_lingo', category: 'product' },
+      { name: 'singify', vercel_project_id: '', category: 'product' },
     ],
   };
 }
