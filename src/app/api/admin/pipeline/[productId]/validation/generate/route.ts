@@ -18,7 +18,14 @@ export async function POST(
     }
     
     const productSlug = params.productId;
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      const text = await request.text();
+      console.error('Failed to parse request body:', text);
+      return NextResponse.json({ error: 'Invalid request body', received: text }, { status: 400 });
+    }
     const { fields } = body;
 
     if (!fields || !Array.isArray(fields) || fields.length === 0) {
