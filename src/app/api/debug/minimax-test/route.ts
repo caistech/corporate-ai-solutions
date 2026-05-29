@@ -9,14 +9,14 @@ export async function GET() {
   }
   
   try {
-    const response = await fetch(`https://api.minimax.chat/v1/text/chatcompletion_v2?GroupId=${GROUP_ID}`, {
+    const response = await fetch(`https://api.minimax.io/v1/chat/completions?GroupId=${GROUP_ID}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${MINIMAX_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'abab6.5s-chat',
+        model: 'MiniMax-M2.7',
         messages: [
           { role: 'user', content: 'Say hello in 3 words' }
         ],
