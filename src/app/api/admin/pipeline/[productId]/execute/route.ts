@@ -101,8 +101,47 @@ export async function POST(
       });
     }
 
-    // Real execution (Phase 6): Would call InvestorPilot API here
-    // For now, just mark as committed
+    // Real execution: Send to InvestorPilot
+    const investorPilotUrl = process.env.INVESTORPILOT_WEBHOOK_URL;
+    if (!investorPilotUrl) {
+      console.warn('[execute] INVESTORPILOT_WEBHOOK_URL not set, skipping webhook');
+    } else {
+      const webhookPayload = {
+        product_id: productId,
+        product_name: product.display_name,
+        description: product.promise,
+        landing_page_url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
+        distributor_icp: product.distributor,
+        distributor_pitch: product.pitch || null,
+        end_user_icp: product.end_user,
+        friction: product.friction,
+        regulated_flag: product.regulated || false,
+        cta_spec: {
+          destination: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
+          events: ['cta_click', 'form_submit'],
+        },
+        validation_summary: {
+          hard_gates_passed: product.hard_gates_passed,
+          weighted_score: product.weighted_score_percent,
+          gates_ready: product.gate1_ready,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      const webhookResponse = await fetch(investorPilotUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookPayload),
+      });
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error('[execute] InvestorPilot webhook failed:', webhookResponse.status, errorText);
+        throw new Error(`InvestorPilot webhook failed: ${webhookResponse.status}`);
+      }
+
+      console.log('[execute] Sent to InvestorPilot:', webhookPayload.product_id);
+    }
     const { error: updateError } = await supabase
       .from('product_validation_status')
       .update({
