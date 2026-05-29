@@ -6,13 +6,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
-
 export async function POST(
   request: NextRequest,
   { params }: { params: { productId: string } }
 ) {
   try {
+    const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
     if (!MINIMAX_API_KEY) {
       console.error('MINIMAX_API_KEY is not set');
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
