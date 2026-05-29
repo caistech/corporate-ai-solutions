@@ -13,6 +13,11 @@ export async function POST(
   { params }: { params: { productId: string } }
 ) {
   try {
+    if (!MINIMAX_API_KEY) {
+      console.error('MINIMAX_API_KEY is not set');
+      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
+    }
+    
     const productSlug = params.productId;
     const body = await request.json();
     const { fields } = body;
