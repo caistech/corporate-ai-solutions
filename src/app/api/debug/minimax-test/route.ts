@@ -9,13 +9,12 @@ export async function GET() {
   }
   
   try {
-    // Try x-api-key header (some MiniMax endpoints need this)
-    const response = await fetch('https://api.minimax.io/v1/chat/completions', {
+    // Pay-as-you-go needs GroupId
+    const response = await fetch(`https://api.minimax.io/v1/chat/completions?GroupId=${GROUP_ID}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MINIMAX_API_KEY}`,
-        'x-api-key': MINIMAX_API_KEY
+        'Authorization': `Bearer ${MINIMAX_API_KEY}`
       },
       body: JSON.stringify({
         model: 'MiniMax-M2.7',
@@ -29,7 +28,7 @@ export async function GET() {
     return NextResponse.json({ 
       ok: response.ok, 
       status: response.status,
-      url: 'https://api.minimax.io/v1/chat/completions (no GroupId)',
+      url: `https://api.minimax.io/v1/chat/completions?GroupId=${GROUP_ID}`,
       keyPrefix: MINIMAX_API_KEY?.substring(0, 15),
       data 
     });
