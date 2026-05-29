@@ -21,6 +21,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import { 
   Building, 
   FileCheck, 
@@ -96,6 +97,35 @@ export default function ProductFactoryDashboard() {
     };
 
     fetchData();
+
+    // Subscribe to realtime updates from key tables
+    const channels = supabase
+      .channel('pipeline-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pipeline_gates' },
+        () => fetchData()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'lifecycle_stages' },
+        () => fetchData()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'certificates' },
+        () => fetchData()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sensors' },
+        () => fetchData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channels);
+    };
   }, []);
 
   const productsByStage = STAGES.map(stage => ({

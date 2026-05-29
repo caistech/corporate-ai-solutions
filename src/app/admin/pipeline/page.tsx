@@ -16,6 +16,7 @@
 import React, { useEffect, useState } from 'react';
 import PipelineTable from '@/components/admin/PipelineTable';
 import PipelineSummary from '@/components/admin/PipelineSummary';
+import { supabase } from '@/lib/supabase';
 
 interface PortfolioData {
   summary: {
@@ -61,6 +62,35 @@ export default function PipelineDashboard() {
     };
 
     fetchPortfolio();
+
+    // Subscribe to realtime updates from key tables
+    const channels = supabase
+      .channel('pipeline-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pipeline_gates' },
+        () => fetchPortfolio()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'lifecycle_stages' },
+        () => fetchPortfolio()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'certificates' },
+        () => fetchPortfolio()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sensors' },
+        () => fetchPortfolio()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channels);
+    };
   }, []);
 
   if (isLoading) {
