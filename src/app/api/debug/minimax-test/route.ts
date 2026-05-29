@@ -9,12 +9,13 @@ export async function GET() {
   }
   
   try {
-    // Try without GroupId first (Token Plan keys may not need it)
+    // Try x-api-key header (some MiniMax endpoints need this)
     const response = await fetch('https://api.minimax.io/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MINIMAX_API_KEY}`
+        'Authorization': `Bearer ${MINIMAX_API_KEY}`,
+        'x-api-key': MINIMAX_API_KEY
       },
       body: JSON.stringify({
         model: 'MiniMax-M2.7',
