@@ -37,10 +37,14 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     }
   };
 
+  const getProductSlug = () => product.product_slug || product.id || product.productId || 'unknown';
+  
   const handleGenerate = async (field: string) => {
     setGenerating(field);
     try {
-      const res = await fetch(`/api/admin/pipeline/${product.product_slug}/validation/generate`, {
+      const slug = getProductSlug();
+      console.log('Generating for slug:', slug);
+      const res = await fetch(`/api/admin/pipeline/${slug}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: [field] }),
