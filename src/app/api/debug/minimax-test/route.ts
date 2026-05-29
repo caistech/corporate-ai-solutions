@@ -27,7 +27,9 @@ export async function GET() {
     return NextResponse.json({ 
       ok: response.ok, 
       status: response.status,
-      groupId: GROUP_ID,
+      url: `https://api.minimax.chat/v1/text/chatcompletion_v2?GroupId=${GROUP_ID}`,
+      groupIdUsed: GROUP_ID,
+      keyPrefix: MINIMAX_API_KEY?.substring(0, 15),
       data 
     });
   } catch (err: any) {
