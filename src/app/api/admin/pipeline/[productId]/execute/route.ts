@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -128,10 +129,19 @@ export async function POST(
         timestamp: new Date().toISOString(),
       };
 
+      const webhookBody = JSON.stringify(webhookPayload);
+      const webhookSecret = process.env.PIPELINE_INTAKE_WEBHOOK_SECRET;
+      const hmacSignature = webhookSecret
+        ? `sha256=${crypto.createHmac('sha256', webhookSecret).update(webhookBody).digest('hex')}`
+        : null;
+
       const webhookResponse = await fetch(investorPilotUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(webhookPayload),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(hmacSignature && { 'x-pipeline-signature': hmacSignature }),
+        },
+        body: webhookBody,
       });
 
       if (!webhookResponse.ok) {
