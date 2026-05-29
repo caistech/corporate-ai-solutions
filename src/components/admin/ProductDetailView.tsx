@@ -179,6 +179,38 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
       </div>
 
+      {/* STEP 5: Founder Commitment */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 5</span>
+          <h2 className="text-lg font-semibold text-gray-900">Founder Commitment</h2>
+          {product.validation?.has_methodology_commitment && <CheckCircle className="text-green-600" size={18} />}
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Tick to confirm you're committed to running the 4-week validation pipeline.
+          <br /><strong>This item is for:</strong> Confirming you will actually validate this product.
+          <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
+        </p>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={product.validation?.has_methodology_commitment || false}
+            onChange={async (e) => {
+              await fetch(`/api/admin/pipeline/${productId}/validation`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
+              });
+              handleRefresh();
+            }}
+            className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+          />
+          <span className="text-gray-700">
+            I commit to running the 4-week validation pipeline for this product
+          </span>
+        </label>
+      </div>
+
       {/* STEP 6: Hard Gates / Compliance */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
