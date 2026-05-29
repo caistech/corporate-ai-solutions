@@ -1,68 +1,69 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle, ArrowRight, CheckCircle, Settings, Users, Target, FileText, Play, Shield } from 'lucide-react';
+import { AlertCircle, ArrowRight, CheckCircle, Settings, Users, Target, FileText, Play, Shield, Sparkles } from 'lucide-react';
 
 interface GapsSectionProps {
   gaps: string[];
   actionItems: string[];
   productSlug?: string;
+  onAction?: (action: string, gap: string) => void;
 }
 
-const gapToAction: Record<string, { label: string; href: string; icon: React.ReactNode }> = {
+const gapToAction: Record<string, { label: string; action: string; icon: React.ReactNode }> = {
   'Missing product promise': { 
-    label: 'Add promise', 
-    href: '#validation-fields',
-    icon: <FileText size={14} />
+    label: 'Generate', 
+    action: 'generate-promise',
+    icon: <Sparkles size={14} />
   },
   'Missing distributor hypothesis': { 
-    label: 'Add distributor', 
-    href: '#validation-fields',
-    icon: <Users size={14} />
+    label: 'Generate', 
+    action: 'generate-distributor',
+    icon: <Sparkles size={14} />
   },
   'Missing end-user definition': { 
-    label: 'Add end user', 
-    href: '#validation-fields',
-    icon: <Target size={14} />
+    label: 'Generate', 
+    action: 'generate-end_user',
+    icon: <Sparkles size={14} />
   },
   'Missing friction/pain point': { 
-    label: 'Add friction', 
-    href: '#validation-fields',
-    icon: <AlertCircle size={14} />
+    label: 'Generate', 
+    action: 'generate-friction',
+    icon: <Sparkles size={14} />
   },
   'No founder commitment to validate': { 
-    label: 'Add commitment', 
-    href: '#methodology',
+    label: 'Add', 
+    action: 'add-commitment',
     icon: <Shield size={14} />
   },
   'hard gates': { 
-    label: 'Run compliance', 
-    href: '#compliance-audit',
+    label: 'Run', 
+    action: 'run-compliance',
     icon: <CheckCircle size={14} />
   },
   'Validation tests not yet run': { 
-    label: 'Run tests', 
-    href: '#validation-tests',
+    label: 'Run', 
+    action: 'run-tests',
     icon: <Play size={14} />
   },
   'Validation tests failed': { 
-    label: 'Review failures', 
-    href: '#validation-tests',
+    label: 'Review', 
+    action: 'review-failures',
     icon: <AlertCircle size={14} />
   },
   'Validation tests passed with warnings': { 
-    label: 'Review warnings', 
-    href: '#validation-tests',
+    label: 'Review', 
+    action: 'review-warnings',
     icon: <AlertCircle size={14} />
   },
   'Not yet added to validation pipeline': { 
-    label: 'Initialize product', 
-    href: '#initialize',
+    label: 'Init', 
+    action: 'initialize',
     icon: <Settings size={14} />
   },
 };
 
-export default function GapsSection({ gaps, actionItems, productSlug }: GapsSectionProps) {
+export default function GapsSection({ gaps, actionItems, productSlug, onAction }: GapsSectionProps) {
   const getActionForGap = (gap: string) => {
     for (const [key, action] of Object.entries(gapToAction)) {
       if (gap.includes(key)) {
@@ -70,6 +71,12 @@ export default function GapsSection({ gaps, actionItems, productSlug }: GapsSect
       }
     }
     return null;
+  };
+
+  const handleClick = (action: string | undefined, gap: string) => {
+    if (action && onAction) {
+      onAction(action, gap);
+    }
   };
 
   return (
@@ -95,14 +102,14 @@ export default function GapsSection({ gaps, actionItems, productSlug }: GapsSect
                     <span className="text-yellow-600 font-bold mt-0.5">•</span>
                     <span className="text-gray-700 flex-1">{gap}</span>
                     {action && (
-                      <a
-                        href={action.href}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      <button
+                        onClick={() => handleClick(action.action, gap)}
+                        className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 text-xs font-medium"
                       >
                         {action.icon}
                         {action.label}
                         <ArrowRight size={12} />
-                      </a>
+                      </button>
                     )}
                   </li>
                 );
@@ -122,14 +129,14 @@ export default function GapsSection({ gaps, actionItems, productSlug }: GapsSect
                     </span>
                     <span className="text-gray-700 mt-0.5 flex-1">{item}</span>
                     {action && (
-                      <a
-                        href={action.href}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      <button
+                        onClick={() => handleClick(action.action, item)}
+                        className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 text-xs font-medium"
                       >
                         {action.icon}
-                        Fix
+                        Do it
                         <ArrowRight size={12} />
-                      </a>
+                      </button>
                     )}
                   </li>
                 );
