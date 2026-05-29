@@ -49,7 +49,9 @@ Format as JSON:
 
 Only include the fields requested: ${fields.join(', ')}`;
 
-    const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+    const GROUP_ID = process.env.MINIMAX_GROUP_ID || '516712014697644041';
+    
+    const response = await fetch(`https://api.minimax.chat/v1/text/chatcompletion_v2?GroupId=${GROUP_ID}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
