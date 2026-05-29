@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
           { name: 'lingo-pure-ai', display_name: 'Lingo Pure AI' },
           { name: 'mova', display_name: 'Mova' },
           { name: 'rehearsals-ai', display_name: 'RehearsalsAI' },
+          { name: 'singify', display_name: 'Singify' },
           { name: 'tourlingo', display_name: 'TourLingo' },
           { name: 'universal-lingo', display_name: 'Universal Lingo' },
         ]
