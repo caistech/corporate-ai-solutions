@@ -26,7 +26,7 @@ export async function POST(
       console.error('Failed to parse request body:', text);
       return NextResponse.json({ error: 'Invalid request body', received: text }, { status: 400 });
     }
-    const { fields } = body;
+    const { fields, productDetails } = body;
 
     if (!fields || !Array.isArray(fields) || fields.length === 0) {
       return NextResponse.json({ error: 'No fields specified' }, { status: 400 });
@@ -37,7 +37,20 @@ export async function POST(
                      productSlug.includes('seafields') || productSlug.includes('wavecrest') || productSlug.includes('branscombe') ? 'Property Development' :
                      'SaaS Product';
 
-    const prompt = `Generate validation fields for a product called "${productSlug}" (category: ${category}).
+    // Build context from product details if provided
+    let productContext = '';
+    if (productDetails) {
+      productContext = `
+Product Details:
+- Name: ${productDetails.name || productSlug}
+- Problem: ${productDetails.problem || 'Not specified'}
+- Solution: ${productDetails.solution || 'Not specified'}  
+- Target Audience: ${productDetails.targetAudience || 'Not specified'}
+- One-liner: ${productDetails.oneLiner || 'Not specified'}
+`;
+    }
+
+    const prompt = `Generate validation fields for a product called "${productSlug}" (category: ${category}).${productContext}
 
 For each field, provide a 1-2 sentence response:
 
