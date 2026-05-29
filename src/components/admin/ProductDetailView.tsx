@@ -172,7 +172,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           {validationFieldsComplete && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          These 4 fields define what your product is and who it's for.
+          These 4 fields define what your product is and who it is for.
           <br /><strong>This item is for:</strong> Defining the product promise, distributor model, end user, and pain point.
           <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
         </p>
@@ -187,7 +187,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           {product.validation?.has_methodology_commitment && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          Tick to confirm you're committed to running the 4-week validation pipeline.
+          Tick to confirm you are committed to running the 4-week validation pipeline.
           <br /><strong>This item is for:</strong> Confirming you will actually validate this product.
           <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
         </p>
