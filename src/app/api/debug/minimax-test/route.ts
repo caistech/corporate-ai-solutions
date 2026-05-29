@@ -9,7 +9,8 @@ export async function GET() {
   }
   
   try {
-    const response = await fetch(`https://api.minimax.io/v1/chat/completions?GroupId=${GROUP_ID}`, {
+    // Try without GroupId first (Token Plan keys may not need it)
+    const response = await fetch('https://api.minimax.io/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,8 +28,7 @@ export async function GET() {
     return NextResponse.json({ 
       ok: response.ok, 
       status: response.status,
-      url: `https://api.minimax.chat/v1/text/chatcompletion_v2?GroupId=${GROUP_ID}`,
-      groupIdUsed: GROUP_ID,
+      url: 'https://api.minimax.io/v1/chat/completions (no GroupId)',
       keyPrefix: MINIMAX_API_KEY?.substring(0, 15),
       data 
     });
