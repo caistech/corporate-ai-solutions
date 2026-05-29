@@ -10,7 +10,7 @@ export async function GET() {
   
   try {
     // Pay-as-you-go needs GroupId
-    const response = await fetch(`https://api.minimax.io/v1/chat/completions?GroupId=${GROUP_ID}`, {
+    const response = await fetch('https://api.minimax.io/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
