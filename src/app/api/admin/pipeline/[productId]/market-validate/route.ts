@@ -164,9 +164,13 @@ export async function POST(
     if (verdict === 'DIE') {
       const investorPilotApiUrl = process.env.INVESTORPILOT_API_URL;
       const investorPilotApiKey = process.env.INVESTORPILOT_API_KEY;
+      const investorPilotSupabaseUrl = process.env.INVESTORPILOT_SUPABASE_URL;
+      const investorPilotServiceKey = process.env.INVESTORPILOT_SERVICE_ROLE_KEY;
 
-      if (investorPilotApiUrl && investorPilotApiKey) {
-        const { data: channels } = await supabase
+      if (investorPilotApiUrl && investorPilotApiKey && investorPilotSupabaseUrl && investorPilotServiceKey) {
+        const investorPilotDb = createClient(investorPilotSupabaseUrl, investorPilotServiceKey);
+
+        const { data: channels } = await investorPilotDb
           .from('channels')
           .select('id')
           .eq('product_id', product.investorpilot_product_id)
