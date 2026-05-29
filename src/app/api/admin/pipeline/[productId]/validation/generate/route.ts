@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 export async function POST(
   request: NextRequest,
@@ -46,30 +46,31 @@ Format as JSON:
 
 Only include the fields requested: ${fields.join(', ')}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'x-api-key': ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'You are a product validation expert. Generate concise, specific validation field content based on product names. Output ONLY valid JSON.',
         messages: [
-          { role: 'system', content: 'You are a product validation expert. Generate concise, specific validation field content based on product names.' },
           { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
+        ]
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('OpenAI error:', err);
+      console.error('Anthropic error:', err);
       return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '{}';
+    const content = data.content?.[0]?.text || '{}';
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
