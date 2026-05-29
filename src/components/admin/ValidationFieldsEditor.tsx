@@ -37,7 +37,7 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     }
   };
 
-  const getProductSlug = () => product.product_slug || product.id || product.productId || 'unknown';
+  const getProductSlug = () => product.manifest?.name || product.validation?.product_slug || product.id || product.productId || 'unknown';
   
   const handleGenerate = async (field: string) => {
     setGenerating(field);
@@ -87,15 +87,16 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     
     setGenerating('all');
     try {
+      const slug = getProductSlug();
       const productDetails = {
-        name: product.manifest?.name || product.product_slug,
+        name: product.manifest?.name || slug,
         problem: product.ideaCard?.problem || '',
         solution: product.ideaCard?.solution || '',
         targetAudience: product.ideaCard?.end_user_pool || product.ideaCard?.distributor || '',
         oneLiner: product.ideaCard?.one_liner || '',
       };
       
-      const res = await fetch(`/api/admin/pipeline/${product.id}/validation/generate`, {
+      const res = await fetch(`/api/admin/pipeline/${slug}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: missing, productDetails }),
