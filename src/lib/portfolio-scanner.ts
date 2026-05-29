@@ -62,6 +62,7 @@ export interface ProductValidationStatus {
 export interface EnrichedProduct {
   manifest: ManifestProduct;
   validation: ProductValidationStatus | null;
+  ideaCard: Record<string, string> | null;  // Idea card from methodology_hypothesis_cards
   gaps: string[];  // List of missing validation fields
   readiness_score: number;  // 0-100: how ready for outreach?
   can_run_outreach_now: boolean;  // GREEN: ready to start outreach
@@ -487,6 +488,23 @@ async function fetchSensors(supabase: any): Promise<Map<string, any>> {
 }
 
 /**
+ * Fetch idea cards from methodology_hypothesis_cards table
+ */
+async function fetchIdeaCards(supabase: any): Promise<Map<string, Record<string, string>>> {
+  const { data } = await supabase
+    .from('methodology_hypothesis_cards')
+    .select('product_slug, idea_card');
+
+  const map = new Map<string, Record<string, string>>();
+  (data || []).forEach((row: any) => {
+    if (row.idea_card) {
+      map.set(row.product_slug, row.idea_card);
+    }
+  });
+  return map;
+}
+
+/**
  * Scan entire portfolio: Read manifest + enrich with DB state
  */
 export async function scanPortfolio(): Promise<EnrichedProduct[]> {
@@ -500,9 +518,11 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
   const lifecycleStages = await fetchLifecycleStages(supabase);
   const certificates = await fetchCertificates(supabase);
   const sensors = await fetchSensors(supabase);
+  const ideaCards = await fetchIdeaCards(supabase);
 
   const enriched: EnrichedProduct[] = manifest.projects.map((product) => {
     const validation = validationStatuses.get(product.name) || null;
+    const ideaCard = ideaCards.get(product.name) || null;
     const gaps = identifyGaps(validation);
     const readiness_score = calculateReadinessScore(validation, gaps);
     const can_run_outreach_now = readiness_score >= 80 && gaps.length === 0;
@@ -523,6 +543,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     return {
       manifest: product,
       validation,
+      ideaCard,
       gaps,
       readiness_score,
       can_run_outreach_now,
