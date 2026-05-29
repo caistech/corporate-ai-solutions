@@ -68,7 +68,7 @@ Only include the fields requested: ${fields.join(', ')}`;
     if (!response.ok) {
       const err = await response.text();
       console.error('Minimax error:', err);
-      return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
+      return NextResponse.json({ error: 'AI generation failed', minimaxError: err }, { status: 500 });
     }
 
     const data = await response.json();
@@ -96,7 +96,8 @@ Only include the fields requested: ${fields.join(', ')}`;
 
     return NextResponse.json(filtered);
   } catch (error) {
-    console.error('Error generating validation:', error);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Error generating validation:', msg);
+    return NextResponse.json({ error: 'Internal error', detail: msg }, { status: 500 });
   }
 }
