@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
 
 export async function POST(
   request: NextRequest,
@@ -15,13 +15,12 @@ export async function POST(
   try {
     const productSlug = params.productId;
     const body = await request.json();
-    const { fields } = body; // ['promise', 'distributor', 'end_user', 'friction']
+    const { fields } = body;
 
     if (!fields || !Array.isArray(fields) || fields.length === 0) {
       return NextResponse.json({ error: 'No fields specified' }, { status: 400 });
     }
 
-    // Get product context from the slug
     const category = productSlug.includes('pipeline') ? 'Internal Tool' :
                      productSlug.includes('hemp') ? 'Sustainable Housing' :
                      productSlug.includes('seafields') || productSlug.includes('wavecrest') || productSlug.includes('branscombe') ? 'Property Development' :
@@ -29,12 +28,12 @@ export async function POST(
 
     const prompt = `Generate validation fields for a product called "${productSlug}" (category: ${category}).
 
-For each field, provide a 1-2 sentence response that would work for a product validation framework:
+For each field, provide a 1-2 sentence response:
 
-1. Promise: What does this product deliver? (1-2 sentences, be specific to the product name)
-2. Distributor: Who sells/delivers this to end users? (1-2 sentences)
-3. End User: Who uses this product? (1-2 sentences)  
-4. Friction: What problem/pain point does this solve? (1-2 sentences)
+1. Promise: What does this product deliver?
+2. Distributor: Who sells/delivers this to end users?
+3. End User: Who uses this product?  
+4. Friction: What problem/pain point does this solve?
 
 Format as JSON:
 {
@@ -46,31 +45,30 @@ Format as JSON:
 
 Only include the fields requested: ${fields.join(', ')}`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${MINIMAX_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: 'You are a product validation expert. Generate concise, specific validation field content based on product names. Output ONLY valid JSON.',
+        model: 'abab6.5s-chat',
         messages: [
+          { role: 'system', content: 'You are a product validation expert. Output ONLY valid JSON.' },
           { role: 'user', content: prompt }
-        ]
+        ],
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('Anthropic error:', err);
+      console.error('Minimax error:', err);
       return NextResponse.json({ error: 'AI generation failed' }, { status: 500 });
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || '{}';
+    const content = data.choices?.[0]?.message?.content || '{}';
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);

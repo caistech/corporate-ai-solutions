@@ -21,7 +21,7 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
   const handleSave = async (field: string) => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/pipeline/${product.id}/validation`, {
+      const res = await fetch(`/api/admin/pipeline/${product.product_slug}/validation`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: formData[field as keyof typeof formData] }),
@@ -40,7 +40,7 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
   const handleGenerate = async (field: string) => {
     setGenerating(field);
     try {
-      const res = await fetch(`/api/admin/pipeline/${product.id}/validation/generate`, {
+      const res = await fetch(`/api/admin/pipeline/${product.product_slug}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: [field] }),
