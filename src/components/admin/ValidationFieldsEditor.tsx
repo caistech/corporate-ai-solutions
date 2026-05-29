@@ -47,10 +47,15 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
       });
       if (res.ok) {
         const data = await res.json();
+        console.log('Generate response:', data);
         if (data[field]) {
           setFormData({ ...formData, [field]: data[field] });
           setEditing(field);
+        } else {
+          console.log('No data for field:', field, data);
         }
+      } else {
+        console.error('Generate failed:', res.status);
       }
     } catch (err) {
       console.error(err);
