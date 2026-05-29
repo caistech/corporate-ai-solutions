@@ -21,6 +21,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+function extractVerticals(distributorText: string | null): string | null {
+  if (!distributorText) return null;
+  const verticals = ['construction', 'manufacturing', 'logistics', 'healthcare', 'finance', 'retail', 'technology', 'real estate', 'education', 'government'];
+  const found = verticals.filter(v => distributorText.toLowerCase().includes(v));
+  return found.length > 0 ? found.join(', ') : null;
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { productId: string } }
@@ -116,6 +123,9 @@ export async function POST(
         distributor_pitch: product.pitch || null,
         end_user_icp: product.end_user,
         friction: product.friction,
+        customer_outcomes: product.promise,
+        core_mechanism: product.promise,
+        target_verticals: product.distributor ? extractVerticals(product.distributor) : null,
         regulated_flag: product.regulated || false,
         cta_spec: {
           destination: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
@@ -127,6 +137,14 @@ export async function POST(
           gates_ready: product.gate1_ready,
         },
         timestamp: new Date().toISOString(),
+        // New ICP fields for tight targeting
+        icp_company_size: product.icp_company_size || null,
+        icp_stage: product.icp_stage || null,
+        icp_buyer_title: product.icp_buyer_title || null,
+        icp_user_title: product.icp_user_title || null,
+        icp_stack_tools: product.icp_stack_tools || null,
+        traction_arr: product.traction_arr || null,
+        traction_customers: product.traction_customers || null,
       };
 
       const webhookBody = JSON.stringify(webhookPayload);

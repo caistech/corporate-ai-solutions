@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Sparkles, Loader2 } from 'lucide-react'
 
 type BuildType = 'product' | 'shared-service' | 'infra-product-candidate'
 
@@ -99,6 +100,38 @@ export function IdeaCardEditor({
     })
   }
 
+  const [generatingIcp, setGeneratingIcp] = useState(false)
+  const [icpMsg, setIcpMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  const generateIcp = async () => {
+    setGeneratingIcp(true)
+    setIcpMsg(null)
+    try {
+      const idea_card: Record<string, string> = {}
+      for (const [k, v] of Object.entries(fields)) if (v.trim()) idea_card[k] = v.trim()
+      
+      const res = await fetch(`/api/admin/pipeline/${slug}/generate-icp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idea_card }),
+      })
+      
+      const json = await res.json()
+      
+      if (!res.ok) {
+        setIcpMsg({ ok: false, text: json.error || 'Failed to generate ICP' })
+        return
+      }
+      
+      setIcpMsg({ ok: true, text: 'ICP generated! Check product profile for details.' })
+      router.refresh()
+    } catch (e) {
+      setIcpMsg({ ok: false, text: (e as Error).message })
+    } finally {
+      setGeneratingIcp(false)
+    }
+  }
+
   const ta =
     'mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-white outline-none focus:border-accent'
 
@@ -146,7 +179,7 @@ export function IdeaCardEditor({
         ))}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           type="button"
           onClick={save}
@@ -156,6 +189,26 @@ export function IdeaCardEditor({
           {pending ? 'Saving…' : 'Save idea card'}
         </button>
         {msg && <span className={`text-sm ${msg.ok ? 'text-emerald-300' : 'text-red-300'}`}>{msg.text}</span>}
+        
+        <button
+          type="button"
+          onClick={generateIcp}
+          disabled={generatingIcp || !fields.one_liner}
+          className="min-h-[44px] rounded-lg border border-purple-500/50 bg-purple-500/10 px-4 text-sm font-medium text-purple-300 hover:bg-purple-500/20 disabled:opacity-50 flex items-center gap-2"
+        >
+          {generatingIcp ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating ICP...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Generate ICP Profile
+            </>
+          )}
+        </button>
+        {icpMsg && <span className={`text-sm ${icpMsg.ok ? 'text-emerald-300' : 'text-red-300'}`}>{icpMsg.text}</span>}
       </div>
     </div>
   )
