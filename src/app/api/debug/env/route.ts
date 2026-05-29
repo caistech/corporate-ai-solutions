@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
+  const keys = Object.keys(process.env).filter(k => k.includes('MINIMAX') || k.includes('API') || k.includes('KEY'))
   return NextResponse.json({
-    INVESTORPILOT_WEBHOOK_URL: process.env.INVESTORPILOT_WEBHOOK_URL ? 'SET' : 'NOT_SET',
-    PIPELINE_INTAKE_WEBHOOK_SECRET: process.env.PIPELINE_INTAKE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET',
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    MINIMAX_API_KEY: process.env.MINIMAX_API_KEY ? 'SET (' + process.env.MINIMAX_API_KEY.substring(0, 8) + '...)' : 'NOT_SET',
+    envKeysFound: keys,
+    minimax: process.env.MINIMAX_API_KEY ? 'SET' : 'MISSING',
+    other: Object.fromEntries(
+      Object.entries(process.env).filter(([k]) => k.includes('MINIMAX'))
+    )
   })
 }
