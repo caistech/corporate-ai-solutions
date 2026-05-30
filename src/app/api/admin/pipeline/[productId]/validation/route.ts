@@ -42,11 +42,11 @@ export async function PATCH(
 
     console.log('PATCH validation:', { productSlug, update });
 
-    // Try direct update with trimmed/lowercased slug
+    // Try direct update with ilike for case-insensitive match
     const { error, count } = await supabase
       .from('product_validation_status')
       .update(update)
-      .eq('product_slug', productSlug)
+      .ilike('product_slug', productSlug)
       .select();
 
     if (error) {
