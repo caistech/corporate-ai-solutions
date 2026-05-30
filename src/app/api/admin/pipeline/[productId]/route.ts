@@ -27,14 +27,24 @@ export async function GET(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    const { data: freshValidation } = await supabase
+    // Query ALL to debug what's there
+    const { data: allValidation } = await supabase
+      .from('product_validation_status')
+      .select('product_slug, promise, distributor, end_user, friction');
+    
+    console.log('All validation slugs:', allValidation?.map(r => r.product_slug));
+    
+    // Try exact match
+    const { data: exactMatch } = await supabase
       .from('product_validation_status')
       .select('*')
-      .ilike('product_slug', productId)
+      .eq('product_slug', productId)
       .single();
+    
+    console.log('Exact match:', exactMatch);
 
-    if (freshValidation) {
-      product.validation = freshValidation;
+    if (exactMatch) {
+      product.validation = exactMatch;
     }
 
     return NextResponse.json(product, {
