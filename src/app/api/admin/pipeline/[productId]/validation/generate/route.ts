@@ -18,18 +18,20 @@ export async function POST(
     }
     
     const productSlug = params.productId;
-    let body;
+    let fields: string[] = [];
+    let productDetails: Record<string, string> = {};
     try {
-      body = await request.json();
+      const rawBody = await request.text();
+      const body = JSON.parse(rawBody);
+      fields = body.fields;
+      productDetails = body.productDetails || {};
     } catch (e) {
-      const raw = await request.text();
-      console.error('Failed to parse request body:', raw);
-      return NextResponse.json({ error: 'Invalid JSON', received: raw.substring(0, 200) }, { status: 400 });
+      console.error('Failed to parse request body');
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
-    const { fields, productDetails } = body;
 
-    if (!fields || !Array.isArray(fields) || fields.length === 0) {
-      return NextResponse.json({ error: 'No fields specified' }, { status: 400 });
+    if (!Array.isArray(fields) || fields.length === 0) {
+      fields = ['promise', 'distributor', 'end_user', 'friction'];
     }
 
     const category = productSlug.includes('pipeline') ? 'Internal Tool' :
