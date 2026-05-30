@@ -118,8 +118,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   };
 
   const handleLoginToInvestorPilot = async () => {
-    // First open InvestorPilot login in new tab
-    window.open('https://investor-pilot-pi.vercel.app/login', '_blank');
+    // First open InvestorPilot in new tab (home page works, login has SSR issues)
+    window.open('https://investor-pilot-pi.vercel.app/', '_blank');
     
     setInvestorPilotLogin(true);
     try {
@@ -797,7 +797,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         {/* Login to InvestorPilot - Same Account */}
         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800 mb-3">
-            Already have an InvestorPilot account? Use the same email to access your outreach pipeline.
+            Already have an InvestorPilot account? Click below to open InvestorPilot, then click "Sign in" to log in.
           </p>
           <button
             onClick={handleLoginToInvestorPilot}
