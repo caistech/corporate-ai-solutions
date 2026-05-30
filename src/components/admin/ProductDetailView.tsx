@@ -441,9 +441,28 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                       onClick={async () => {
                         setRunningTest(test.id);
                         setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' as const } : t));
-                        // Simulate test run - in real implementation, call gstack skills
-                        await new Promise(r => setTimeout(r, 2000));
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed' as const, findings: [] } : t));
+                        try {
+                          const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                              testType: test.id, 
+                              testId: test.id,
+                              mvpUrl: product.validation?.mvp_url 
+                            }),
+                          });
+                          const data = await res.json();
+                          console.log('[COMPLIANCE TEST] Result:', data);
+                          // For now, mark as passed - in real impl, parse findings from data
+                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { 
+                            ...t, 
+                            status: data.findings?.length > 0 ? 'failed' as const : 'passed' as const,
+                            findings: data.findings || []
+                          } : t));
+                        } catch (err) {
+                          console.error('[COMPLIANCE TEST] Error:', err);
+                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' as const } : t));
+                        }
                         setRunningTest(null);
                       }}
                       disabled={runningTest === test.id}
@@ -529,9 +548,27 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                       onClick={async () => {
                         setRunningTest('val-' + test.id);
                         setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' as const } : t));
-                        // Simulate test run - in real implementation, call gstack skills
-                        await new Promise(r => setTimeout(r, 2000));
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed' as const, findings: [] } : t));
+                        try {
+                          const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                              testType: test.id, 
+                              testId: test.id,
+                              mvpUrl: product.validation?.mvp_url 
+                            }),
+                          });
+                          const data = await res.json();
+                          console.log('[VALIDATION TEST] Result:', data);
+                          setValidationTests(prev => prev.map(t => t.id === test.id ? { 
+                            ...t, 
+                            status: data.findings?.length > 0 ? 'failed' as const : 'passed' as const,
+                            findings: data.findings || []
+                          } : t));
+                        } catch (err) {
+                          console.error('[VALIDATION TEST] Error:', err);
+                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' as const } : t));
+                        }
                         setRunningTest(null);
                       }}
                       disabled={runningTest === 'val-' + test.id}
