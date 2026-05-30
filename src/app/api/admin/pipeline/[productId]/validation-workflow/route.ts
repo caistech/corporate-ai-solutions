@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createHmac } from 'node:crypto';
 import { getAuth } from '@/lib/auth-utils';
 import { getProductPipeline } from '@/lib/portfolio-scanner';
 
@@ -133,12 +134,65 @@ export async function POST(
         created_by: auth.user.id,
       });
 
-    // TODO: Trigger InvestorPilot validation pipeline
-    // This would involve:
-    // 1. Creating records in the InvestorPilot workflow table
-    // 2. Sending webhooks to distributor discovery service
-    // 3. Setting up dual-stream validation audience (end-users + distributors)
-    // For now, we mark it as ready and log the execution
+    // Trigger InvestorPilot webhook
+    const webhookUrl = process.env.PIPELINE_INTAKE_WEBHOOK_URL;
+    const webhookSecret = process.env.PIPELINE_INTAKE_WEBHOOK_SECRET;
+    
+    let investorPilotResult = null;
+    
+    if (webhookUrl && webhookSecret) {
+      const payload = {
+        product_id: productId,
+        product_name: product?.manifest?.name || productId,
+        description: product?.manifest?.description || '',
+        landing_page_url: product?.validation?.mvp_url || `https://${productId}.vercel.app`,
+        distributor_icp: product?.manifest?.distributor || '',
+        distributor_pitch: product?.manifest?.pitch || null,
+        end_user_icp: product?.manifest?.end_user || '',
+        friction: product?.manifest?.friction || '',
+        customer_outcomes: product?.manifest?.customer_outcomes || null,
+        core_mechanism: product?.manifest?.core_mechanism || null,
+        target_verticals: product?.manifest?.verticals || null,
+        regulated_flag: product?.manifest?.category?.includes('regulated') || false,
+        cta_spec: {
+          destination: product?.validation?.mvp_url || `https://${productId}.vercel.app`,
+          events: ['page_view', 'signup']
+        },
+        validation_summary: {
+          hard_gates_passed: product?.validation?.hard_gates_passed || 6,
+          weighted_score: gate1Score,
+          gates_ready: true
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      const rawPayload = JSON.stringify(payload);
+      const signature = createHmac('sha256', webhookSecret).update(rawPayload).digest('hex');
+      
+      try {
+        const webhookRes = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Pipeline-Signature': `sha256=${signature}`
+          },
+          body: rawPayload
+        });
+        
+        investorPilotResult = {
+          status: webhookRes.status,
+          ok: webhookRes.ok,
+          body: webhookRes.ok ? await webhookRes.json().catch(() => null) : await webhookRes.text().catch(() => null)
+        };
+        
+        console.log(`[validation-workflow] InvestorPilot webhook result:`, investorPilotResult);
+      } catch (webhookErr) {
+        console.error('[validation-workflow] InvestorPilot webhook failed:', webhookErr);
+        investorPilotResult = { error: webhookErr instanceof Error ? webhookErr.message : 'webhook failed' };
+      }
+    } else {
+      console.warn('[validation-workflow] PIPELINE_INTAKE_WEBHOOK_URL not configured - skipping InvestorPilot sync');
+    }
 
     const response: ExecutionResponse = {
       success: true,
