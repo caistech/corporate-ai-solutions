@@ -707,6 +707,16 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           </button>
         </div>
 
+        {/* DEBUG: Show what's blocking outreach */}
+        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+          <div className="font-medium text-yellow-800">Debug Info:</div>
+          <div>can_run_outreach_now: <span className="font-mono">{String(product.can_run_outreach_now)}</span></div>
+          <div>allCompliancePassed: <span className="font-mono">{String(allCompliancePassed)}</span></div>
+          <div>allValidationPassed: <span className="font-mono">{String(allValidationPassed)}</span></div>
+          <div>allTestsPassed: <span className="font-mono">{String(allTestsPassed)}</span></div>
+          <div>isReadyForOutreach: <span className="font-mono">{String(isReadyForOutreach)}</span></div>
+        </div>
+
         {/* Submit for Outreach Button */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <button
