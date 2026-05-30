@@ -242,6 +242,37 @@ export async function POST(
       const result = await testConfig.autoCheck(productUrl);
       console.log('[RUN-TEST] Auto result:', result);
       
+      // Save results to DB
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      // Map testId to DB field
+      const fieldMap: Record<string, string> = {
+        'auth': 'test_part_c_auth_flows',
+        'branding': 'test_part_a_admin_portal',
+        'metadata': 'test_part_a_admin_portal',
+        'security': 'test_part_a_admin_portal',
+        'privacy': 'test_part_a_admin_portal',
+        'naive': 'test_part_b_user_portal',
+        'voice': 'test_part_b_user_portal',
+        'gtm': 'test_part_b_user_portal',
+        'qa': 'test_part_d_scaffold_verify'
+      };
+      
+      const dbField = fieldMap[testId];
+      if (dbField) {
+        const dbStatus = result.status === 'passed' ? 'passed' : result.status === 'warning' ? 'warning' : 'failed';
+        await supabase
+          .from('product_validation_status')
+          .update({ 
+            [dbField]: dbStatus,
+            last_validation_test_run: new Date().toISOString()
+          })
+          .eq('product_slug', productSlug);
+      }
+      
       return NextResponse.json({
         testId,
         testType,
