@@ -315,12 +315,12 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             </a>
             <button
               onClick={async () => {
-                const newUrl = prompt('Enter new product URL (leave empty to remove):', product.validation?.mvp_url || '');
-                if (newUrl !== null) {
+                const newUrl = prompt('Enter product URL:', product.validation?.mvp_url || '');
+                if (newUrl !== null && newUrl.trim() !== '') {
                   const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mvp_url: newUrl || null }),
+                    body: JSON.stringify({ mvp_url: newUrl.trim() }),
                   });
                   if (res.ok) {
                     const data = await res.json();
