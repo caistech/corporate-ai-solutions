@@ -153,7 +153,7 @@ export async function POST(
         customer_outcomes: null,
         core_mechanism: null,
         target_verticals: product?.manifest?.category || null,
-        regulated_flag: (product?.manifest?.category === 'product' || product?.manifest?.category === 'client-product'),
+        regulated_flag: product?.manifest?.category === 'product' || product?.manifest?.category === 'client-product',
         cta_spec: {
           destination: product?.validation?.mvp_url || `https://${productId}.vercel.app`,
           events: ['page_view', 'signup']

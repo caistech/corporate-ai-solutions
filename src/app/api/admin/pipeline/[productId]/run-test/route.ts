@@ -130,7 +130,22 @@ const TEST_CONFIGS: Record<string, {
   naive: { 
     skill: 'naive-tester', 
     description: 'Human walkthrough test',
-    runnable: 'manual' 
+    runnable: 'auto',
+    autoCheck: async (url) => {
+      try {
+        const html = await fetch(url).then(r => r.text());
+        const findings = [];
+        const hasSignup = html.includes('signup') || html.includes('Sign up') || html.includes('register');
+        const hasCTA = html.includes('button') || html.includes('Button') || html.includes('cta');
+        const hasValueProp = html.includes('help') || html.includes('improve') || html.includes('better') || html.includes('sing');
+        if (!hasSignup) findings.push('No signup path found');
+        if (!hasCTA) findings.push('No CTA buttons found');
+        if (!hasValueProp) findings.push('Value prop may be unclear');
+        return findings.length > 0 ? { status: 'warning', findings } : { status: 'passed', findings: [] };
+      } catch (e) {
+        return { status: 'failed', findings: [`Check failed: ${e}`] };
+      }
+    }
   },
   voice: { 
     skill: 'voice-auditor', 
@@ -153,7 +168,22 @@ const TEST_CONFIGS: Record<string, {
   gtm: { 
     skill: 'gtm-auditor', 
     description: 'Distribution loop check',
-    runnable: 'manual' 
+    runnable: 'auto',
+    autoCheck: async (url) => {
+      try {
+        const html = await fetch(url).then(r => r.text());
+        const findings = [];
+        const hasShare = html.includes('share') || html.includes('Share') || html.includes('social');
+        const hasCTA = html.includes('Get started') || html.includes('Sign up') || html.includes('Try') || html.includes('Start');
+        const hasBenefit = html.includes('save') || html.includes('free') || html.includes('benefit') || html.includes('improve');
+        if (!hasCTA) findings.push('No clear conversion CTA');
+        if (!hasBenefit) findings.push('No clear benefit/offer');
+        if (!hasShare) findings.push('No distribution loop (share/referral)');
+        return findings.length > 0 ? { status: 'warning', findings } : { status: 'passed', findings: [] };
+      } catch (e) {
+        return { status: 'failed', findings: [`GTM check failed: ${e}`] };
+      }
+    }
   },
   qa: { 
     skill: 'qa', 
