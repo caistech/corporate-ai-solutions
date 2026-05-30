@@ -46,16 +46,16 @@ export async function PATCH(
 
     update.updated_at = new Date().toISOString();
 
-    console.log('PATCH validation:', { productSlug, update });
+    console.log('[PATCH] validation:', { productSlug, update });
 
     // Use .eq() with exact match
     const { error, data } = await supabase
       .from('product_validation_status')
       .update(update)
       .eq('product_slug', productSlug)
-      .select('promise, distributor, end_user, friction');
+      .select('promise, distributor, end_user, friction, has_methodology_commitment');
 
-    console.log('Update result:', { error, data });
+    console.log('[PATCH] Update result:', { error, data, rowCount: data?.length });
 
     if (error) {
       console.error('Update error:', error);

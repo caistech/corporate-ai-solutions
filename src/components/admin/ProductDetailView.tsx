@@ -29,22 +29,28 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
   useEffect(() => {
     const fetchProduct = async () => {
+      console.log('[FETCH] Starting fetch, productId:', productId, 'refreshTrigger:', refreshTrigger);
       try {
         setIsLoading(true);
         setError(null);
 
         const res = await fetch(`/api/admin/pipeline/${productId}?_t=${Date.now()}`);
+        console.log('[FETCH] Response status:', res.status);
 
         if (!res.ok) {
           throw new Error(`Failed to fetch product: ${res.statusText}`);
         }
 
         const data = await res.json();
+        console.log('[FETCH] Got data, has_methodology_commitment:', data.validation?.has_methodology_commitment);
         setProduct(data);
+        console.log('[FETCH] Set product state');
       } catch (err) {
+        console.error('[FETCH] Error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setIsLoading(false);
+        console.log('[FETCH] Loading set to false');
       }
     };
 
@@ -52,7 +58,10 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   }, [productId, refreshTrigger]);
 
   const handleRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
+    console.log('[REFRESH] handleRefresh called, current trigger:', refreshTrigger);
+    const newVal = refreshTrigger + 1;
+    setRefreshTrigger(newVal);
+    console.log('[REFRESH] Set trigger to:', newVal);
   };
 
   const handleSubmitForOutreach = async () => {
@@ -198,18 +207,25 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             onChange={async (e) => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('[CHECKBOX] Clicked, value:', e.target.checked);
+              console.log('[CHECKBOX] productId:', productId);
+              console.log('[CHECKBOX] URL:', `/api/admin/pipeline/${productId}/validation`);
               try {
                 const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
                 });
-                console.log('Checkbox save:', res.status, res.ok);
+                const data = await res.json();
+                console.log('[CHECKBOX] Response status:', res.status);
+                console.log('[CHECKBOX] Response data:', data);
                 if (res.ok) {
+                  console.log('[CHECKBOX] Calling handleRefresh');
                   handleRefresh();
+                  console.log('[CHECKBOX] handleRefresh called');
                 }
               } catch (err) {
-                console.error('Checkbox save error:', err);
+                console.error('[CHECKBOX] Error:', err);
               }
             }}
             className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
