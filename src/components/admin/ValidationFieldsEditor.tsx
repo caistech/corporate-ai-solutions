@@ -18,10 +18,22 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     friction: product.validation?.friction || '',
   });
 
+  // Sync formData when product.validation changes
+  React.useEffect(() => {
+    setFormData({
+      promise: product.validation?.promise || '',
+      distributor: product.validation?.distributor || '',
+      end_user: product.validation?.end_user || '',
+      friction: product.validation?.friction || '',
+    });
+  }, [product.validation?.promise, product.validation?.distributor, product.validation?.end_user, product.validation?.friction]);
+
+  const getProductSlug = () => product.validation?.product_slug || product.manifest?.name || product.id || 'unknown';
+
   const handleSave = async (field: string) => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/pipeline/${product.product_slug}/validation`, {
+      const res = await fetch(`/api/admin/pipeline/${getProductSlug()}/validation`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: formData[field as keyof typeof formData] }),
