@@ -56,7 +56,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, count });
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
