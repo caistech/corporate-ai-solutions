@@ -15,18 +15,26 @@ import { createClient } from '@supabase/supabase-js'
  * Use for: getUser(), requireUser(), session checks
  */
 export function createCookieClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!url || !key) {
+    console.error('[auth] Missing env vars:', { 
+      url: !!url, 
+      key: !!key,
+      urlValue: url,
+    })
+    throw new Error(`Supabase env missing: URL=${!!url}, KEY=${!!key}`)
+  }
+  
   const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) { return cookieStore.get(name)?.value },
-        set() {},
-        remove() {},
-      },
-    }
-  )
+  return createServerClient(url, key, {
+    cookies: {
+      get(name: string) { return cookieStore.get(name)?.value },
+      set() {},
+      remove() {},
+    },
+  })
 }
 
 /**
