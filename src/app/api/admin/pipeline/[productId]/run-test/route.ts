@@ -168,9 +168,7 @@ export async function POST(
         skill: testConfig.skill,
         ...result,
         productUrl,
-        instructions: testConfig.runnable === 'manual' 
-          ? `Run /${testConfig.skill} skill on ${productUrl}` 
-          : null
+        instructions: null
       });
     }
 
