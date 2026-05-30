@@ -135,7 +135,7 @@ const TEST_CONFIGS: Record<string, {
       try {
         const html = await fetch(url).then(r => r.text());
         const findings = [];
-        const hasSignup = html.includes('signup') || html.includes('Sign up') || html.includes('register');
+        const hasSignup = html.includes('signup') || html.includes('Sign up') || html.includes('register') || html.includes('/signup') || html.includes('href="/signup"');
         const hasCTA = html.includes('button') || html.includes('Button') || html.includes('cta');
         const hasValueProp = html.includes('help') || html.includes('improve') || html.includes('better') || html.includes('sing');
         if (!hasSignup) findings.push('No signup path found');
