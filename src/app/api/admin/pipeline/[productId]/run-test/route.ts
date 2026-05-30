@@ -276,7 +276,7 @@ export async function POST(
         // Recalculate weighted score after test update
         const { data: currentData } = await supabase
           .from('product_validation_status')
-          .select('test_part_a_admin_portal, test_part_b_user_portal, test_part_c_auth_flows, test_part_d_scaffold')
+          .select('test_part_a_admin_portal, test_part_b_user_portal, test_part_c_auth_flows, test_part_d_scaffold_verify, has_promise, has_distributor, has_end_user, has_friction, has_methodology_commitment, hard_gates_passed, hard_gates_total')
           .eq('product_slug', productSlug)
           .single();
 
@@ -290,11 +290,30 @@ export async function POST(
             calcScore(currentData.test_part_a_admin_portal) +
             calcScore(currentData.test_part_b_user_portal) +
             calcScore(currentData.test_part_c_auth_flows) +
-            calcScore(currentData.test_part_d_scaffold);
+            calcScore(currentData.test_part_d_scaffold_verify);
+
+          // Calculate hard gates passed
+          let hardGatesPassed = 0;
+          if (currentData.has_promise) hardGatesPassed++;
+          if (currentData.has_distributor) hardGatesPassed++;
+          if (currentData.has_end_user) hardGatesPassed++;
+          if (currentData.has_friction) hardGatesPassed++;
+          if (currentData.has_methodology_commitment) hardGatesPassed++;
+          // Add test parts as hard gates
+          if (currentData.test_part_a_admin_portal === 'passed') hardGatesPassed++;
+          if (currentData.test_part_b_user_portal === 'passed') hardGatesPassed++;
+          if (currentData.test_part_c_auth_flows === 'passed') hardGatesPassed++;
+          if (currentData.test_part_d_scaffold_verify === 'passed') hardGatesPassed++;
+
+          console.log('[run-test] Updating score:', newScore, 'hard_gates:', hardGatesPassed);
 
           await supabase
             .from('product_validation_status')
-            .update({ weighted_score_percent: newScore })
+            .update({ 
+              weighted_score_percent: newScore,
+              hard_gates_passed: hardGatesPassed,
+              hard_gates_total: 9
+            })
             .eq('product_slug', productSlug);
         }
       }
