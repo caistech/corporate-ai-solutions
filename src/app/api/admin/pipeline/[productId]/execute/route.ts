@@ -8,6 +8,28 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
+function generateProductPitch(
+  promise: string | null,
+  coreMechanism: string | null,
+  customerOutcomes: string | null
+): string {
+  const parts: string[] = [];
+
+  if (promise) {
+    parts.push(`We solve: ${promise}`);
+  }
+
+  if (coreMechanism) {
+    parts.push(`Our approach: ${coreMechanism}`);
+  }
+
+  if (customerOutcomes) {
+    parts.push(`Clients get: ${customerOutcomes}`);
+  }
+
+  return parts.join(' | ');
+}
+
 function getServerClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -122,6 +144,13 @@ export async function POST(
       return NextResponse.json({ error: 'Cannot execute with gaps', missing_fields: gaps }, { status: 400 });
     }
 
+    // Generate product_pitch from promise + core_mechanism + customer_outcomes
+    const productPitch = generateProductPitch(
+      product.promise,
+      product.core_mechanism,
+      product.customer_outcomes
+    );
+
     const outreachPayload = {
       product_id: productId,
       product_name: product.display_name,
@@ -130,6 +159,7 @@ export async function POST(
       end_user: product.end_user,
       friction: product.friction,
       // Additional fields for InvestorPilot
+      product_pitch: productPitch,
       core_mechanism: product.core_mechanism || null,
       customer_outcomes: product.customer_outcomes || null,
       icp_company_size: product.icp_company_size || null,
