@@ -42,11 +42,25 @@ export async function PATCH(
 
     console.log('PATCH validation:', { productSlug, update });
 
-    // Try direct update with ilike for case-insensitive match
+    // First, find the exact row
+    const { data: existing } = await supabase
+      .from('product_validation_status')
+      .select('product_slug')
+      .ilike('product_slug', productSlug)
+      .limit(1);
+    
+    const exactSlug = existing?.[0]?.product_slug;
+    console.log('Found slug:', exactSlug);
+    
+    if (!exactSlug) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // Now update with exact slug
     const { error, count } = await supabase
       .from('product_validation_status')
       .update(update)
-      .ilike('product_slug', productSlug)
+      .eq('product_slug', exactSlug)
       .select();
 
     if (error) {
