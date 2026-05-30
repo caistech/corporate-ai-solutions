@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient, getUserEmail } from '@/lib/auth';
+import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
 const supabase = createServiceClient();
