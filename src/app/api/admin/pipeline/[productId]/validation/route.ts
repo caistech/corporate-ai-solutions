@@ -52,11 +52,11 @@ export async function PATCH(
 
     console.log('[PATCH] validation:', { productSlug, update });
 
-    // Use .eq() with exact match - just update, don't select
+    // Use upsert to create row if it doesn't exist
     const { error, data } = await supabase
       .from('product_validation_status')
-      .update(update)
-      .eq('product_slug', productSlug);
+      .upsert({ product_slug: productSlug, ...update }, { onConflict: 'product_slug' })
+      .select();
 
     console.log('[PATCH] Update result:', { error });
 
