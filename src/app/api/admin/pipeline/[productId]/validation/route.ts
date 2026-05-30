@@ -11,7 +11,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const ALLOWED_FIELDS = ['promise', 'distributor', 'end_user', 'friction'];
+const ALLOWED_FIELDS = ['promise', 'distributor', 'end_user', 'friction', 'has_methodology_commitment'];
 
 export async function PATCH(
   request: NextRequest,
@@ -25,9 +25,15 @@ export async function PATCH(
     const update: Record<string, any> = {};
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined) {
-        update[field] = body[field];
-        // Also update the corresponding has_* flag
-        update[`has_${field}`] = !!body[field] && body[field].trim().length > 0;
+        const value = body[field];
+        // Handle boolean fields (like has_methodology_commitment) vs string fields
+        if (typeof value === 'boolean') {
+          update[field] = value;
+        } else {
+          update[field] = value;
+          // Also update the corresponding has_* flag for string fields
+          update[`has_${field}`] = !!value && value.trim().length > 0;
+        }
       }
     }
 
