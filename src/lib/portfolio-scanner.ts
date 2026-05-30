@@ -284,6 +284,7 @@ async function fetchValidationStatuses(
   const map = new Map<string, ProductValidationStatus>();
   (data || []).forEach((row: any) => {
     if (row.product_slug) {
+      console.log('Storing validation for:', row.product_slug, 'promise:', row.promise);
       map.set(row.product_slug, row as ProductValidationStatus);
     }
   });
