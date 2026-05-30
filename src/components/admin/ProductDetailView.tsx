@@ -97,7 +97,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       });
       if (res.ok) {
         alert('Product submitted for outreach! InvestorPilot will be notified.');
-        handleRefresh();
+        // handleRefresh(); // DISABLED - keeps stale data
       }
     } catch (err) {
       console.error(err);
@@ -481,7 +481,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                             status: newStatus,
                             findings: newFindings
                           } : t));
-                          handleRefresh();
+                          // handleRefresh(); // DISABLED - keeps stale data
                         } catch (err) {
                           console.error('[COMPLIANCE TEST] Error:', err);
                           setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
@@ -613,7 +613,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                             status: newStatus,
                             findings: newFindings
                           } : t));
-                          handleRefresh();
+                          // handleRefresh(); // DISABLED - keeps stale data
                         } catch (err) {
                           console.error('[VALIDATION TEST] Error:', err);
                           setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
@@ -734,3 +734,4 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     </div>
   );
 }
+
