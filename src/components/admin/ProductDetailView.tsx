@@ -119,8 +119,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   };
 
   const handleLoginToInvestorPilot = async () => {
-    // First open InvestorPilot in new tab (home page works, login has SSR issues)
-    window.open('https://investor-pilot-pi.vercel.app/', '_blank');
+    // Open InvestorPilot login page in new tab
+    window.open('https://investor-pilot-pi.vercel.app/login', '_blank');
     
     setInvestorPilotLogin(true);
     try {
