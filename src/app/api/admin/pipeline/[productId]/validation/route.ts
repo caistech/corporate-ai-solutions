@@ -29,25 +29,19 @@ export async function PATCH(
     const update: Record<string, any> = {};
     const skipHasFlag = ['mvp_url']; // Fields that shouldn't get auto has_ flag
     
-    console.log('[PATCH] ALLOWED_FIELDS:', ALLOWED_FIELDS);
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined) {
         const value = body[field];
         console.log('[PATCH] Processing field:', field, 'value:', value, 'type:', typeof value);
-        // Handle boolean fields (like has_methodology_commitment) vs string fields
         if (typeof value === 'boolean') {
           update[field] = value;
-          console.log('[PATCH] Boolean field set:', field, '=', value);
         } else {
           update[field] = value;
-          // Also update the corresponding has_* flag for string fields (skip mvp_url)
+          // Also update the corresponding has_* flag for string fields
           if (!skipHasFlag.includes(field)) {
             update[`has_${field}`] = !!value && value.trim().length > 0;
-            console.log('[PATCH] Has flag set:', `has_${field}`, '=', update[`has_${field}`]);
           }
         }
-      } else {
-        console.log('[PATCH] Field not in body, skipping:', field);
       }
     }
 
@@ -61,93 +55,46 @@ export async function PATCH(
       );
     }
 
-    update.updated_at = new Date().toISOString();
-    console.log('[PATCH] Final update object:', update);
-
-    console.log('[PATCH] Checking if row exists...');
-    // Check if row exists first
-    const { data: existing, error: existingError } = await supabase
+    // Use UPSERT - more reliable than UPDATE
+    console.log('[PATCH] Doing UPSERT with:', { product_slug: productSlug, ...update });
+    
+    const displayName = productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    
+    const { data: upsertResult, error: upsertError } = await supabase
       .from('product_validation_status')
-      .select('product_slug')
-      .eq('product_slug', productSlug)
+      .upsert({ 
+        product_slug: productSlug, 
+        display_name: displayName,
+        ...update,
+        updated_at: new Date().toISOString()
+      }, { 
+        onConflict: 'product_slug',
+        ignoreDuplicates: false 
+      })
+      .select()
       .single();
 
-    console.log('[PATCH] Row exists check:', { found: !!existing, error: existingError });
+    console.log('[PATCH] UPSERT result:', { upsertResult, upsertError });
 
-    let error: any = null;
-    let data: any = null;
-
-    if (existing) {
-      console.log('[PATCH] Row exists - doing UPDATE');
-      // Row exists - use update (preserves other columns)
-      // Use .update() then re-fetch to ensure we get updated data
-      await supabase
-        .from('product_validation_status')
-        .update(update)
-        .eq('product_slug', productSlug);
-      
-      // Verify the update worked by fetching fresh
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('product_validation_status')
-        .select('*')
-        .eq('product_slug', productSlug)
-        .single();
-      
-      console.log('[PATCH] Update verified:', { 
-        error: verifyError, 
-        commitment: verifyData?.has_methodology_commitment,
-        mvp_url: verifyData?.mvp_url 
-      });
-      error = null;
-      data = [verifyData];
-    } else {
-      console.log('[PATCH] Row does NOT exist - doing INSERT');
-      // Row doesn't exist - use insert
-      const displayName = productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      console.log('[PATCH] Insert payload:', { product_slug: productSlug, display_name: displayName, ...update });
-      const result = await supabase
-        .from('product_validation_status')
-        .insert({ product_slug: productSlug, display_name: displayName, ...update });
-      console.log('[PATCH] Insert response:', { error: result.error, data: result.data });
-      error = result.error;
-      data = result.data;
-    }
-
-    console.log('[PATCH] DB operation result:', { hasError: !!error, error });
-
-    if (error) {
-      console.error('[PATCH] Update error:', error);
+    if (upsertError) {
+      console.error('[PATCH] UPSERT error:', upsertError);
       return NextResponse.json(
-        { error: 'Failed to update validation', details: error.message },
+        { error: 'Failed to update validation', details: upsertError.message },
         { status: 500 }
       );
     }
 
-    // Return the updated row so client doesn't need to refetch
-    console.log('[PATCH] Fetching updated row...');
-    try {
-      const { data: updatedRow, error: fetchError } = await supabase
-        .from('product_validation_status')
-        .select('*')
-        .eq('product_slug', productSlug)
-        .single();
-      
-      console.log('[PATCH] Fetched row:', { found: !!updatedRow, error: fetchError });
-      if (updatedRow) {
-        console.log('[PATCH] Row details:', { 
-          commitment: updatedRow.has_methodology_commitment, 
-          mvp_url: updatedRow.mvp_url,
-          has_promise: updatedRow.has_promise,
-          has_distributor: updatedRow.has_distributor
-        });
-      }
-      console.log('[PATCH] ========== END PATCH SUCCESS ==========');
-      return NextResponse.json({ success: true, data: updatedRow });
-    } catch (e) {
-      console.log('[PATCH] Failed to fetch updated row:', e);
-      console.log('[PATCH] ========== END PATCH SUCCESS (no row) ==========');
-      return NextResponse.json({ success: true, data: null });
-    }
+    // Fetch fresh to verify
+    const { data: finalRow, error: fetchError } = await supabase
+      .from('product_validation_status')
+      .select('*')
+      .eq('product_slug', productSlug)
+      .single();
+
+    console.log('[PATCH] Final fetch:', { finalRow, fetchError });
+    console.log('[PATCH] ========== END PATCH SUCCESS ==========');
+
+    return NextResponse.json({ success: true, data: finalRow });
   } catch (error) {
     console.error('[PATCH] ========== END PATCH ERROR ==========', error);
     return NextResponse.json(
