@@ -34,7 +34,7 @@ export async function GET(
       .eq('product_slug', productId)
       .single();
 
-    console.log('[GET] Direct query result:', { found: !!freshValidation, error: freshError, commitment: freshValidation?.has_methodology_commitment });
+    console.log('[GET] Direct query result:', { found: !!freshValidation, error: freshError, commitment: freshValidation?.has_methodology_commitment, mvp_url: freshValidation?.mvp_url });
 
     if (freshValidation) {
       product.validation = freshValidation;
