@@ -41,6 +41,15 @@ export async function PATCH(
     update.updated_at = new Date().toISOString();
 
     console.log('PATCH validation:', { productSlug, update });
+    
+    // First check if row exists
+    const { data: existing } = await supabase
+      .from('product_validation_status')
+      .select('id, product_slug')
+      .eq('product_slug', productSlug);
+    
+    console.log('Existing rows:', existing);
+    
     // Try update first
     let { error, count, data } = await supabase
       .from('product_validation_status')
@@ -48,12 +57,16 @@ export async function PATCH(
       .eq('product_slug', productSlug)
       .select();
     
+    console.log('Update result:', { error, count });
+    
     // If no rows updated, try insert
     if (!error && (!count || count === 0)) {
+      console.log('Trying insert');
       const insertResult = await supabase
         .from('product_validation_status')
         .insert({ product_slug: productSlug, ...update })
         .select();
+      console.log('Insert result:', insertResult);
       error = insertResult.error;
       count = insertResult.count;
       data = insertResult.data;
