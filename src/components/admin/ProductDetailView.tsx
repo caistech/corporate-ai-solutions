@@ -454,11 +454,27 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                           });
                           const data = await res.json();
                           console.log('[COMPLIANCE TEST] Result:', data);
-                          // For now, mark as passed - in real impl, parse findings from data
+                          
+                          // Handle both automated and manual test results
+                          let newStatus: TestStatus = 'passed';
+                          let newFindings: string[] = [];
+                          
+                          if (data.status === 'manual_required') {
+                            // Show instructions for manual tests
+                            newStatus = 'warning';
+                            newFindings = data.instructions ? [data.instructions] : ['Manual review required'];
+                            if (data.steps) {
+                              newFindings = data.steps;
+                            }
+                          } else if (data.findings?.length > 0) {
+                            newStatus = data.status === 'warning' ? 'warning' : 'failed';
+                            newFindings = data.findings;
+                          }
+                          
                           setComplianceTests(prev => prev.map(t => t.id === test.id ? { 
                             ...t, 
-                            status: data.findings?.length > 0 ? 'failed' : 'passed',
-                            findings: data.findings || []
+                            status: newStatus,
+                            findings: newFindings
                           } : t));
                         } catch (err) {
                           console.error('[COMPLIANCE TEST] Error:', err);
@@ -561,10 +577,23 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                           });
                           const data = await res.json();
                           console.log('[VALIDATION TEST] Result:', data);
+                          
+                          // Handle both automated and manual test results
+                          let newStatus: TestStatus = 'passed';
+                          let newFindings: string[] = [];
+                          
+                          if (data.status === 'manual_required') {
+                            newStatus = 'warning';
+                            newFindings = data.steps || [data.instructions].filter(Boolean);
+                          } else if (data.findings?.length > 0) {
+                            newStatus = data.status === 'warning' ? 'warning' : 'failed';
+                            newFindings = data.findings;
+                          }
+                          
                           setValidationTests(prev => prev.map(t => t.id === test.id ? { 
                             ...t, 
-                            status: data.findings?.length > 0 ? 'failed' : 'passed',
-                            findings: data.findings || []
+                            status: newStatus,
+                            findings: newFindings
                           } : t));
                         } catch (err) {
                           console.error('[VALIDATION TEST] Error:', err);
