@@ -14,7 +14,7 @@ import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
 import ValidationTestResults from './ValidationTestResults';
-import { CheckCircle, Send, Loader2, ExternalLink, Play, Wrench, XCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Send, Loader2, ExternalLink, Play, Wrench, XCircle, AlertTriangle, AlertCircle } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -525,6 +525,18 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
               <CheckCircle className="text-green-600" size={20} />
               <span className="text-green-700 font-medium">All compliance tests passed!</span>
+            </div>
+          )}
+          {complianceTests.some(t => t.status === 'warning') && !complianceTests.every(t => t.status === 'passed') && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <AlertCircle className="text-yellow-600" size={20} />
+              <span className="text-yellow-700 font-medium">{complianceTests.filter(t => t.status === 'warning').length} compliance tests with warnings</span>
+            </div>
+          )}
+          {complianceTests.some(t => t.status === 'failed') && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <XCircle className="text-red-600" size={20} />
+              <span className="text-red-700 font-medium">{complianceTests.filter(t => t.status === 'failed').length} compliance tests failed</span>
             </div>
           )}
         </div>
