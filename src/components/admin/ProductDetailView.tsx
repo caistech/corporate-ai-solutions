@@ -14,7 +14,7 @@ import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
 import ValidationTestResults from './ValidationTestResults';
-import { CheckCircle, Send, Loader2 } from 'lucide-react';
+import { CheckCircle, Send, Loader2, ExternalLink } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -265,32 +265,123 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         </label>
       </div>
 
-      {/* STEP 6: Hard Gates / Compliance */}
+      {/* STEP 6: Product URL - Build or Skip to Tests */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
+          <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
+          <h2 className="text-lg font-semibold text-gray-900">Product Deployment</h2>
+          {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          {product.validation?.mvp_url 
+            ? "Product URL is set. You can run validation tests."
+            : "Enter the deployed product URL to enable testing. If no URL exists, you need to design and build the product first."}
+        </p>
+        
+        {product.validation?.mvp_url ? (
+          <div className="flex items-center gap-4">
+            <a 
+              href={product.validation.mvp_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline flex items-center gap-2"
+            >
+              {product.validation.mvp_url}
+              <ExternalLink size={14} />
+            </a>
+            <button
+              onClick={async () => {
+                const newUrl = prompt('Enter new product URL (leave empty to remove):', product.validation?.mvp_url || '');
+                if (newUrl !== null) {
+                  const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mvp_url: newUrl || null }),
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    setProduct((prev: any) => ({
+                      ...prev,
+                      validation: data.data
+                    }));
+                  }
+                }
+              }}
+              className="text-sm text-gray-600 hover:text-gray-800"
+            >
+              Edit URL
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded">
+              ⚠️ No product URL found. You need to either:
+            </p>
+            <ol className="text-sm text-gray-600 list-decimal list-inside space-y-1">
+              <li>Enter an existing deployed URL below if the product already exists</li>
+              <li>Design and build the product (then come back and enter URL)</li>
+            </ol>
+            <div className="flex gap-2 mt-4">
+              <input
+                type="url"
+                placeholder="https://your-product.vercel.app"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                id="mvp-url-input"
+              />
+              <button
+                onClick={async () => {
+                  const input = document.getElementById('mvp-url-input') as HTMLInputElement;
+                  const url = input?.value?.trim();
+                  if (url) {
+                    const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ mvp_url: url }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setProduct((prev: any) => ({
+                        ...prev,
+                        validation: data.data
+                      }));
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              >
+                Save URL
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* STEP 8: Hard Gates / Compliance */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 8</span>
           <h2 className="text-lg font-semibold text-gray-900">Compliance & Hard Gates</h2>
           {product.validation?.hard_gates_passed > 0 && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
           Run compliance checks to ensure the product meets technical and legal requirements.
           <br /><strong>This item is for:</strong> Verifying auth, branding, metadata, and other hard requirements.
-          <br /><strong>When done:</strong> Move to Step 7 (Validation Tests) ↓
+          <br /><strong>When done:</strong> Move to Step 9 (Validation Tests) ↓
         </p>
         <QuickActionsPanel product={product} onRefresh={handleRefresh} />
       </div>
 
-      {/* STEP 7: Validation Tests */}
+      {/* STEP 9: Validation Tests */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
+          <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 9</span>
           <h2 className="text-lg font-semibold text-gray-900">Validation Tests</h2>
           {product.validation?.validation_test_status === 'passed' && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
           Run automated tests to verify the product works.
           <br /><strong>This item is for:</strong> Testing admin portal, user portal, auth flows, and scaffold.
-          <br /><strong>When done:</strong> Move to Step 8 (Final Score) ↓
+          <br /><strong>When done:</strong> Move to Step 10 (Final Score) ↓
         </p>
         <ValidationTestResults
           validation={product.validation}
@@ -298,10 +389,10 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         />
       </div>
 
-      {/* STEP 8: Gaps Summary + Submit */}
+      {/* STEP 10: Gaps Summary + Submit */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 8</span>
+          <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 10</span>
           <h2 className="text-lg font-semibold text-gray-900">Final Score Check</h2>
           {product.readiness_score >= 80 && <CheckCircle className="text-green-600" size={18} />}
         </div>

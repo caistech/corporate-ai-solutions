@@ -11,7 +11,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const ALLOWED_FIELDS = ['promise', 'distributor', 'end_user', 'friction', 'has_methodology_commitment'];
+const ALLOWED_FIELDS = ['promise', 'distributor', 'end_user', 'friction', 'has_methodology_commitment', 'mvp_url'];
 
 export async function PATCH(
   request: NextRequest,
@@ -62,14 +62,14 @@ export async function PATCH(
       .from('product_validation_status')
       .update(update)
       .eq('product_slug', productSlug)
-      .select('promise, distributor, end_user, friction, has_methodology_commitment');
+      .select('promise, distributor, end_user, friction, has_methodology_commitment, mvp_url');
 
     console.log('[PATCH] Update result:', { error, data, rowCount: data?.length });
 
     // Verify after update
     const { data: afterUpdate } = await supabase
       .from('product_validation_status')
-      .select('has_methodology_commitment')
+      .select('has_methodology_commitment, mvp_url')
       .eq('product_slug', productSlug)
       .single();
     console.log('[PATCH] After update:', afterUpdate);
