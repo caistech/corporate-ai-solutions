@@ -118,6 +118,9 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   };
 
   const handleLoginToInvestorPilot = async () => {
+    // First open InvestorPilot login in new tab
+    window.open('https://investor-pilot-pi.vercel.app/login', '_blank');
+    
     setInvestorPilotLogin(true);
     try {
       const res = await fetch('/api/auth/investorpilot-magic-link', {
@@ -126,7 +129,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       });
       const data = await res.json();
       if (res.ok && data.message) {
-        alert(data.message);
+        alert(data.message + '\n\nCheck your email and click the link, or use the login page that opened.');
       } else {
         alert(data.error || 'Failed to send login link');
       }
