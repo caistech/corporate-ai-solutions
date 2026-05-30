@@ -15,26 +15,18 @@ import { createClient } from '@supabase/supabase-js'
  * Use for: getUser(), requireUser(), session checks
  */
 export function createCookieClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  
-  if (!url || !key) {
-    console.error('[auth] Missing env vars:', { 
-      url: !!url, 
-      key: !!key,
-      urlValue: url,
-    })
-    throw new Error(`Supabase env missing: URL=${!!url}, KEY=${!!key}`)
-  }
-  
   const cookieStore = cookies()
-  return createServerClient(url, key, {
-    cookies: {
-      get(name: string) { return cookieStore.get(name)?.value },
-      set() {},
-      remove() {},
-    },
-  })
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value },
+        set() {},
+        remove() {},
+      },
+    }
+  )
 }
 
 /**
@@ -42,8 +34,11 @@ export function createCookieClient() {
  * Returns null if not authenticated.
  */
 export async function getUser() {
+  console.log('[auth] getUser - calling createCookieClient')
   const supabase = createCookieClient()
+  console.log('[auth] getUser - client created, calling getUser')
   const { data: { user } } = await supabase.auth.getUser()
+  console.log('[auth] getUser result:', { hasUser: !!user, email: user?.email })
   return user
 }
 
@@ -52,7 +47,9 @@ export async function getUser() {
  * Returns null if not authenticated.
  */
 export async function getUserEmail(): Promise<string | null> {
+  console.log('[auth] getUserEmail - start')
   const user = await getUser()
+  console.log('[auth] getUserEmail - user:', !!user)
   if (!user?.email) return null
   
   const supabase = createCookieClient()
