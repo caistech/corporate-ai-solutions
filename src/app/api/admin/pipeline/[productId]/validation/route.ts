@@ -41,11 +41,24 @@ export async function PATCH(
     update.updated_at = new Date().toISOString();
 
     console.log('PATCH validation:', { productSlug, update });
-    const { error, count, data } = await supabase
+    // Try update first
+    let { error, count, data } = await supabase
       .from('product_validation_status')
-      .upsert({ product_slug: productSlug, ...update }, { onConflict: 'product_slug' })
+      .update(update)
+      .eq('product_slug', productSlug)
       .select();
-    console.log('PATCH result:', { error, count, data });
+    
+    console.log('Update result:', { error, count, data });
+    
+    // If no rows updated, try insert
+    if (!error && (!count || count === 0)) {
+      console.log('No rows updated, trying insert');
+      const insertResult = await supabase
+        .from('product_validation_status')
+        .insert({ product_slug: productSlug, ...update })
+        .select();
+      console.log('Insert result:', insertResult);
+    }
 
     if (error) {
       console.error('Error updating validation:', error);
