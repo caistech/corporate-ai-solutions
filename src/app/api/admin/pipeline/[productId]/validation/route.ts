@@ -43,9 +43,10 @@ export async function PATCH(
     console.log('PATCH validation:', { productSlug, update });
     
     // First check if row exists
+    console.log('Looking for product_slug:', productSlug);
     const { data: existing } = await supabase
       .from('product_validation_status')
-      .select('id, product_slug')
+      .select('id, product_slug, promise')
       .eq('product_slug', productSlug);
     
     console.log('Existing rows:', existing);
@@ -64,7 +65,7 @@ export async function PATCH(
       console.log('Trying insert');
       const insertResult = await supabase
         .from('product_validation_status')
-        .insert({ product_slug: productSlug, ...update })
+        .insert({ product_slug: productSlug, display_name: productSlug, ...update })
         .select();
       console.log('Insert result:', insertResult);
       error = insertResult.error;
