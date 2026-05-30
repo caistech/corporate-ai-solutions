@@ -13,6 +13,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient as createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
@@ -22,7 +24,19 @@ const supabase = createClient(
 );
 
 async function getUserEmail(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = cookies();
+  const supabaseServer = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value },
+        set() {},
+        remove() {},
+      },
+    },
+  );
+  const { data: { user } } = await supabaseServer.auth.getUser();
   if (!user?.email) return null;
   const { data: profile } = await supabase
     .from('profiles')
