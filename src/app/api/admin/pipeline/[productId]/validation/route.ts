@@ -18,7 +18,7 @@ export async function PATCH(
   { params }: { params: { productId: string } }
 ) {
   try {
-    const productSlug = params.productId;
+    const productSlug = params.productId.trim().toLowerCase();
     const body = await request.json();
 
     // Build update object with only allowed fields
@@ -41,47 +41,24 @@ export async function PATCH(
     update.updated_at = new Date().toISOString();
 
     console.log('PATCH validation:', { productSlug, update });
-    
-    // First check if row exists
-    console.log('Looking for product_slug:', productSlug);
-    const { data: existing } = await supabase
-      .from('product_validation_status')
-      .select('id, product_slug, promise')
-      .eq('product_slug', productSlug);
-    
-    console.log('Existing rows:', existing);
-    
-    // Try update first
-    let { error, count, data } = await supabase
+
+    // Try direct update with trimmed/lowercased slug
+    const { error, count } = await supabase
       .from('product_validation_status')
       .update(update)
       .eq('product_slug', productSlug)
       .select();
-    
-    console.log('Update result:', { error, count });
-    
-    // If no rows updated, try insert
-    if (!error && (!count || count === 0)) {
-      console.log('Trying insert');
-      const insertResult = await supabase
-        .from('product_validation_status')
-        .insert({ product_slug: productSlug, display_name: productSlug, ...update })
-        .select();
-      console.log('Insert result:', insertResult);
-      error = insertResult.error;
-      count = insertResult.count;
-      data = insertResult.data;
-    }
 
     if (error) {
-      console.error('Error updating validation:', error);
+      console.error('Update error:', error);
       return NextResponse.json(
         { error: 'Failed to update validation', details: error.message },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true, count, data });
+    console.log('Update success, rows affected:', count);
+    return NextResponse.json({ success: true, count });
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
