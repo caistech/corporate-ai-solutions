@@ -48,25 +48,11 @@ export async function PATCH(
 
     console.log('PATCH validation:', { productSlug, update });
 
-    // First, find the exact row
-    const { data: existing } = await supabase
-      .from('product_validation_status')
-      .select('product_slug')
-      .ilike('product_slug', productSlug)
-      .limit(1);
-    
-    const exactSlug = existing?.[0]?.product_slug;
-    console.log('Found slug:', exactSlug);
-    
-    if (!exactSlug) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-    }
-
-    // Now update with exact slug - select the promise field to verify
+    // Use .eq() with exact match
     const { error, data } = await supabase
       .from('product_validation_status')
       .update(update)
-      .eq('product_slug', exactSlug)
+      .eq('product_slug', productSlug)
       .select('promise, distributor, end_user, friction');
 
     console.log('Update result:', { error, data });
