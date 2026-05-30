@@ -28,20 +28,21 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const [submitting, setSubmitting] = useState(false);
 
   // Compliance tests state
-  const [complianceTests, setComplianceTests] = useState([
-    { id: 'auth', name: 'Auth Flows', description: 'Signup, login, password reset, magic link work', status: 'pending' as const, findings: [] as string[] },
-    { id: 'branding', name: 'Branding', description: 'Logo, colors, typography consistent', status: 'pending' as const, findings: [] },
-    { id: 'metadata', name: 'Metadata', description: 'OG tags, title, favicon, manifest', status: 'pending' as const, findings: [] },
-    { id: 'security', name: 'Security Headers', description: 'CORS, CSP, HSTS configured', status: 'pending' as const, findings: [] },
-    { id: 'privacy', name: 'Privacy Compliance', description: 'Terms, privacy policy, cookie consent', status: 'pending' as const, findings: [] },
+  type TestStatus = 'pending' | 'running' | 'passed' | 'failed' | 'warning';
+  const [complianceTests, setComplianceTests] = useState<Array<{ id: string; name: string; description: string; status: TestStatus; findings: string[] }>>([
+    { id: 'auth', name: 'Auth Flows', description: 'Signup, login, password reset, magic link work', status: 'pending', findings: [] },
+    { id: 'branding', name: 'Branding', description: 'Logo, colors, typography consistent', status: 'pending', findings: [] },
+    { id: 'metadata', name: 'Metadata', description: 'OG tags, title, favicon, manifest', status: 'pending', findings: [] },
+    { id: 'security', name: 'Security Headers', description: 'CORS, CSP, HSTS configured', status: 'pending', findings: [] },
+    { id: 'privacy', name: 'Privacy Compliance', description: 'Terms, privacy policy, cookie consent', status: 'pending', findings: [] },
   ]);
 
   // Validation tests state
-  const [validationTests, setValidationTests] = useState([
-    { id: 'naive', name: 'Naive Tester', description: 'Human walkthrough - friction, terminology, "I want that" reaction', status: 'pending' as const, findings: [] },
-    { id: 'voice', name: 'Voice Auditor', description: 'Voice agent placement and behavior', status: 'pending' as const, findings: [] },
-    { id: 'gtm', name: 'GTM Auditor', description: 'Distribution loop - does output create next user?', status: 'pending' as const, findings: [] },
-    { id: 'qa', name: 'QA Tests', description: 'Automated browser testing', status: 'pending' as const, findings: [] },
+  const [validationTests, setValidationTests] = useState<Array<{ id: string; name: string; description: string; status: TestStatus; findings: string[] }>>([
+    { id: 'naive', name: 'Naive Tester', description: 'Human walkthrough - friction, terminology, "I want that" reaction', status: 'pending', findings: [] },
+    { id: 'voice', name: 'Voice Auditor', description: 'Voice agent placement and behavior', status: 'pending', findings: [] },
+    { id: 'gtm', name: 'GTM Auditor', description: 'Distribution loop - does output create next user?', status: 'pending', findings: [] },
+    { id: 'qa', name: 'QA Tests', description: 'Automated browser testing', status: 'pending', findings: [] },
   ]);
 
   const [runningTest, setRunningTest] = useState<string | null>(null);
@@ -440,7 +441,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                     <button
                       onClick={async () => {
                         setRunningTest(test.id);
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' as const } : t));
+                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
                         try {
                           const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
                             method: 'POST',
@@ -456,12 +457,12 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                           // For now, mark as passed - in real impl, parse findings from data
                           setComplianceTests(prev => prev.map(t => t.id === test.id ? { 
                             ...t, 
-                            status: data.findings?.length > 0 ? 'failed' as const : 'passed' as const,
+                            status: data.findings?.length > 0 ? 'failed' : 'passed',
                             findings: data.findings || []
                           } : t));
                         } catch (err) {
                           console.error('[COMPLIANCE TEST] Error:', err);
-                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' as const } : t));
+                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
                         }
                         setRunningTest(null);
                       }}
@@ -478,7 +479,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                       onClick={async () => {
                         setFixingTest(test.id);
                         await new Promise(r => setTimeout(r, 2000));
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed' as const, findings: [] } : t));
+                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
                         setFixingTest(null);
                       }}
                       disabled={fixingTest === test.id}
@@ -547,7 +548,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                     <button
                       onClick={async () => {
                         setRunningTest('val-' + test.id);
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' as const } : t));
+                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
                         try {
                           const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
                             method: 'POST',
@@ -562,12 +563,12 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                           console.log('[VALIDATION TEST] Result:', data);
                           setValidationTests(prev => prev.map(t => t.id === test.id ? { 
                             ...t, 
-                            status: data.findings?.length > 0 ? 'failed' as const : 'passed' as const,
+                            status: data.findings?.length > 0 ? 'failed' : 'passed',
                             findings: data.findings || []
                           } : t));
                         } catch (err) {
                           console.error('[VALIDATION TEST] Error:', err);
-                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' as const } : t));
+                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
                         }
                         setRunningTest(null);
                       }}
@@ -584,7 +585,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                       onClick={async () => {
                         setFixingTest('val-' + test.id);
                         await new Promise(r => setTimeout(r, 2000));
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed' as const, findings: [] } : t));
+                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
                         setFixingTest(null);
                       }}
                       disabled={fixingTest === 'val-' + test.id}
