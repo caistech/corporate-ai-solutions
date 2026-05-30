@@ -143,6 +143,23 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     return gaps;
   };
 
+  const calculateLocalReadinessScore = (validation: any, gaps: string[]) => {
+    if (!validation) return 0;
+    const fieldsComplete = 
+      (validation.has_promise ? 1 : 0) +
+      (validation.has_distributor ? 1 : 0) +
+      (validation.has_end_user ? 1 : 0) +
+      (validation.has_friction ? 1 : 0) +
+      (validation.has_methodology_commitment ? 1 : 0);
+    const fieldsScore = (fieldsComplete / 5) * 40;
+    const deploymentScore = validation.mvp_url ? 20 : 0;
+    const complianceScore = validation.hard_gates_passed && validation.hard_gates_total 
+      ? (validation.hard_gates_passed / validation.hard_gates_total) * 20 
+      : 0;
+    const validationScore = validation.validation_test_status === 'passed' ? 20 : 0;
+    return Math.round(fieldsScore + deploymentScore + complianceScore + validationScore);
+  };
+
   const validationFieldsComplete = 
     product.validation?.promise && 
     product.validation?.distributor && 
@@ -273,12 +290,16 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 console.log('[CHECKBOX] Response commitment value:', data.data?.has_methodology_commitment);
                 if (res.ok && data.data) {
                   const newGaps = calculateGaps(data.data);
+                  const newReadinessScore = calculateLocalReadinessScore(data.data, newGaps);
+                  const newCanRunOutreach = newReadinessScore >= 80 && newGaps.length === 0;
                   setProduct((prev: any) => ({
                     ...prev,
                     validation: data.data,
-                    gaps: newGaps
+                    gaps: newGaps,
+                    readiness_score: newReadinessScore,
+                    can_run_outreach_now: newCanRunOutreach
                   }));
-                  console.log('[CHECKBOX] Updated local state, gaps:', newGaps);
+                  console.log('[CHECKBOX] Updated local state, gaps:', newGaps, 'readiness:', newReadinessScore, 'canRunOutreach:', newCanRunOutreach);
                 }
               } catch (err) {
                 console.error('[CHECKBOX] Error:', err);
@@ -705,16 +726,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           >
             Recalculate Score (debug)
           </button>
-        </div>
-
-        {/* DEBUG: Show what's blocking outreach */}
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-          <div className="font-medium text-yellow-800">Debug Info:</div>
-          <div>can_run_outreach_now: <span className="font-mono">{String(product.can_run_outreach_now)}</span></div>
-          <div>allCompliancePassed: <span className="font-mono">{String(allCompliancePassed)}</span></div>
-          <div>allValidationPassed: <span className="font-mono">{String(allValidationPassed)}</span></div>
-          <div>allTestsPassed: <span className="font-mono">{String(allTestsPassed)}</span></div>
-          <div>isReadyForOutreach: <span className="font-mono">{String(isReadyForOutreach)}</span></div>
         </div>
 
         {/* Submit for Outreach Button */}
