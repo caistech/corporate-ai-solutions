@@ -682,6 +682,31 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         </p>
         <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
         
+        {/* Force Score Recalculation */}
+        <div className="mt-4">
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch(`/api/admin/pipeline/${productId}/recalculate-score`, { method: 'POST' });
+                const data = await res.json();
+                console.log('[RECALCULATE] Result:', data);
+                if (data.success) {
+                  setProduct((prev: any) => ({
+                    ...prev,
+                    validation: data.data,
+                    readiness_score: data.readiness_score
+                  }));
+                }
+              } catch (err) {
+                console.error('[RECALCULATE] Error:', err);
+              }
+            }}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Recalculate Score (debug)
+          </button>
+        </div>
+
         {/* Submit for Outreach Button */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <button
