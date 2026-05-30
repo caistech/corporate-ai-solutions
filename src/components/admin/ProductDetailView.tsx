@@ -265,6 +265,33 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         </label>
       </div>
 
+      {/* STEP 7: Design & Build */}
+      <div className={`rounded-lg shadow p-6 ${product.validation?.mvp_url ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
+          <h2 className="text-lg font-semibold text-gray-900">Design & Build</h2>
+          {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          {product.validation?.mvp_url 
+            ? "Product is built and deployed. Skip to validation tests."
+            : "Design and build the product. Once deployed, enter the URL in Step 6."}
+        </p>
+        
+        {product.validation?.mvp_url ? (
+          <p className="text-sm text-gray-500 italic">
+            ✅ Product deployed - design & build complete
+          </p>
+        ) : (
+          <button
+            onClick={() => window.open('https://github.com/new', '_blank')}
+            className="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+          >
+            Start Design & Build →
+          </button>
+        )}
+      </div>
+
       {/* STEP 6: Product URL - Build or Skip to Tests */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
