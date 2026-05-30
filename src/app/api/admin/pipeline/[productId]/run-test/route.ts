@@ -272,6 +272,31 @@ export async function POST(
             last_validation_test_run: new Date().toISOString()
           })
           .eq('product_slug', productSlug);
+
+        // Recalculate weighted score after test update
+        const { data: currentData } = await supabase
+          .from('product_validation_status')
+          .select('test_part_a_admin_portal, test_part_b_user_portal, test_part_c_auth_flows, test_part_d_scaffold')
+          .eq('product_slug', productSlug)
+          .single();
+
+        if (currentData) {
+          const calcScore = (status: string) => {
+            if (status === 'passed') return 25;
+            if (status === 'warning') return 20;
+            return 0;
+          };
+          const newScore = 
+            calcScore(currentData.test_part_a_admin_portal) +
+            calcScore(currentData.test_part_b_user_portal) +
+            calcScore(currentData.test_part_c_auth_flows) +
+            calcScore(currentData.test_part_d_scaffold);
+
+          await supabase
+            .from('product_validation_status')
+            .update({ weighted_score_percent: newScore })
+            .eq('product_slug', productSlug);
+        }
       }
       
       return NextResponse.json({

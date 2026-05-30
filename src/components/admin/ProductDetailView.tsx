@@ -476,6 +476,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                             status: newStatus,
                             findings: newFindings
                           } : t));
+                          handleRefresh();
                         } catch (err) {
                           console.error('[COMPLIANCE TEST] Error:', err);
                           setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
@@ -607,6 +608,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                             status: newStatus,
                             findings: newFindings
                           } : t));
+                          handleRefresh();
                         } catch (err) {
                           console.error('[VALIDATION TEST] Error:', err);
                           setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
