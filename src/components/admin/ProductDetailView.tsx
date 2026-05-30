@@ -33,7 +33,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         setIsLoading(true);
         setError(null);
 
-        const res = await fetch(`/api/admin/pipeline/${productId}`);
+        const res = await fetch(`/api/admin/pipeline/${productId}?_t=${Date.now()}`);
 
         if (!res.ok) {
           throw new Error(`Failed to fetch product: ${res.statusText}`);
