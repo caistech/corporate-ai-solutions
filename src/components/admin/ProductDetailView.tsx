@@ -176,7 +176,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <br /><strong>This item is for:</strong> Defining the product promise, distributor model, end user, and pain point.
           <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
         </p>
-        <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
+        <ValidationFieldsEditor key={refreshTrigger} product={product} onRefresh={handleRefresh} />
       </div>
 
       {/* STEP 5: Founder Commitment */}
