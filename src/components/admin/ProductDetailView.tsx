@@ -78,8 +78,10 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     fetchProduct();
   }, [productId, refreshTrigger]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     console.log('[REFRESH] handleRefresh called, current trigger:', refreshTrigger);
+    // Wait for DB sync before fetching
+    await new Promise(r => setTimeout(r, 500));
     const newVal = refreshTrigger + 1;
     setRefreshTrigger(newVal);
     console.log('[REFRESH] Set trigger to:', newVal);
