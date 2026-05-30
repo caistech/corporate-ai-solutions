@@ -56,12 +56,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Now update with exact slug
-    const { error, count } = await supabase
+    // Now update with exact slug - select the promise field to verify
+    const { error, data } = await supabase
       .from('product_validation_status')
       .update(update)
       .eq('product_slug', exactSlug)
-      .select();
+      .select('promise, distributor, end_user, friction');
+
+    console.log('Update result:', { error, data });
 
     if (error) {
       console.error('Update error:', error);
@@ -71,8 +73,7 @@ export async function PATCH(
       );
     }
 
-    console.log('Update success, rows affected:', count);
-    return NextResponse.json({ success: true, count });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
