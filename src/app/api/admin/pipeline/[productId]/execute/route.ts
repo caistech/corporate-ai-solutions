@@ -165,6 +165,7 @@ export async function POST(
       icp_company_size: product.icp_company_size || null,
       icp_stage: product.icp_stage || null,
       icp_verticals: product.icp_verticals || null,
+      icp_geography: product.icp_geography || null,
       one_pager_url: product.one_pager_url || null,
       pitch_deck_url: product.pitch_deck_url || null,
       partner_types: product.partner_types || 'referral',
