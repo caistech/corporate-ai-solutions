@@ -98,9 +98,8 @@ Only include the fields requested: ${fields.join(', ')}`;
     }
 
     const data = await response.json();
-    console.log('Minimax response:', JSON.stringify(data));
     const content = data.choices?.[0]?.message?.content || '{}';
-    console.log('Minimax content:', content);
+    return NextResponse.json({ debug: { data, content } });
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
