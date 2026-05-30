@@ -19,6 +19,9 @@ export async function GET(
     const productId = params.productId;
 
     const product = await getProductPipeline(productId);
+    
+    // Debug: log what's in validationStatuses map
+    console.log('DEBUG getProductPipeline:', { productId, productName: product?.manifest?.name, validation: product?.validation });
 
     if (!product) {
       return NextResponse.json(
