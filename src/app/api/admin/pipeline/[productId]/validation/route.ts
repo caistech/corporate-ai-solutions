@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   global: { headers: { 'Cache-Control': 'no-cache' } }
 });
 
-const ALLOWED_FIELDS = ['promise', 'distributor', 'end_user', 'friction', 'has_methodology_commitment', 'mvp_url'];
+const ALLOWED_FIELDS = ['promise', 'distributor', 'end_user', 'friction', 'customer_outcomes', 'core_mechanism', 'icp_geography', 'has_methodology_commitment', 'mvp_url'];
 
 export async function PATCH(
   request: NextRequest,

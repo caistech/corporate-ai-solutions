@@ -16,6 +16,9 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
     distributor: product.validation?.distributor || '',
     end_user: product.validation?.end_user || '',
     friction: product.validation?.friction || '',
+    customer_outcomes: product.validation?.customer_outcomes || '',
+    core_mechanism: product.validation?.core_mechanism || '',
+    icp_geography: product.validation?.icp_geography || '',
   });
 
   // Sync formData when product.validation changes
@@ -25,8 +28,11 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
       distributor: product.validation?.distributor || '',
       end_user: product.validation?.end_user || '',
       friction: product.validation?.friction || '',
+      customer_outcomes: product.validation?.customer_outcomes || '',
+      core_mechanism: product.validation?.core_mechanism || '',
+      icp_geography: product.validation?.icp_geography || '',
     });
-  }, [product.validation?.promise, product.validation?.distributor, product.validation?.end_user, product.validation?.friction]);
+  }, [product.validation?.promise, product.validation?.distributor, product.validation?.end_user, product.validation?.friction, product.validation?.customer_outcomes, product.validation?.core_mechanism, product.validation?.icp_geography]);
 
   const getProductSlug = () => product.validation?.product_slug || product.manifest?.name || product.id || 'unknown';
 
@@ -151,6 +157,9 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
     { key: 'distributor', label: 'Distributor', placeholder: 'Who sells/delivers this to end users?' },
     { key: 'end_user', label: 'End User', placeholder: 'Who uses this product?' },
     { key: 'friction', label: 'Friction/Pain Point', placeholder: 'What problem does this solve?' },
+    { key: 'customer_outcomes', label: 'Customer Outcomes', placeholder: 'What results do users get after 90 days? (e.g., 50% faster onboarding, 2x engagement)' },
+    { key: 'core_mechanism', label: 'Core Mechanism', placeholder: 'How does your AI work? (e.g., voice analysis, predictive models, NLP)' },
+    { key: 'icp_geography', label: 'Target Geography', placeholder: 'Where do you want to target? (e.g., Australia, US, UK, Global, APAC)' },
   ];
 
   const missingCount = fields.filter(f => !product.validation?.[f.key]).length;
