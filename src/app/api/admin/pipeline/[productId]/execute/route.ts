@@ -29,14 +29,21 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { productId: string } }
 ) {
+  const productId = params.productId;
+  console.log('[execute] START', { productId });
+  
   try {
-    const productId = params.productId;
     const body = await request.json();
-    const dryRun = body.dry_run !== false; // Default to dry-run
+    const dryRun = body.dry_run !== false;
+    console.log('[execute] Request parsed', { dryRun });
 
     // Check authentication first
+    console.log('[execute] Checking auth...');
     const submitterEmail = await getUserEmail();
+    console.log('[execute] Auth result', { submitterEmail: !!submitterEmail, email: submitterEmail });
+    
     if (!submitterEmail) {
+      console.log('[execute] AUTH FAILED - returning 401');
       return NextResponse.json(
         { error: 'Must be logged in to submit for outreach', requires_login: true },
         { status: 401 }
@@ -44,13 +51,17 @@ export async function POST(
     }
 
     // Fetch current product
+    console.log('[execute] Fetching product from DB...');
     const { data: product, error: fetchError } = await supabase
       .from('product_validation_status')
       .select('*')
       .eq('product_slug', productId)
       .single();
 
+    console.log('[execute] DB result', { productFound: !!product, fetchError: fetchError?.message });
+
     if (fetchError || !product) {
+      console.log('[execute] PRODUCT NOT FOUND - returning 404');
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
@@ -59,6 +70,7 @@ export async function POST(
 
     // Check readiness
     if ((product.weighted_score_percent || 0) < 80) {
+      console.log('[execute] READINESS CHECK FAILED', { score: product.weighted_score_percent });
       return NextResponse.json(
         {
           error: 'Not ready for execution',
@@ -76,6 +88,8 @@ export async function POST(
     if (!product.has_end_user) gaps.push('end_user');
     if (!product.has_friction) gaps.push('friction');
     if (!product.has_methodology_commitment) gaps.push('methodology_commitment');
+
+    console.log('[execute] Gaps check', { gaps, allFilled: gaps.length === 0 });
 
     if (gaps.length > 0) {
       return NextResponse.json(
