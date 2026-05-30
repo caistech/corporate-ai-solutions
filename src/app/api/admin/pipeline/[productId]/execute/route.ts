@@ -4,7 +4,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import crypto from 'crypto';
+import { cookies } from 'next/headers';
+
+function getServerClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+function getAuthClient() {
+  const cookieStore = cookies();
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+      },
+    }
+  );
+}
 
 function getDbClient() {
   return createClient(
@@ -43,8 +63,15 @@ export async function POST(
     const dryRun = body.dry_run !== false;
     console.log('[execute] Request parsed', { dryRun });
 
-    console.log('[execute] Auth bypassed for testing');
-    const submitterEmail = 'dennis@caistech.com';
+    const authClient = getAuthClient();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    
+    if (authError || !user?.email) {
+      return NextResponse.json({ error: 'Unauthorized - must be logged in' }, { status: 401 });
+    }
+    
+    const submitterEmail = user.email;
+    console.log('[execute] Logged in user email:', submitterEmail);
 
     console.log('[execute] Fetching product from DB...');
     const supabase = getDbClient();
