@@ -81,7 +81,7 @@ export async function PATCH(
       data = result.data;
     }
 
-    console.log('[PATCH] Update result:', { error });
+    console.log('[PATCH] Update result:', { error, updateApplied: update, existing: !!existing });
 
     if (error) {
       console.error('Update error:', error);

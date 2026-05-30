@@ -356,12 +356,14 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 onClick={async () => {
                   const input = document.getElementById('mvp-url-input') as HTMLInputElement;
                   const url = input?.value?.trim();
+                  console.log('[URL SAVE] Button clicked, url:', url);
                   if (url) {
                     const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ mvp_url: url }),
                     });
+                    console.log('[URL SAVE] Response:', res.status, await res.clone().json().catch(() => ({})));
                     if (res.ok) {
                       const data = await res.json();
                       setProduct((prev: any) => ({
