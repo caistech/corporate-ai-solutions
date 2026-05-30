@@ -581,7 +581,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           )}
         </div>
       </div>
-      </div>
 
       {/* STEP 10: Gaps Summary + Submit */}
       <div className="bg-white rounded-lg shadow p-6">
