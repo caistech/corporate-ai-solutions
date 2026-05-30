@@ -99,7 +99,7 @@ export async function PATCH(
         .eq('product_slug', productSlug)
         .single();
       
-      console.log('[PATCH] Returning updated row:', updatedRow);
+      console.log('[PATCH] Returning updated row:', { commitment: updatedRow?.has_methodology_commitment, mvp_url: updatedRow?.mvp_url });
       return NextResponse.json({ success: true, data: updatedRow });
     } catch (e) {
       console.log('[PATCH] Returning update success without row');
