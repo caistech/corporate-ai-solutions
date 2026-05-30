@@ -84,6 +84,28 @@ src/
 - All secrets in `.env.local`, never inline
 - Image optimization via Next.js Image with domain whitelist
 
+## Supabase Auth Pattern (MANDATORY)
+**NEVER use service role key for auth checks** — it bypasses cookies and can't detect user sessions.
+
+- Auth checks: Use `createServerClient` with `NEXT_PUBLIC_SUPABASE_ANON_KEY` + `cookies()` from 'next/headers'
+- Data operations: Use service role key via `createClient()` from '@supabase/supabase-js'
+
+Example for API routes needing auth:
+```typescript
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+async function getUser() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { get: (n) => cookieStore.get(n)?.value, set() {}, remove() {} } }
+  )
+  return supabase.auth.getUser()
+}
+```
+
 ## Watch out for
 - TypeScript strict mode is on
 - 4 ElevenLabs voice agents each have unique system prompts — don't merge them
