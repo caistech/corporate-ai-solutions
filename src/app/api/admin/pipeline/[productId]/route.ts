@@ -34,6 +34,14 @@ export async function GET(
     );
     
     console.log('[GET] Querying product_validation_status for product_slug:', productId);
+    
+    // First do a raw count query to see what's in the table
+    const { count } = await supabase
+      .from('product_validation_status')
+      .select('*', { count: 'exact', head: true })
+      .eq('product_slug', productId);
+    console.log('[GET] Row count for', productId, ':', count);
+    
     const { data: freshValidation, error: freshError } = await supabase
       .from('product_validation_status')
       .select('*')
@@ -46,7 +54,8 @@ export async function GET(
       commitment: freshValidation?.has_methodology_commitment, 
       mvp_url: freshValidation?.mvp_url,
       promise: freshValidation?.promise,
-      distributor: freshValidation?.distributor
+      distributor: freshValidation?.distributor,
+      allFields: freshValidation ? Object.keys(freshValidation) : 'none'
     });
 
     if (freshValidation) {
