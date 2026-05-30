@@ -40,10 +40,12 @@ export async function PATCH(
 
     update.updated_at = new Date().toISOString();
 
+    console.log('PATCH validation:', { productSlug, update });
     const { error } = await supabase
       .from('product_validation_status')
       .update(update)
       .eq('product_slug', productSlug);
+    console.log('PATCH result:', error);
 
     if (error) {
       console.error('Error updating validation:', error);
