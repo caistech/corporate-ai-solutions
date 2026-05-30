@@ -20,14 +20,16 @@ export async function POST(
     const productSlug = params.productId;
     let fields: string[] = [];
     let productDetails: Record<string, string> = {};
+    let rawBody = '';
     try {
-      const rawBody = await request.text();
+      rawBody = await request.text();
+      console.log('Raw body:', rawBody);
       const body = JSON.parse(rawBody);
       fields = body.fields;
       productDetails = body.productDetails || {};
     } catch (e) {
-      console.error('Failed to parse request body');
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      console.error('Failed to parse request body:', rawBody);
+      return NextResponse.json({ error: 'Invalid JSON', received: rawBody }, { status: 400 });
     }
 
     if (!Array.isArray(fields) || fields.length === 0) {
