@@ -325,7 +325,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               <input
                 type="url"
                 placeholder="https://your-product.vercel.app"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                 id="mvp-url-input"
               />
               <button

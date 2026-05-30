@@ -48,31 +48,13 @@ export async function PATCH(
 
     console.log('[PATCH] validation:', { productSlug, update });
 
-    // First verify the row exists
-    const { data: existing } = await supabase
-      .from('product_validation_status')
-      .select('id, product_slug')
-      .eq('product_slug', productSlug)
-      .single();
-    
-    console.log('[PATCH] Existing row:', existing);
-
-    // Use .eq() with exact match
+    // Use .eq() with exact match - just update, don't select
     const { error, data } = await supabase
       .from('product_validation_status')
       .update(update)
-      .eq('product_slug', productSlug)
-      .select('promise, distributor, end_user, friction, has_methodology_commitment, mvp_url');
+      .eq('product_slug', productSlug);
 
-    console.log('[PATCH] Update result:', { error, data, rowCount: data?.length });
-
-    // Verify after update
-    const { data: afterUpdate } = await supabase
-      .from('product_validation_status')
-      .select('has_methodology_commitment, mvp_url')
-      .eq('product_slug', productSlug)
-      .single();
-    console.log('[PATCH] After update:', afterUpdate);
+    console.log('[PATCH] Update result:', { error });
 
     if (error) {
       console.error('Update error:', error);
@@ -83,14 +65,19 @@ export async function PATCH(
     }
 
     // Return the updated row so client doesn't need to refetch
-    const { data: updatedRow } = await supabase
-      .from('product_validation_status')
-      .select('*')
-      .eq('product_slug', productSlug)
-      .single();
-    
-    console.log('[PATCH] Returning updated row:', updatedRow);
-    return NextResponse.json({ success: true, data: updatedRow });
+    try {
+      const { data: updatedRow } = await supabase
+        .from('product_validation_status')
+        .select('*')
+        .eq('product_slug', productSlug)
+        .single();
+      
+      console.log('[PATCH] Returning updated row:', updatedRow);
+      return NextResponse.json({ success: true, data: updatedRow });
+    } catch (e) {
+      console.log('[PATCH] Returning update success without row');
+      return NextResponse.json({ success: true, data: null });
+    }
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
