@@ -35,7 +35,28 @@ const TEST_CONFIGS: Record<string, {
   branding: { 
     skill: 'qa', 
     description: 'Branding check',
-    runnable: 'manual' 
+    runnable: 'auto',
+    autoCheck: async (url) => {
+      try {
+        const html = await fetch(url).then(r => r.text());
+        const findings = [];
+        // Check for logo (common selectors)
+        const hasLogo = html.includes('logo') || html.includes('Logo') || html.includes('brand') || html.includes('Brand');
+        // Check for consistent colors via style or css
+        const hasStyles = html.includes('color:') || html.includes('background') || html.includes('.css');
+        // Check for favicon
+        const hasFavicon = html.includes('favicon') || html.includes('icon');
+        
+        if (!hasLogo && !hasFavicon) findings.push('No logo or brand element detected');
+        if (!hasStyles) findings.push('No inline styles found - brand may be inconsistent');
+        
+        return findings.length > 0 
+          ? { status: 'warning', findings } 
+          : { status: 'passed', findings: [] };
+      } catch (e) {
+        return { status: 'failed', findings: [`Could not check branding: ${e}`] };
+      }
+    }
   },
   metadata: { 
     skill: 'qa', 
@@ -80,7 +101,31 @@ const TEST_CONFIGS: Record<string, {
   privacy: { 
     skill: 'qa', 
     description: 'Privacy compliance check',
-    runnable: 'manual' 
+    runnable: 'auto',
+    autoCheck: async (url) => {
+      try {
+        const findings = [];
+        // Check for terms page
+        const termsRes = await fetch(url + '/terms', { method: 'HEAD' });
+        const privacyRes = await fetch(url + '/privacy', { method: 'HEAD' });
+        
+        if (!termsRes.ok && termsRes.status !== 404) findings.push('Terms page check failed');
+        if (!privacyRes.ok && privacyRes.status !== 404) findings.push('Privacy page check failed');
+        
+        // Check for cookie consent in HTML
+        const html = await fetch(url).then(r => r.text());
+        const hasCookieConsent = html.toLowerCase().includes('cookie') || html.toLowerCase().includes('consent');
+        
+        if (!termsRes.ok && termsRes.status === 404) findings.push('No /terms page found');
+        if (!privacyRes.ok && privacyRes.status === 404) findings.push('No /privacy page found');
+        
+        return findings.length > 0 
+          ? { status: 'warning', findings } 
+          : { status: 'passed', findings: [] };
+      } catch (e) {
+        return { status: 'failed', findings: [`Could not check privacy: ${e}`] };
+      }
+    }
   },
   naive: { 
     skill: 'naive-tester', 
