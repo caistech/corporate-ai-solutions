@@ -60,7 +60,7 @@ export async function POST(
     // Check readiness: validation tests must be passed or passed with non-blocking warnings
     const { data: validationData, error: fetchError } = await supabase
       .from('product_validation_status')
-      .select('validation_test_status, weighted_score_percent, gate1_score_percent')
+      .select('validation_test_status, weighted_score_percent, gate1_score_percent, validation_test_results')
       .eq('product_slug', productId)
       .single();
 
@@ -74,6 +74,7 @@ export async function POST(
     // Check readiness gate: validation tests passed or warning (non-blocking)
     const testStatus = validationData.validation_test_status;
     const gate1Score = validationData.gate1_score_percent || 0;
+    const testResults = validationData.validation_test_results as Record<string, { status: string }> | null;
     
     if (testStatus === 'failed' || testStatus === 'not_run') {
       return NextResponse.json(
@@ -86,11 +87,41 @@ export async function POST(
       );
     }
 
-    if (gate1Score < 85) {
+    // REQUIRE gstack skills (qa, naive) to have been run and passed/warning before outreach
+    const qaResult = testResults?.qa;
+    const naiveResult = testResults?.naive;
+    const gtmResult = testResults?.gtm;
+    
+    if (!qaResult || qaResult.status === 'not_run') {
+      return NextResponse.json(
+        { error: 'QA test not run - must run /qa before outreach' },
+        { status: 400 }
+      );
+    }
+    if (qaResult.status === 'failed') {
+      return NextResponse.json(
+        { error: 'QA test failed - fix issues before outreach', findings: testResults?.qa?.findings },
+        { status: 400 }
+      );
+    }
+    if (!naiveResult || naiveResult.status === 'not_run') {
+      return NextResponse.json(
+        { error: 'Naive tester not run - must run /naive-tester before outreach' },
+        { status: 400 }
+      );
+    }
+    if (naiveResult.status === 'failed') {
+      return NextResponse.json(
+        { error: 'Naive tester failed - fix human UX issues before outreach', findings: testResults?.naive?.findings },
+        { status: 400 }
+      );
+    }
+
+    if (gate1Score < 80) {
       return NextResponse.json(
         {
           error: 'Product readiness score too low',
-          reason: `Gate 1 readiness: ${gate1Score}%. Must be ≥ 90% before executing validation workflows.`,
+          reason: `Gate 1 readiness: ${gate1Score}%. Must be ≥ 80% before executing validation workflows.`,
           current_readiness: gate1Score,
         },
         { status: 400 }
