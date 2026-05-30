@@ -78,6 +78,9 @@ export async function POST(
     const submitterEmail = user.email;
     console.log('[execute] Logged in user email:', submitterEmail);
 
+    console.log('[execute] Fetching product from DB...');
+    const supabase = getDbClient();
+    
     // Get user's organisation from Pipeline's DB
     const { data: profile } = await supabase
       .from('profiles')
@@ -88,8 +91,6 @@ export async function POST(
     const organisationId = profile?.active_organisation_id;
     console.log('[execute] User org ID:', organisationId);
 
-    console.log('[execute] Fetching product from DB...');
-    const supabase = getDbClient();
     const { data: product, error: fetchError } = await supabase
       .from('product_validation_status')
       .select('*')

@@ -511,7 +511,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               </div>
             ))}
           </div>
-          {gaps.some(g => g.includes('Missing')) && (
+          {product.gaps?.some((g: string) => g.includes('Missing')) && (
             <p className="text-xs text-orange-700 mt-2">
               ⚠️ Complete missing fields above before executing to InvestorPilot
             </p>
