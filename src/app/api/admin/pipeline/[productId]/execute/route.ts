@@ -14,40 +14,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import crypto from 'crypto';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-async function getUserEmailDebug() {
-  console.log('[auth] getUserEmailDebug - start')
-  try {
-    const cookieStore = cookies()
-    console.log('[auth] got cookies')
-    
-    const supabase2 = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) { return cookieStore.get(name)?.value },
-          set() {},
-          remove() {},
-        },
-      }
-    )
-    console.log('[auth] created client')
-    
-    const { data: { user } } = await supabase2.auth.getUser()
-    console.log('[auth] got user:', !!user)
-    return user?.email || 'debug@test.com'
-  } catch (err) {
-    console.error('[auth] ERROR:', err)
-    return 'debug@test.com'
+function getDbClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
   }
 }
 
@@ -82,6 +56,7 @@ export async function POST(
 
     // Fetch current product
     console.log('[execute] Fetching product from DB...');
+    const supabase = getDbClient();
     const { data: product, error: fetchError } = await supabase
       .from('product_validation_status')
       .select('*')
