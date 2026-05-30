@@ -23,6 +23,8 @@ export async function PATCH(
 
     // Build update object with only allowed fields
     const update: Record<string, any> = {};
+    const skipHasFlag = ['mvp_url']; // Fields that shouldn't get auto has_ flag
+    
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined) {
         const value = body[field];
@@ -31,8 +33,10 @@ export async function PATCH(
           update[field] = value;
         } else {
           update[field] = value;
-          // Also update the corresponding has_* flag for string fields
-          update[`has_${field}`] = !!value && value.trim().length > 0;
+          // Also update the corresponding has_* flag for string fields (skip mvp_url)
+          if (!skipHasFlag.includes(field)) {
+            update[`has_${field}`] = !!value && value.trim().length > 0;
+          }
         }
       }
     }
