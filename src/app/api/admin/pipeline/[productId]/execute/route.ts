@@ -25,7 +25,9 @@ export async function POST(
   { params }: { params: { productId: string } }
 ) {
   console.log('[execute] BEFORE PARAMS');
+  console.log('[execute] raw params:', JSON.stringify(params));
   const productId = params.productId;
+  console.log('[execute] extracted productId:', productId);
   console.log('[execute] START', { productId });
   
   try {
