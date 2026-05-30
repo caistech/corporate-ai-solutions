@@ -32,6 +32,7 @@ interface FixResult {
   output?: string;
   repoPath?: string;
   syncNeeded?: boolean;
+  error?: string;
 }
 
 async function checkLocalRepo(productId: string): Promise<string | null> {

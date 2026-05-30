@@ -100,7 +100,7 @@ export async function POST(
     }
     if (qaResult.status === 'failed') {
       return NextResponse.json(
-        { error: 'QA test failed - fix issues before outreach', findings: testResults?.qa?.findings },
+        { error: 'QA test failed - fix issues before outreach', details: 'Check test results in pipeline' },
         { status: 400 }
       );
     }
@@ -112,7 +112,7 @@ export async function POST(
     }
     if (naiveResult.status === 'failed') {
       return NextResponse.json(
-        { error: 'Naive tester failed - fix human UX issues before outreach', findings: testResults?.naive?.findings },
+        { error: 'Naive tester failed - fix human UX issues before outreach', details: 'Check test results in pipeline' },
         { status: 400 }
       );
     }
