@@ -222,10 +222,10 @@ function getManualSteps(testType: string, url: string): string[] {
       ];
     case 'privacy':
       return [
-        `1. Check for Terms of Service page',
-        '2. Check for Privacy Policy page',
-        '3. Verify cookie consent if needed',
-        '4. Ensure GDPR/compliance if EU users'
+        "1. Check for Terms of Service page",
+        "2. Check for Privacy Policy page",
+        "3. Verify cookie consent if needed",
+        "4. Ensure GDPR/compliance if EU users"
       ];
     default:
       return ['Manual test - follow skill instructions'];
