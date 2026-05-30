@@ -78,6 +78,16 @@ export async function POST(
     const submitterEmail = user.email;
     console.log('[execute] Logged in user email:', submitterEmail);
 
+    // Get user's organisation from Pipeline's DB
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_organisation_id')
+      .eq('id', user.id)
+      .single();
+    
+    const organisationId = profile?.active_organisation_id;
+    console.log('[execute] User org ID:', organisationId);
+
     console.log('[execute] Fetching product from DB...');
     const supabase = getDbClient();
     const { data: product, error: fetchError } = await supabase
@@ -152,6 +162,7 @@ export async function POST(
         end_user_icp: product.end_user,
         friction: product.friction,
         submitter_email: submitterEmail.toLowerCase(),
+        submitter_organisation_id: organisationId,
         timestamp: new Date().toISOString(),
       };
 
