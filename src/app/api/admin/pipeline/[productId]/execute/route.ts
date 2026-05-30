@@ -166,7 +166,7 @@ export async function POST(
       icp_stage: product.icp_stage || null,
       icp_verticals: product.icp_verticals || null,
       icp_geography: product.icp_geography || null,
-      one_pager_url: product.one_pager_url || null,
+      one_pager_url: product.mvp_url || null,
       pitch_deck_url: product.pitch_deck_url || null,
       partner_types: product.partner_types || 'referral',
       // Validation scores
