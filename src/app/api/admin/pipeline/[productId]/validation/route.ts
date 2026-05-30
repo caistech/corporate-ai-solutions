@@ -52,12 +52,34 @@ export async function PATCH(
 
     console.log('[PATCH] validation:', { productSlug, update });
 
-    // Use upsert to create row if it doesn't exist (need display_name)
-    const displayName = productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    const { error, data } = await supabase
+    // Check if row exists first
+    const { data: existing } = await supabase
       .from('product_validation_status')
-      .upsert({ product_slug: productSlug, display_name: displayName, ...update }, { onConflict: 'product_slug' })
-      .select();
+      .select('product_slug')
+      .eq('product_slug', productSlug)
+      .single();
+
+    let error: any = null;
+    let data: any = null;
+
+    if (existing) {
+      // Row exists - use update (preserves other columns)
+      const result = await supabase
+        .from('product_validation_status')
+        .update(update)
+        .eq('product_slug', productSlug)
+        .select();
+      error = result.error;
+      data = result.data;
+    } else {
+      // Row doesn't exist - use insert
+      const displayName = productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const result = await supabase
+        .from('product_validation_status')
+        .insert({ product_slug: productSlug, display_name: displayName, ...update });
+      error = result.error;
+      data = result.data;
+    }
 
     console.log('[PATCH] Update result:', { error });
 
