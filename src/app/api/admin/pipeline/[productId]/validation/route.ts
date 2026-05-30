@@ -80,14 +80,26 @@ export async function PATCH(
     if (existing) {
       console.log('[PATCH] Row exists - doing UPDATE');
       // Row exists - use update (preserves other columns)
-      const result = await supabase
+      // Use .update() then re-fetch to ensure we get updated data
+      await supabase
         .from('product_validation_status')
         .update(update)
+        .eq('product_slug', productSlug);
+      
+      // Verify the update worked by fetching fresh
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('product_validation_status')
+        .select('*')
         .eq('product_slug', productSlug)
-        .select();
-      console.log('[PATCH] Update response:', { error: result.error, data: result.data });
-      error = result.error;
-      data = result.data;
+        .single();
+      
+      console.log('[PATCH] Update verified:', { 
+        error: verifyError, 
+        commitment: verifyData?.has_methodology_commitment,
+        mvp_url: verifyData?.mvp_url 
+      });
+      error = null;
+      data = [verifyData];
     } else {
       console.log('[PATCH] Row does NOT exist - doing INSERT');
       // Row doesn't exist - use insert
