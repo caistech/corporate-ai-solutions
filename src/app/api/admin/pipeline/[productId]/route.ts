@@ -30,7 +30,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(product, {
+    return NextResponse.json({ ...product, _debug: { productId, name: product?.manifest?.name } }, {
       status: 200,
       headers: {
         'Cache-Control': 'no-store, max-age=0',
