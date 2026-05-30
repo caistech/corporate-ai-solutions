@@ -42,6 +42,7 @@ export interface ProductValidationStatus {
   has_end_user: boolean;
   has_friction: boolean;
   has_methodology_commitment: boolean;
+  mvp_url: string | null;
   last_validation_update: string | null;
   last_outreach_attempt: string | null;
   last_scoring_run: string;
