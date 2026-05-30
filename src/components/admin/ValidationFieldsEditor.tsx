@@ -4,10 +4,10 @@ import { Sparkles, Loader2 } from 'lucide-react';
 
 interface ValidationFieldsEditorProps {
   product: any;
-  onRefresh: () => void;
+  onUpdate?: (updatedValidation: any) => void;
 }
 
-export default function ValidationFieldsEditor({ product, onRefresh }: ValidationFieldsEditorProps) {
+export default function ValidationFieldsEditor({ product, onUpdate }: ValidationFieldsEditorProps) {
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
@@ -40,10 +40,14 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: formData[field as keyof typeof formData] }),
       });
-      console.log('Save response:', res.status, res.ok);
+      const data = await res.json();
+      console.log('Save response:', res.status, data);
       if (res.ok) {
         setEditing(null);
-        onRefresh();
+        // Pass updated data back to parent instead of refreshing
+        if (onUpdate && data.data) {
+          onUpdate(data.data);
+        }
       } else {
         const err = await res.text();
         console.error('Save failed:', err);
