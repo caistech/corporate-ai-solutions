@@ -1,7 +1,6 @@
 /**
  * PATCH /api/admin/pipeline/[productId]/validation
- * 
- * Update validation fields (promise, distributor, end_user, friction)
+ * Update validation fields
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,27 +16,23 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { productId: string } }
 ) {
-  console.log('[PATCH] ========== START PATCH VALIDATION ==========');
+  console.log('[PATCH] ========== START ==========');
   try {
     const productSlug = params.productId.trim().toLowerCase();
-    console.log('[PATCH] productSlug:', productSlug);
-
     const body = await request.json();
-    console.log('[PATCH] body received:', body);
+    console.log('[PATCH] productSlug:', productSlug, 'body:', JSON.stringify(body));
 
-    // Build update object with only allowed fields
     const update: Record<string, any> = {};
-    const skipHasFlag = ['mvp_url']; // Fields that shouldn't get auto has_ flag
+    const skipHasFlag = ['mvp_url'];
     
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined) {
         const value = body[field];
-        console.log('[PATCH] Processing field:', field, 'value:', value, 'type:', typeof value);
         if (typeof value === 'boolean') {
           update[field] = value;
+          console.log('[PATCH] Boolean field:', field, '=', value);
         } else {
           update[field] = value;
-          // Also update the corresponding has_* flag for string fields
           if (!skipHasFlag.includes(field)) {
             update[`has_${field}`] = !!value && value.trim().length > 0;
           }
@@ -45,61 +40,42 @@ export async function PATCH(
       }
     }
 
-    console.log('[PATCH] Built update object:', update);
-
     if (Object.keys(update).length === 0) {
-      console.log('[PATCH] No valid fields to update');
-      return NextResponse.json(
-        { error: 'No valid fields to update' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No valid fields' }, { status: 400 });
     }
 
-    // Use UPSERT - more reliable than UPDATE
-    console.log('[PATCH] Doing UPSERT with:', { product_slug: productSlug, ...update });
-    
-    const displayName = productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    
-    const { data: upsertResult, error: upsertError } = await supabase
+    console.log('[PATCH] Update payload:', JSON.stringify(update));
+
+    // Direct update using eq
+    const result = await supabase
       .from('product_validation_status')
-      .upsert({ 
-        product_slug: productSlug, 
-        display_name: displayName,
-        ...update,
-        updated_at: new Date().toISOString()
-      }, { 
-        onConflict: 'product_slug',
-        ignoreDuplicates: false 
-      })
-      .select()
-      .single();
+      .update(update)
+      .eq('product_slug', productSlug);
 
-    console.log('[PATCH] UPSERT result:', { upsertResult, upsertError });
-
-    if (upsertError) {
-      console.error('[PATCH] UPSERT error:', upsertError);
-      return NextResponse.json(
-        { error: 'Failed to update validation', details: upsertError.message },
-        { status: 500 }
-      );
+    console.log('[PATCH] Update result - count:', result.count, 'status:', result.status);
+    
+    if (result.error) {
+      console.error('[PATCH] Update error:', result.error);
+      return NextResponse.json({ error: result.error.message }, { status: 500 });
     }
 
-    // Fetch fresh to verify
-    const { data: finalRow, error: fetchError } = await supabase
+    // Wait for DB to commit
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Now SELECT to get the updated row
+    const { data: fresh, error: fetchError } = await supabase
       .from('product_validation_status')
       .select('*')
       .eq('product_slug', productSlug)
       .single();
 
-    console.log('[PATCH] Final fetch:', { finalRow, fetchError });
-    console.log('[PATCH] ========== END PATCH SUCCESS ==========');
+    console.log('[PATCH] Fresh data:', JSON.stringify(fresh));
+    console.log('[PATCH] commitment is:', fresh?.has_methodology_commitment);
+    console.log('[PATCH] ========== END ==========');
 
-    return NextResponse.json({ success: true, data: finalRow });
+    return NextResponse.json({ success: true, data: fresh });
   } catch (error) {
-    console.error('[PATCH] ========== END PATCH ERROR ==========', error);
-    return NextResponse.json(
-      { error: 'Internal error' },
-      { status: 500 }
-    );
+    console.error('[PATCH] EXCEPTION:', error);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
