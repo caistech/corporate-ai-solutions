@@ -250,7 +250,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         <p className="text-sm text-gray-600 mb-4">
           Tick to confirm you are committed to running the 4-week validation pipeline.
           <br /><strong>This item is for:</strong> Confirming you will actually validate this product.
-          <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
+          <br /><strong>When done:</strong> Move to Step 6 (Design & Build) ↓
         </p>
         <label className="flex items-center gap-3 cursor-pointer">
           <input
@@ -289,17 +289,17 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         </label>
       </div>
 
-      {/* STEP 7: Design & Build */}
+      {/* STEP 6: Design & Build */}
       <div className={`rounded-lg shadow p-6 ${product.validation?.mvp_url ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
+          <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
           <h2 className="text-lg font-semibold text-gray-900">Design & Build</h2>
           {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
           {product.validation?.mvp_url 
             ? "Product is built and deployed. Skip to validation tests."
-            : "Design and build the product. Once deployed, enter the URL in Step 6."}
+            : "Design and build the product. Once deployed, enter the URL in Step 7."}
         </p>
         
         {product.validation?.mvp_url ? (
@@ -316,10 +316,10 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         )}
       </div>
 
-      {/* STEP 6: Product URL - Build or Skip to Tests */}
+      {/* STEP 7: Product URL - Build or Skip to Tests */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
+          <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
           <h2 className="text-lg font-semibold text-gray-900">Product Deployment</h2>
           {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
         </div>
