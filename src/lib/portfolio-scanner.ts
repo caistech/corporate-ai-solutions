@@ -522,7 +522,9 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
   const ideaCards = await fetchIdeaCards(supabase);
 
   const enriched: EnrichedProduct[] = manifest.projects.map((product) => {
+    console.log('Looking for:', product.name, 'keys in map:', Array.from(validationStatuses.keys()));
     const validation = validationStatuses.get(product.name.toLowerCase()) || validationStatuses.get(product.name) || null;
+    console.log('Found validation:', validation?.promise);
     const ideaCard = ideaCards.get(product.name) || null;
     const gaps = identifyGaps(validation);
     const readiness_score = calculateReadinessScore(validation, gaps);
