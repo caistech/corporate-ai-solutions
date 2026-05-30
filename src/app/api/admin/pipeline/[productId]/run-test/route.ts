@@ -133,11 +133,16 @@ const TEST_CONFIGS: Record<string, {
     runnable: 'auto',
     autoCheck: async (url) => {
       try {
-        const html = await fetch(url).then(r => r.text());
+        // Fetch homepage and login page to check for signup
+        const [homeHtml, loginHtml] = await Promise.all([
+          fetch(url).then(r => r.text()).catch(() => ''),
+          fetch(url + '/login').then(r => r.text()).catch(() => '')
+        ]);
+        const combinedHtml = homeHtml + loginHtml;
         const findings = [];
-        const hasSignup = html.includes('signup') || html.includes('Sign up') || html.includes('register') || html.includes('/signup') || html.includes('href="/signup"');
-        const hasCTA = html.includes('button') || html.includes('Button') || html.includes('cta');
-        const hasValueProp = html.includes('help') || html.includes('improve') || html.includes('better') || html.includes('sing');
+        const hasSignup = combinedHtml.includes('signup') || combinedHtml.includes('Sign up') || combinedHtml.includes('register') || combinedHtml.includes('/signup') || combinedHtml.includes('href="/signup"') || combinedHtml.includes("href='/signup'");
+        const hasCTA = combinedHtml.includes('button') || combinedHtml.includes('Button') || combinedHtml.includes('cta') || combinedHtml.includes('Get started') || combinedHtml.includes('Start');
+        const hasValueProp = combinedHtml.includes('help') || combinedHtml.includes('improve') || combinedHtml.includes('better') || combinedHtml.includes('sing') || combinedHtml.includes('vocal') || combinedHtml.includes('coach');
         if (!hasSignup) findings.push('No signup path found');
         if (!hasCTA) findings.push('No CTA buttons found');
         if (!hasValueProp) findings.push('Value prop may be unclear');
