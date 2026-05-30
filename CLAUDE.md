@@ -90,3 +90,13 @@ src/
 - Stripe has both subscription products AND credit packages
 - `constants.ts` is the source of truth for the 17-product portfolio
 - Permanent redirect: `/invest` → `/invest-in-the-future-of-ai`
+
+## DEBUGGING STANDARD (MANDATORY)
+**Default strategy: Preemptively add logging at every step so issues are traceable without iterative add-test-add cycles.**
+
+- Add console.log at every decision point in API routes (before DB calls, after, before returns)
+- Include relevant context in logs: `{ action: 'name', input: x, output: y, userId: z }`
+- Log the same thing in multiple places to trace full flow (e.g., PATCH before update, PATCH result, GET returns)
+- Never remove useful debug logs — if they're helping now, they'll help again
+- Use structured log prefixes: `[PATCH]`, `[GET]`, `[VALIDATE]`, `[TEST]` for easy grep filtering
+- This applies to ALL new code: APIs, components, utilities
