@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getProductPipeline } from '@/lib/portfolio-scanner';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(
   request: NextRequest,
@@ -18,10 +19,23 @@ export async function GET(
   try {
     const productId = params.productId;
 
+    // Direct query to bypass caching issues
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const { data: directValidation } = await supabase
+      .from('product_validation_status')
+      .select('*')
+      .ilike('product_slug', productId);
+
     const product = await getProductPipeline(productId);
     
-    // Debug: log what's in validationStatuses map
-    console.log('DEBUG getProductPipeline:', { productId, productName: product?.manifest?.name, validation: product?.validation });
+    // Merge direct query result
+    if (directValidation && directValidation.length > 0) {
+      product.validation = directValidation[0];
+    }
 
     if (!product) {
       return NextResponse.json(
