@@ -175,7 +175,28 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     if ((validation.weighted_score_percent || 0) < 80) {
       gaps.push(`Weighted score ${validation.weighted_score_percent || 0}% (need ≥80%)`);
     }
+    // Check InvestorPilot required fields for dataset completeness
+    if (!validation.core_mechanism) gaps.push('Missing core mechanism (AI will generate from promise)');
+    if (!validation.customer_outcomes) gaps.push('Missing customer outcomes (AI will generate)');
+    if (!validation.one_pager_url) gaps.push('Missing one-pager URL (required for InvestorPilot)');
     return gaps;
+  };
+
+  // Check which InvestorPilot fields are missing
+  const getInvestorPilotFieldsStatus = (validation: any) => {
+    const fields = [
+      { key: 'has_promise', label: 'Product Promise' },
+      { key: 'has_distributor', label: 'Distributor ICP' },
+      { key: 'has_end_user', label: 'End User ICP' },
+      { key: 'has_friction', label: 'Friction/Pain Point' },
+      { key: 'core_mechanism', label: 'Core Mechanism' },
+      { key: 'customer_outcomes', label: 'Customer Outcomes' },
+      { key: 'one_pager_url', label: 'One-Pager URL' },
+    ];
+    return fields.map(f => ({
+      label: f.label,
+      complete: f.key.startsWith('has_') ? validation?.[f.key] : !!validation?.[f.key]
+    }));
   };
 
   const calculateLocalReadinessScore = (validation: any, gaps: string[]) => {
@@ -475,6 +496,28 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <h2 className="text-lg font-semibold text-gray-900">Compliance Tests</h2>
           {complianceTests.every(t => t.status === 'passed') && <CheckCircle className="text-green-600" size={18} />}
         </div>
+        
+        {/* Dataset Completeness Check */}
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle className="text-blue-600" size={16} />
+            <span className="font-medium text-blue-900">InvestorPilot Data Completeness</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {getInvestorPilotFieldsStatus(product.validation).map((field) => (
+              <div key={field.label} className={`flex items-center gap-1 ${field.complete ? 'text-green-700' : 'text-orange-600'}`}>
+                {field.complete ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
+                {field.label}
+              </div>
+            ))}
+          </div>
+          {gaps.some(g => g.includes('Missing')) && (
+            <p className="text-xs text-orange-700 mt-2">
+              ⚠️ Complete missing fields above before executing to InvestorPilot
+            </p>
+          )}
+        </div>
+        
         <p className="text-sm text-gray-600 mb-4">
           Run compliance checks to ensure the product meets technical and legal requirements.
           <br /><strong>When done:</strong> Move to Step 9 (Validation Tests) ↓

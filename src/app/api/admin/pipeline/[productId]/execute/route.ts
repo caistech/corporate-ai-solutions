@@ -128,6 +128,16 @@ export async function POST(
       distributor_target: product.distributor,
       end_user: product.end_user,
       friction: product.friction,
+      // Additional fields for InvestorPilot
+      core_mechanism: product.core_mechanism || null,
+      customer_outcomes: product.customer_outcomes || null,
+      icp_company_size: product.icp_company_size || null,
+      icp_stage: product.icp_stage || null,
+      icp_verticals: product.icp_verticals || null,
+      one_pager_url: product.one_pager_url || null,
+      pitch_deck_url: product.pitch_deck_url || null,
+      partner_types: product.partner_types || 'referral',
+      // Validation scores
       validation_summary: {
         hard_gates_passed: product.hard_gates_passed,
         weighted_score: product.weighted_score_percent,
