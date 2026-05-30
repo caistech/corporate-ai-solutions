@@ -2,10 +2,6 @@
  * GET /api/admin/pipeline/[productId]
  *
  * Fetch detailed validation status for a single product
- * - Manifest data
- * - Validation status from Supabase
- * - Calculated gaps and action items
- * - Recent events from audit trail
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,32 +15,29 @@ export async function GET(
   try {
     const productId = params.productId;
 
-    // Direct query to bypass caching issues
+    const product = await getProductPipeline(productId);
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // Direct query for fresh validation data
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    const { data: directValidation } = await supabase
+    const { data: freshValidation } = await supabase
       .from('product_validation_status')
       .select('*')
-      .ilike('product_slug', productId);
+      .ilike('product_slug', productId)
+      .single();
 
-    const product = await getProductPipeline(productId);
-    
-    // Merge direct query result
-    if (directValidation && directValidation.length > 0) {
-      product.validation = directValidation[0];
+    if (freshValidation) {
+      product.validation = freshValidation;
     }
 
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ ...product, _debug: { productId, name: product?.manifest?.name } }, {
+    return NextResponse.json(product, {
       status: 200,
       headers: {
         'Cache-Control': 'no-store, max-age=0',
