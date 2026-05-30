@@ -176,7 +176,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <br /><strong>This item is for:</strong> Defining the product promise, distributor model, end user, and pain point.
           <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
         </p>
-        <ValidationFieldsEditor key={refreshTrigger} product={product} onRefresh={handleRefresh} />
+        <ValidationFieldsEditor product={product} onRefresh={handleRefresh} />
       </div>
 
       {/* STEP 5: Founder Commitment */}
@@ -196,12 +196,21 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             type="checkbox"
             checked={product.validation?.has_methodology_commitment || false}
             onChange={async (e) => {
-              await fetch(`/api/admin/pipeline/${productId}/validation`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
-              });
-              handleRefresh();
+              e.preventDefault();
+              e.stopPropagation();
+              try {
+                const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
+                });
+                console.log('Checkbox save:', res.status, res.ok);
+                if (res.ok) {
+                  handleRefresh();
+                }
+              } catch (err) {
+                console.error('Checkbox save error:', err);
+              }
             }}
             className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
           />
