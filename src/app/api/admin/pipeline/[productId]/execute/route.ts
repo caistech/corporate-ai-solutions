@@ -66,9 +66,12 @@ export async function POST(
     console.log('[execute] Request parsed', { dryRun });
 
     const authClient = getAuthClient();
+    console.log('[execute] Getting user from auth...');
     const { data: { user }, error: authError } = await authClient.auth.getUser();
+    console.log('[execute] Auth result:', { userId: user?.id, email: user?.email, authError: authError?.message });
     
     if (authError || !user?.email) {
+      console.log('[execute] AUTH FAILED - returning 401');
       return NextResponse.json({ error: 'Unauthorized - must be logged in' }, { status: 401 });
     }
     
