@@ -103,6 +103,23 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     );
   }
 
+  const calculateGaps = (validation: any) => {
+    const gaps: string[] = [];
+    if (!validation) return gaps;
+    if (!validation.has_promise) gaps.push('Missing product promise');
+    if (!validation.has_distributor) gaps.push('Missing distributor hypothesis');
+    if (!validation.has_end_user) gaps.push('Missing end-user definition');
+    if (!validation.has_friction) gaps.push('Missing friction/pain point');
+    if (!validation.has_methodology_commitment) gaps.push('No founder commitment to validate');
+    if (validation.hard_gates_passed < validation.hard_gates_total) {
+      gaps.push(`${validation.hard_gates_total - validation.hard_gates_passed} hard gates not passed`);
+    }
+    if ((validation.weighted_score_percent || 0) < 80) {
+      gaps.push(`Weighted score ${validation.weighted_score_percent || 0}% (need ≥80%)`);
+    }
+    return gaps;
+  };
+
   const validationFieldsComplete = 
     product.validation?.promise && 
     product.validation?.distributor && 
@@ -189,9 +206,11 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           product={product} 
           onUpdate={(updatedValidation) => {
             console.log('[EDITOR] Got updated validation:', updatedValidation);
+            const newGaps = calculateGaps(updatedValidation);
             setProduct((prev: any) => ({
               ...prev,
-              validation: updatedValidation
+              validation: updatedValidation,
+              gaps: newGaps
             }));
           }} 
         />
@@ -226,12 +245,13 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 const data = await res.json();
                 console.log('[CHECKBOX] Response:', data);
                 if (res.ok && data.data) {
-                  // Update local state directly with returned data
+                  const newGaps = calculateGaps(data.data);
                   setProduct((prev: any) => ({
                     ...prev,
-                    validation: data.data
+                    validation: data.data,
+                    gaps: newGaps
                   }));
-                  console.log('[CHECKBOX] Updated local state');
+                  console.log('[CHECKBOX] Updated local state, gaps:', newGaps);
                 }
               } catch (err) {
                 console.error('[CHECKBOX] Error:', err);
