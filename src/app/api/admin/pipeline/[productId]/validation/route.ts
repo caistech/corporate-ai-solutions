@@ -41,12 +41,11 @@ export async function PATCH(
     update.updated_at = new Date().toISOString();
 
     console.log('PATCH validation:', { productSlug, update });
-    const { error, count } = await supabase
+    const { error, count, data } = await supabase
       .from('product_validation_status')
-      .update(update)
-      .eq('product_slug', productSlug)
+      .upsert({ product_slug: productSlug, ...update }, { onConflict: 'product_slug' })
       .select();
-    console.log('PATCH result:', { error, count });
+    console.log('PATCH result:', { error, count, data });
 
     if (error) {
       console.error('Error updating validation:', error);
@@ -56,7 +55,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ success: true, count });
+    return NextResponse.json({ success: true, count, data, error: error?.message });
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
