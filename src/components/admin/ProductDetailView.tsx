@@ -94,7 +94,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       const res = await fetch(`/api/admin/pipeline/${productId}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'run_outreach' }),
+        body: JSON.stringify({ action: 'run_outreach', dry_run: false }),
       });
       const data = await res.json();
       if (res.ok) {
