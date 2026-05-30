@@ -26,6 +26,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [investorPilotLogin, setInvestorPilotLogin] = useState(false);
 
   // Compliance tests state
   type TestStatus = 'pending' | 'running' | 'passed' | 'failed' | 'warning';
@@ -95,15 +96,45 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'run_outreach' }),
       });
+      const data = await res.json();
       if (res.ok) {
         alert('Product submitted for outreach! InvestorPilot will be notified.');
-        // handleRefresh(); // DISABLED - keeps stale data
+      } else if (data.action_required === 'create_account') {
+        const goToSignup = confirm(`${data.message}\n\nClick OK to sign up for InvestorPilot, or Cancel to just send yourself a login link.`);
+        if (goToSignup) {
+          window.open(data.signup_url, '_blank');
+        } else {
+          handleLoginToInvestorPilot();
+        }
+      } else {
+        alert(data.error || 'Failed to submit for outreach');
       }
     } catch (err) {
       console.error(err);
       alert('Failed to submit for outreach');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleLoginToInvestorPilot = async () => {
+    setInvestorPilotLogin(true);
+    try {
+      const res = await fetch('/api/auth/investorpilot-magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok && data.message) {
+        alert(data.message);
+      } else {
+        alert(data.error || 'Failed to send login link');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to send login link');
+    } finally {
+      setInvestorPilotLogin(false);
     }
   };
 
@@ -758,6 +789,33 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               ✅ Product will be sent to InvestorPilot for distributor outreach
             </p>
           )}
+        </div>
+
+        {/* Login to InvestorPilot - Same Account */}
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800 mb-3">
+            Already have an InvestorPilot account? Use the same email to access your outreach pipeline.
+          </p>
+          <button
+            onClick={handleLoginToInvestorPilot}
+            disabled={investorPilotLogin}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-all"
+          >
+            {investorPilotLogin ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                Sending login link...
+              </>
+            ) : (
+              <>
+                <ExternalLink size={18} />
+                Login to InvestorPilot →
+              </>
+            )}
+          </button>
+          <p className="text-xs text-blue-600 mt-2">
+            Sends a magic link to your email for instant access
+          </p>
         </div>
       </div>
 

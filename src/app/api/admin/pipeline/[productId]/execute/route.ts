@@ -1,10 +1,10 @@
 /**
  * POST /api/admin/pipeline/[productId]/execute
- * 
+ *
  * Mark product as ready and prepare for outreach
  * Phase 2: Dry-run mode (no actual outreach)
  * Phase 6: Will integrate with InvestorPilot API
- * 
+ *
  * Does:
  * 1. Verify all gates passed + all fields filled (readiness ≥80%)
  * 2. Mark as "committed to pipeline"
@@ -20,6 +20,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+async function getUserEmail(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) return null;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('id', user.id)
+    .single();
+  return profile?.email || user.email;
+}
 
 function extractVerticals(distributorText: string | null): string | null {
   if (!distributorText) return null;
@@ -109,6 +120,40 @@ export async function POST(
       });
     }
 
+    // Get submitter email for verification
+    const submitterEmail = await getUserEmail();
+    if (!submitterEmail) {
+      return NextResponse.json(
+        { error: 'Must be logged in to submit for outreach' },
+        { status: 401 }
+      );
+    }
+
+    // Check if user has InvestorPilot access (is org member)
+    const investorPilotSupabase = createClient(
+      process.env.INVESTORPILOT_SUPABASE_URL!,
+      process.env.INVESTORPILOT_SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: membership } = await investorPilotSupabase
+      .from('memberships')
+      .select('id, profiles!inner(email)')
+      .eq('profiles.email', submitterEmail.toLowerCase())
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) {
+      return NextResponse.json(
+        {
+          error: 'InvestorPilot account required',
+          message: 'You need an InvestorPilot account to submit products for outreach.',
+          action_required: 'create_account',
+          signup_url: process.env.NEXT_PUBLIC_INVESTORPILOT_URL + '/signup',
+          login_url: process.env.NEXT_PUBLIC_INVESTORPILOT_URL + '/login',
+        },
+        { status: 403 }
+      );
+    }
+
     // Real execution: Send to InvestorPilot
     const investorPilotUrl = process.env.INVESTORPILOT_WEBHOOK_URL;
     if (!investorPilotUrl) {
@@ -145,6 +190,8 @@ export async function POST(
         icp_stack_tools: product.icp_stack_tools || null,
         traction_arr: product.traction_arr || null,
         traction_customers: product.traction_customers || null,
+        // Email verification - tied to submitter's account
+        submitter_email: submitterEmail.toLowerCase(),
       };
 
       const webhookBody = JSON.stringify(webhookPayload);
