@@ -208,8 +208,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               e.preventDefault();
               e.stopPropagation();
               console.log('[CHECKBOX] Clicked, value:', e.target.checked);
-              console.log('[CHECKBOX] productId:', productId);
-              console.log('[CHECKBOX] URL:', `/api/admin/pipeline/${productId}/validation`);
               try {
                 const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
                   method: 'PATCH',
@@ -217,12 +215,14 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                   body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
                 });
                 const data = await res.json();
-                console.log('[CHECKBOX] Response status:', res.status);
-                console.log('[CHECKBOX] Response data:', data);
-                if (res.ok) {
-                  console.log('[CHECKBOX] Calling handleRefresh');
-                  handleRefresh();
-                  console.log('[CHECKBOX] handleRefresh called');
+                console.log('[CHECKBOX] Response:', data);
+                if (res.ok && data.data) {
+                  // Update local state directly with returned data
+                  setProduct((prev: any) => ({
+                    ...prev,
+                    validation: data.data
+                  }));
+                  console.log('[CHECKBOX] Updated local state');
                 }
               } catch (err) {
                 console.error('[CHECKBOX] Error:', err);

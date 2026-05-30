@@ -48,6 +48,15 @@ export async function PATCH(
 
     console.log('[PATCH] validation:', { productSlug, update });
 
+    // First verify the row exists
+    const { data: existing } = await supabase
+      .from('product_validation_status')
+      .select('id, product_slug')
+      .eq('product_slug', productSlug)
+      .single();
+    
+    console.log('[PATCH] Existing row:', existing);
+
     // Use .eq() with exact match
     const { error, data } = await supabase
       .from('product_validation_status')
@@ -57,6 +66,14 @@ export async function PATCH(
 
     console.log('[PATCH] Update result:', { error, data, rowCount: data?.length });
 
+    // Verify after update
+    const { data: afterUpdate } = await supabase
+      .from('product_validation_status')
+      .select('has_methodology_commitment')
+      .eq('product_slug', productSlug)
+      .single();
+    console.log('[PATCH] After update:', afterUpdate);
+
     if (error) {
       console.error('Update error:', error);
       return NextResponse.json(
@@ -65,7 +82,15 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ success: true, data });
+    // Return the updated row so client doesn't need to refetch
+    const { data: updatedRow } = await supabase
+      .from('product_validation_status')
+      .select('*')
+      .eq('product_slug', productSlug)
+      .single();
+    
+    console.log('[PATCH] Returning updated row:', updatedRow);
+    return NextResponse.json({ success: true, data: updatedRow });
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
