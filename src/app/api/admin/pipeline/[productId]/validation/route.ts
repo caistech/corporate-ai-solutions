@@ -52,10 +52,11 @@ export async function PATCH(
 
     console.log('[PATCH] validation:', { productSlug, update });
 
-    // Use upsert to create row if it doesn't exist
+    // Use upsert to create row if it doesn't exist (need display_name)
+    const displayName = productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     const { error, data } = await supabase
       .from('product_validation_status')
-      .upsert({ product_slug: productSlug, ...update }, { onConflict: 'product_slug' })
+      .upsert({ product_slug: productSlug, display_name: displayName, ...update }, { onConflict: 'product_slug' })
       .select();
 
     console.log('[PATCH] Update result:', { error });
