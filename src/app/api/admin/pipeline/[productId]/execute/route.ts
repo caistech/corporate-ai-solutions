@@ -24,10 +24,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { productId: string } }
 ) {
+  console.log('[execute] BEFORE PARAMS');
   const productId = params.productId;
   console.log('[execute] START', { productId });
   
   try {
+    console.log('[execute] ENTERED TRY');
     console.log('[execute] ENV CHECK:', {
       SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       INVESTORPILOT_URL: !!process.env.INVESTORPILOT_WEBHOOK_URL,
