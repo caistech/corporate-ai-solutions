@@ -173,7 +173,6 @@ export async function POST(
         end_user_icp: product.end_user,
         friction: product.friction,
         submitter_email: submitterEmail.toLowerCase(),
-        submitter_organisation_id: organisationId,
         timestamp: new Date().toISOString(),
       };
 
