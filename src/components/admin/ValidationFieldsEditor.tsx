@@ -49,8 +49,6 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
     }
   };
 
-  const getProductSlug = () => product.manifest?.name || product.validation?.product_slug || product.id || product.productId || 'unknown';
-  
   const handleGenerate = async (field: string) => {
     setGenerating(field);
     try {
