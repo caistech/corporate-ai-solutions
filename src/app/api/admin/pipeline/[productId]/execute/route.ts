@@ -156,6 +156,10 @@ export async function POST(
 
     // Real execution: Send to InvestorPilot
     const investorPilotUrl = process.env.INVESTORPILOT_WEBHOOK_URL;
+    const webhookSecret = process.env.PIPELINE_INTAKE_WEBHOOK_SECRET;
+    console.log('[execute] INVESTORPILOT_WEBHOOK_URL:', investorPilotUrl ? 'SET' : 'NOT SET');
+    console.log('[execute] PIPELINE_INTAKE_WEBHOOK_SECRET:', webhookSecret ? 'SET' : 'NOT SET');
+
     if (!investorPilotUrl) {
       console.warn('[execute] INVESTORPILOT_WEBHOOK_URL not set, skipping webhook');
     } else {
