@@ -21,30 +21,20 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Direct query for fresh validation data
+    // Direct exact-match query for fresh validation data
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    // Query ALL to debug what's there
-    const { data: allValidation } = await supabase
-      .from('product_validation_status')
-      .select('product_slug, promise, distributor, end_user, friction');
-    
-    console.log('All validation slugs:', allValidation?.map(r => r.product_slug));
-    
-    // Try exact match
-    const { data: exactMatch } = await supabase
+    const { data: freshValidation } = await supabase
       .from('product_validation_status')
       .select('*')
       .eq('product_slug', productId)
       .single();
-    
-    console.log('Exact match:', exactMatch);
 
-    if (exactMatch) {
-      product.validation = exactMatch;
+    if (freshValidation) {
+      product.validation = freshValidation;
     }
 
     return NextResponse.json(product, {
