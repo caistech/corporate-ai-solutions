@@ -135,7 +135,7 @@ export async function POST(
       });
 
     // Trigger InvestorPilot webhook
-    const webhookUrl = process.env.PIPELINE_INTAKE_WEBHOOK_URL;
+    const webhookUrl = process.env.INVESTORPILOT_WEBHOOK_URL;
     const webhookSecret = process.env.PIPELINE_INTAKE_WEBHOOK_SECRET;
     
     let investorPilotResult = null;
