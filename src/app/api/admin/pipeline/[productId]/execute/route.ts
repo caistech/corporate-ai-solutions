@@ -129,15 +129,6 @@ export async function POST(
       });
     }
 
-    // Get submitter email for verification
-    const submitterEmail = await getUserEmail();
-    if (!submitterEmail) {
-      return NextResponse.json(
-        { error: 'Must be logged in to submit for outreach' },
-        { status: 401 }
-      );
-    }
-
     // Check if user has InvestorPilot access (is org member)
     const investorPilotSupabase = createClient(
       process.env.INVESTORPILOT_SUPABASE_URL!,
