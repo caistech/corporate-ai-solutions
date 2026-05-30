@@ -22,11 +22,12 @@ function extractVerticals(distributorText: string | null): string | null {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   console.log('[execute] BEFORE PARAMS');
-  console.log('[execute] raw params:', JSON.stringify(params));
-  const productId = params.productId;
+  const resolvedParams = await params;
+  console.log('[execute] raw params:', JSON.stringify(resolvedParams));
+  const productId = resolvedParams.productId;
   console.log('[execute] extracted productId:', productId);
   console.log('[execute] START', { productId });
   
