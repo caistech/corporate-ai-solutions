@@ -48,6 +48,15 @@ export async function POST(
     const body = await request.json();
     const dryRun = body.dry_run !== false; // Default to dry-run
 
+    // Check authentication first
+    const submitterEmail = await getUserEmail();
+    if (!submitterEmail) {
+      return NextResponse.json(
+        { error: 'Must be logged in to submit for outreach', requires_login: true },
+        { status: 401 }
+      );
+    }
+
     // Fetch current product
     const { data: product, error: fetchError } = await supabase
       .from('product_validation_status')
