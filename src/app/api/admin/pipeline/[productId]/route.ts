@@ -27,14 +27,19 @@ export async function GET(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    const { data: freshValidation } = await supabase
+    console.log('[GET] Querying for product_slug:', productId);
+    const { data: freshValidation, error: freshError } = await supabase
       .from('product_validation_status')
       .select('*')
       .eq('product_slug', productId)
       .single();
 
+    console.log('[GET] Direct query result:', { found: !!freshValidation, error: freshError, commitment: freshValidation?.has_methodology_commitment });
+
     if (freshValidation) {
       product.validation = freshValidation;
+    } else {
+      console.log('[GET] No fresh validation found, using cached');
     }
 
     return NextResponse.json(product, {
