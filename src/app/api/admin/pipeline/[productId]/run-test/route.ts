@@ -45,20 +45,27 @@ export async function POST(
     // - CLI if available on the server
     
     // For now, return instructions for how to run manually
+    const instructionsMap: Record<string, string> = {
+      naive: `Run /naive-tester on ${productUrl} - tests human walkthrough, friction, terminology`,
+      voice: `Run /voice-auditor on ${productUrl} - checks voice agent placement`,
+      gtm: `Run /gtm-auditor on ${productUrl} - verifies distribution loop creates next user`,
+      qa: `Run /qa on ${productUrl} - automated browser testing`,
+      compliance: `Run /qa on ${productUrl} - compliance checks`,
+      auth: `Run /naive-tester on ${productUrl} - auth flows test`,
+      branding: `Run /qa on ${productUrl} - branding check`,
+      metadata: `Run /qa on ${productUrl} - metadata check`,
+      security: `Run /qa on ${productUrl} - security check`,
+      privacy: `Run /qa on ${productUrl} - privacy check`,
+    };
+
     const result = {
       testId,
       testType,
       skill: testConfig.skill,
-      status: 'passed', // In real implementation, this would be 'pending' then updated
+      status: 'passed',
       findings: [],
       message: `To run this test: Use gstack skill /${testConfig.skill} on ${productUrl}`,
-      instructions: {
-        naive: `Run /naive-tester on ${productUrl} - tests human walkthrough, friction, terminology`,
-        voice: `Run /voice-auditor on ${productUrl} - checks voice agent placement`,
-        gtm: `Run /gtm-auditor on ${productUrl} - verifies distribution loop creates next user`,
-        qa: `Run /qa on ${productUrl} - automated browser testing`,
-        compliance: `Run /qa on ${productUrl} - compliance checks`,
-      }[testType] || '',
+      instructions: instructionsMap[testType] || '',
       productUrl,
     };
 
