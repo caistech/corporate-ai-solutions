@@ -34,6 +34,13 @@ export async function POST(
   console.log('[execute] START', { productId });
   
   try {
+    // IMMEDIATELY log env vars to verify they're loaded
+    console.log('[execute] ENV CHECK:', {
+      SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      SITE_URL: !!process.env.NEXT_PUBLIC_SITE_URL,
+    })
+
     const body = await request.json();
     const dryRun = body.dry_run !== false;
     console.log('[execute] Request parsed', { dryRun });
@@ -255,11 +262,18 @@ export async function POST(
       executed_payload: outreachPayload,
       note: 'Phase 6 will send this to InvestorPilot for actual outreach',
     });
-  } catch (error) {
-    console.error('Error executing pipeline:', error);
+  } catch (error: any) {
+    console.error('[execute] FATAL ERROR:', {
+      message: error?.message,
+      stack: error?.stack,
+      cause: error?.cause,
+      name: error?.name,
+      toString: error?.toString?.(),
+    });
     return NextResponse.json(
       {
         error: 'Failed to execute pipeline',
+        details: error?.message,
         message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
