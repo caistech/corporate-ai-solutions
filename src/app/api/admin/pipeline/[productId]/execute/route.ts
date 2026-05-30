@@ -13,38 +13,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceClient, getUserEmail } from '@/lib/auth';
 import crypto from 'crypto';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-async function getUserEmail(): Promise<string | null> {
-  const cookieStore = cookies();
-  const supabaseServer = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) { return cookieStore.get(name)?.value },
-        set() {},
-        remove() {},
-      },
-    },
-  );
-  const { data: { user } } = await supabaseServer.auth.getUser();
-  if (!user?.email) return null;
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('id', user.id)
-    .single();
-  return profile?.email || user.email;
-}
+const supabase = createServiceClient();
 
 function extractVerticals(distributorText: string | null): string | null {
   if (!distributorText) return null;
