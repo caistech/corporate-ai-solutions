@@ -48,16 +48,15 @@ export async function PATCH(
       .eq('product_slug', productSlug)
       .select();
     
-    console.log('Update result:', { error, count, data });
-    
     // If no rows updated, try insert
     if (!error && (!count || count === 0)) {
-      console.log('No rows updated, trying insert');
       const insertResult = await supabase
         .from('product_validation_status')
         .insert({ product_slug: productSlug, ...update })
         .select();
-      console.log('Insert result:', insertResult);
+      error = insertResult.error;
+      count = insertResult.count;
+      data = insertResult.data;
     }
 
     if (error) {
@@ -68,7 +67,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ success: true, count, data, error: error?.message });
+    return NextResponse.json({ success: true, count, data });
   } catch (error) {
     console.error('Error in validation PATCH:', error);
     return NextResponse.json(
