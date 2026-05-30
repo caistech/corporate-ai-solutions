@@ -31,19 +31,25 @@ export default function ValidationFieldsEditor({ product, onRefresh }: Validatio
   const getProductSlug = () => product.validation?.product_slug || product.manifest?.name || product.id || 'unknown';
 
   const handleSave = async (field: string) => {
+    const slug = getProductSlug();
+    console.log('Saving field:', field, 'to slug:', slug);
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/pipeline/${getProductSlug()}/validation`, {
+      const res = await fetch(`/api/admin/pipeline/${slug}/validation`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: formData[field as keyof typeof formData] }),
       });
+      console.log('Save response:', res.status, res.ok);
       if (res.ok) {
         setEditing(null);
         onRefresh();
+      } else {
+        const err = await res.text();
+        console.error('Save failed:', err);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Save error:', err);
     } finally {
       setSaving(false);
     }
