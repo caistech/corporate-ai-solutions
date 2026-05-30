@@ -41,11 +41,12 @@ export async function PATCH(
     update.updated_at = new Date().toISOString();
 
     console.log('PATCH validation:', { productSlug, update });
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from('product_validation_status')
       .update(update)
-      .eq('product_slug', productSlug);
-    console.log('PATCH result:', error);
+      .eq('product_slug', productSlug)
+      .select();
+    console.log('PATCH result:', { error, count });
 
     if (error) {
       console.error('Error updating validation:', error);
