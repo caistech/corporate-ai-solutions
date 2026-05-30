@@ -267,7 +267,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                   body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
                 });
                 const data = await res.json();
-                console.log('[CHECKBOX] Response:', data);
+                console.log('[CHECKBOX] Response - success:', data.success, 'data:', JSON.stringify(data.data));
+                console.log('[CHECKBOX] Response commitment value:', data.data?.has_methodology_commitment);
                 if (res.ok && data.data) {
                   const newGaps = calculateGaps(data.data);
                   setProduct((prev: any) => ({

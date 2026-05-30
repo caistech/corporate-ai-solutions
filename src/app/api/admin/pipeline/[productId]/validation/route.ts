@@ -50,16 +50,16 @@ export async function PATCH(
     console.log('[PATCH] Update payload:', JSON.stringify(update));
 
     // Direct update using eq
-    const result = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('product_validation_status')
       .update(update)
       .eq('product_slug', productSlug);
 
-    console.log('[PATCH] Update result - count:', result.count, 'status:', result.status);
+    console.log('[PATCH] Update result - updated:', updated, 'error:', updateError);
     
-    if (result.error) {
-      console.error('[PATCH] Update error:', result.error);
-      return NextResponse.json({ error: result.error.message }, { status: 500 });
+    if (updateError) {
+      console.error('[PATCH] Update error:', updateError);
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
     // Wait for DB to commit
