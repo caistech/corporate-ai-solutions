@@ -4,6 +4,10 @@
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
+// Dynamic, data-backed form page — opt out of static prerendering so the browser Supabase
+// client isn't constructed during the build (it needs runtime env, not build-time inlining).
+export const dynamic = 'force-dynamic'
+
 export default function SubmitReviewPage() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,7 +16,7 @@ export default function SubmitReviewPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [formData, setFormData] = useState({
     clientName: '',
     clientTitle: '',
@@ -22,12 +26,12 @@ export default function SubmitReviewPage() {
     rating: 5,
     platformUsed: '',
   })
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
-    
+
     try {
       const { error: submitError } = await supabase
         .from('client_reviews')
@@ -42,9 +46,9 @@ export default function SubmitReviewPage() {
           source: 'form',
           status: 'pending',
         })
-      
+
       if (submitError) throw submitError
-      
+
       setSubmitted(true)
     } catch (err) {
       console.error('Review submission error:', err)
@@ -53,7 +57,7 @@ export default function SubmitReviewPage() {
       setSubmitting(false)
     }
   }
-  
+
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -73,7 +77,7 @@ export default function SubmitReviewPage() {
       </div>
     )
   }
-  
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
@@ -83,7 +87,7 @@ export default function SubmitReviewPage() {
             We&apos;d love to hear about your experience with Corporate AI Solutions.
             Your feedback helps us improve and helps others make informed decisions.
           </p>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name */}
             <div>
@@ -99,7 +103,7 @@ export default function SubmitReviewPage() {
                 placeholder="John Smith"
               />
             </div>
-            
+
             {/* Title */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -113,7 +117,7 @@ export default function SubmitReviewPage() {
                 placeholder="CEO, Founder, etc."
               />
             </div>
-            
+
             {/* Company */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -127,7 +131,7 @@ export default function SubmitReviewPage() {
                 placeholder="Acme Corp"
               />
             </div>
-            
+
             {/* LinkedIn */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -141,7 +145,7 @@ export default function SubmitReviewPage() {
                 placeholder="https://linkedin.com/in/yourprofile"
               />
             </div>
-            
+
             {/* Platform Used */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -160,7 +164,7 @@ export default function SubmitReviewPage() {
                 <option value="Other">Other</option>
               </select>
             </div>
-            
+
             {/* Rating */}
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -179,7 +183,7 @@ export default function SubmitReviewPage() {
                 ))}
               </div>
             </div>
-            
+
             {/* Review Text */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -197,13 +201,13 @@ export default function SubmitReviewPage() {
                 Minimum 50 characters. Be specific about what you liked!
               </p>
             </div>
-            
+
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                 {error}
               </div>
             )}
-            
+
             <button
               type="submit"
               disabled={submitting || formData.reviewText.length < 50}

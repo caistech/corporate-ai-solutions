@@ -2,7 +2,7 @@
 
 /**
  * /admin/cockpit/requests page
- * 
+ *
  * Admin interface for managing access requests to the methodology cockpit.
  * - View all requests with filtering/sorting
  * - Update status (pending → contacted → approved/rejected)
@@ -14,6 +14,10 @@ import React, { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import AccessRequestsTable from '@/components/admin/AccessRequestsTable';
 import AccessRequestFilters from '@/components/admin/AccessRequestFilters';
+
+// Dynamic admin page — opt out of static prerendering so the browser Supabase client isn't
+// constructed during the build (it needs runtime env, not build-time inlining).
+export const dynamic = 'force-dynamic';
 
 interface AccessRequest {
   id: string;

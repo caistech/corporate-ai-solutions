@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "setup": "npx ts-node scripts/setup.ts",
     "setup:vercel": "npx ts-node scripts/setup-vercel-supabase.ts",
     "setup:stripe": "npx ts-node scripts/setup-stripe.ts",

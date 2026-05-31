@@ -2,9 +2,33 @@
 
 /**
  * Product Detail View Component
- * 
- * Shows comprehensive validation status + fix actions for a single product
- * Structured as a logical flow: Steps 1-4 → Validation Tests → Submit for Outreach
+ *
+ * Operator card for one product, sequenced to the survey-gated flow:
+ *
+ *   FRONT DOOR (always visible)
+ *     Header + Survey Verdict banner
+ *     Step 1 — Define the spec        (the 14 spec fields; can't build/survey without the
+ *                                       distributor/end-user)               [was STEPS 1-4]
+ *     Step 2 — Website / Product URL                                        [was STEP 6]
+ *     Step 3 — Survey gate (the front door) + branch:
+ *                INCOMPLETE-SPEC → fill the spec above
+ *                TEARDOWN / no URL → Stage 2 Design & Build                 [was STEP 7]
+ *                RENOVATION → unlocks downstream
+ *
+ *   DOWNSTREAM (visually locked until a RENOVATION verdict)
+ *     Step 4 — Founder commitment                                          [was STEP 5]
+ *     Step 5 — Compliance tests                                            [was STEP 8]
+ *     Step 6 — Validation tests                                            [was STEP 9]
+ *     Step 7 — Final score + gaps + recalculate + submit + IP login        [was STEP 10]
+ *
+ *   Category + Audit (bottom)
+ *
+ * The survey verdict is NOT recomputed here. It is read from product.survey_gate — the latest
+ * pipeline_gates `gate==='survey'` row, attached by the API route. The verdict is recovered from
+ * the row's `reason` leading token, identical to components/methodology/SurveyGatePanel.tsx
+ * (kept in sync deliberately — see parseVerdict below). Survey itself runs out-of-band: the
+ * naive-tester SURVEY_MODE skill browses the live site and POSTs survey.json to the survey route.
+ * Step 3 surfaces the recorded verdict and how to run survey mode; it does NOT fake-run in-browser.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -14,11 +38,56 @@ import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
 import ValidationTestResults from './ValidationTestResults';
-import { CheckCircle, Send, Loader2, ExternalLink, Play, Wrench, XCircle, AlertTriangle, AlertCircle } from 'lucide-react';
+import type { SurveyGateRecord } from '@/components/methodology/SurveyGatePanel';
+import { CheckCircle, Send, Loader2, ExternalLink, Play, Wrench, XCircle, AlertTriangle, AlertCircle, Lock, Search } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
 }
+
+// ── Survey verdict (light-themed mirror of SurveyGatePanel) ───────────────────────────────────
+// The methodology cockpit's SurveyGatePanel is dark-themed; this card is light. We reuse its
+// SurveyGateRecord shape and parse semantics but render a light banner so it fits the card.
+// parseVerdict MUST stay byte-identical to SurveyGatePanel.parseVerdict — the route writes the
+// `reason` as "VERDICT → next stage · evidenced X/14 · PRE-HARD …" and both readers split the
+// leading token off it. If you change one, change the other (or export it from the panel).
+type Verdict = 'RENOVATION' | 'TEARDOWN' | 'INCOMPLETE-SPEC' | 'UNKNOWN';
+
+function parseVerdict(rec: SurveyGateRecord): Verdict {
+  const head = (rec.reason ?? '').trim().split(/[\s→]/)[0]?.toUpperCase();
+  if (head === 'RENOVATION' || head === 'TEARDOWN' || head === 'INCOMPLETE-SPEC') return head;
+  return rec.status === 'pass' ? 'RENOVATION' : 'UNKNOWN';
+}
+
+// The card's effective front-door state: a recorded verdict, or a synthetic pre-survey state.
+type FrontDoorState = Verdict | 'NOT-SURVEYED' | 'NO-URL';
+
+const VERDICT_BANNER: Record<FrontDoorState, { box: string; text: string; label: string; blurb: string }> = {
+  RENOVATION: {
+    box: 'bg-green-50 border-green-200', text: 'text-green-700', label: 'RENOVATION',
+    blurb: 'The live build evidences the spec. Downstream steps are unlocked → Stage 5.',
+  },
+  TEARDOWN: {
+    box: 'bg-yellow-50 border-yellow-200', text: 'text-yellow-700', label: 'TEARDOWN',
+    blurb: "The live build doesn't evidence the spec (or a PRE-HARD failed). Re-enter Stage 2 design & build.",
+  },
+  'INCOMPLETE-SPEC': {
+    box: 'bg-red-50 border-red-200', text: 'text-red-700', label: 'INCOMPLETE-SPEC',
+    blurb: 'The spec itself is incomplete — fill it in Step 1, then re-run survey mode.',
+  },
+  'NOT-SURVEYED': {
+    box: 'bg-gray-50 border-gray-200', text: 'text-gray-600', label: 'NOT SURVEYED',
+    blurb: 'A URL is set but no survey verdict is recorded yet. Run survey mode against the live build.',
+  },
+  'NO-URL': {
+    box: 'bg-gray-50 border-gray-200', text: 'text-gray-600', label: 'NO URL — PRE-SURVEY',
+    blurb: "No product URL yet, so the survey can't run. Define the spec, then design & build (Stage 2).",
+  },
+  UNKNOWN: {
+    box: 'bg-gray-50 border-gray-200', text: 'text-gray-600', label: 'UNKNOWN',
+    blurb: 'A survey row exists but its verdict could not be read.',
+  },
+};
 
 export default function ProductDetailView({ productId }: ProductDetailViewProps) {
   const [product, setProduct] = useState<any>(null);
@@ -64,7 +133,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         }
 
         const data = await res.json();
-        console.log('[FETCH] Got data, has_methodology_commitment:', data.validation?.has_methodology_commitment);
+        console.log('[FETCH] Got data, has_methodology_commitment:', data.validation?.has_methodology_commitment, 'survey_gate:', data.survey_gate?.reason ?? 'none');
         setProduct(data);
         console.log('[FETCH] Set product state');
       } catch (err) {
@@ -121,7 +190,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const handleLoginToInvestorPilot = async () => {
     // Open InvestorPilot login page in new tab
     window.open('https://investor-pilot-pi.vercel.app/login', '_blank');
-    
+
     setInvestorPilotLogin(true);
     try {
       const res = await fetch('/api/auth/investorpilot-magic-link', {
@@ -201,7 +270,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
   const calculateLocalReadinessScore = (validation: any, gaps: string[]) => {
     if (!validation) return 0;
-    const fieldsComplete = 
+    const fieldsComplete =
       (validation.has_promise ? 1 : 0) +
       (validation.has_distributor ? 1 : 0) +
       (validation.has_end_user ? 1 : 0) +
@@ -209,17 +278,17 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       (validation.has_methodology_commitment ? 1 : 0);
     const fieldsScore = (fieldsComplete / 5) * 40;
     const deploymentScore = validation.mvp_url ? 20 : 0;
-    const complianceScore = validation.hard_gates_passed && validation.hard_gates_total 
-      ? (validation.hard_gates_passed / validation.hard_gates_total) * 20 
+    const complianceScore = validation.hard_gates_passed && validation.hard_gates_total
+      ? (validation.hard_gates_passed / validation.hard_gates_total) * 20
       : 0;
     const validationScore = validation.validation_test_status === 'passed' ? 20 : 0;
     return Math.round(fieldsScore + deploymentScore + complianceScore + validationScore);
   };
 
-  const validationFieldsComplete = 
-    product.validation?.promise && 
-    product.validation?.distributor && 
-    product.validation?.end_user && 
+  const validationFieldsComplete =
+    product.validation?.promise &&
+    product.validation?.distributor &&
+    product.validation?.end_user &&
     product.validation?.friction;
 
   const allCompliancePassed = complianceTests.every(t => t.status === 'passed');
@@ -227,8 +296,29 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const allTestsPassed = allCompliancePassed && allValidationPassed;
   const isReadyForOutreach = product.can_run_outreach_now && allTestsPassed;
 
+  // ── Front-door state ────────────────────────────────────────────────────────────────────────
+  const surveyGate: SurveyGateRecord | null = product.survey_gate ?? null;
+  const hasUrl = !!product.validation?.mvp_url;
+  const frontDoor: FrontDoorState = surveyGate
+    ? parseVerdict(surveyGate)
+    : (hasUrl ? 'NOT-SURVEYED' : 'NO-URL');
+  const isRenovation = frontDoor === 'RENOVATION';
+  const isTeardown = frontDoor === 'TEARDOWN' || frontDoor === 'NO-URL';
+  const isIncompleteSpec = frontDoor === 'INCOMPLETE-SPEC';
+  const downstreamLocked = !isRenovation;
+  const banner = VERDICT_BANNER[frontDoor];
+
+  // The detail line the survey route appends after the first "·" (evidenced X/14 · PRE-HARD …).
+  const surveyDetail = (() => {
+    if (!surveyGate?.reason) return null;
+    const dot = surveyGate.reason.indexOf('·');
+    return dot >= 0 ? surveyGate.reason.slice(dot + 1).trim() : null;
+  })();
+
   return (
     <div className="space-y-6">
+      {/* ═══════════════ FRONT DOOR (always visible) ═══════════════ */}
+
       {/* Header */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -256,53 +346,56 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             )}
           </div>
         </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h2 className="font-semibold text-blue-900 mb-2">Readiness: {product.readiness_score}%</h2>
-          <p className="text-blue-800 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
-          <p className="text-blue-700 text-sm">{product.action_items.length} action{product.action_items.length !== 1 ? 's' : ''} needed to reach outreach readiness</p>
-        </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-2">
-          <p className="font-medium text-gray-900">Validation Progress</p>
-          <p className="text-sm font-bold text-gray-600">{product.readiness_score}%</p>
+      {/* Survey Verdict banner — the build's recorded verdict, read from the pipeline_gates ledger */}
+      <div className={`rounded-xl border p-5 ${banner.box}`}>
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">Survey verdict</span>
+          <span className={`text-2xl font-bold uppercase tracking-wider ${banner.text}`}>{banner.label}</span>
+          {surveyGate && (
+            <span
+              className={`text-xs px-2 py-0.5 rounded uppercase tracking-wider ${
+                surveyGate.status === 'pass' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}
+            >
+              gate {surveyGate.status}
+            </span>
+          )}
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${
-              product.readiness_score >= 80
-                ? 'bg-green-500'
-                : product.readiness_score >= 50
-                  ? 'bg-yellow-500'
-                  : 'bg-red-500'
-            }`}
-            style={{ width: `${product.readiness_score}%` }}
-          />
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {product.can_run_outreach_now
-            ? 'Ready to run outreach! Submit below to notify InvestorPilot.'
-            : `Fill ${product.gaps.length} gap${product.gaps.length !== 1 ? 's' : ''} to enable outreach.`}
-        </p>
+        <p className="mt-2 text-sm text-gray-600">{banner.blurb}</p>
+        {surveyDetail && <p className="mt-1 text-sm text-gray-500">{surveyDetail}</p>}
+        {surveyGate && (
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
+            <span>
+              Recorded {new Date(surveyGate.created_at).toLocaleString()} by{' '}
+              <span className="font-mono">{surveyGate.recorded_by}</span>
+            </span>
+            {surveyGate.deployment_id ? (
+              <span>Bound to deployment <span className="font-mono">{surveyGate.deployment_id.slice(0, 12)}…</span></span>
+            ) : (
+              <span className="text-yellow-700">Unbound — provisional (not tied to a deployment)</span>
+            )}
+            {surveyGate.artifact_ref && <span className="font-mono break-all">{surveyGate.artifact_ref}</span>}
+          </div>
+        )}
       </div>
 
-      {/* STEP 1-4: Validation Fields - The core validation data */}
+      {/* STEP 1: Define the spec — the real prerequisite (can't build or survey without it) */}
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-100">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEPS 1-4</span>
-          <h2 className="text-lg font-semibold text-gray-900">Validation Fields</h2>
+          <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 1</span>
+          <h2 className="text-lg font-semibold text-gray-900">Define the spec</h2>
           {validationFieldsComplete && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          These 4 fields define what your product is and who it is for.
-          <br /><strong>This item is for:</strong> Defining the product promise, distributor model, end user, and pain point.
-          <br /><strong>When done:</strong> Move to Step 6 (Compliance) ↓
+          These fields define what the product is and who it is for. You can&apos;t build a site — or survey one —
+          without knowing the distributor and end-user, so this is the prerequisite for everything below.
+          <br /><strong>This item is for:</strong> the product promise, distributor model, end user, and pain point.
+          <br /><strong>When done:</strong> set the URL in Step 2 ↓
         </p>
-        <ValidationFieldsEditor 
-          product={product} 
+        <ValidationFieldsEditor
+          product={product}
           onUpdate={(updatedValidation) => {
             console.log('[EDITOR] Got updated validation:', updatedValidation);
             const newGaps = calculateGaps(updatedValidation);
@@ -311,82 +404,28 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               validation: updatedValidation,
               gaps: newGaps
             }));
-          }} 
+          }}
         />
       </div>
 
-      {/* STEP 5: Founder Commitment */}
+      {/* STEP 2: Website / Product URL */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 5</span>
-          <h2 className="text-lg font-semibold text-gray-900">Founder Commitment</h2>
-          {product.validation?.has_methodology_commitment && <CheckCircle className="text-green-600" size={18} />}
-        </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Tick to confirm you are committed to running the 4-week validation pipeline.
-          <br /><strong>This item is for:</strong> Confirming you will actually validate this product.
-          <br /><strong>When done:</strong> Move to Step 6 (Design & Build) ↓
-        </p>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={product.validation?.has_methodology_commitment || false}
-            onChange={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('[CHECKBOX] Clicked, value:', e.target.checked);
-              try {
-                const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
-                });
-                const data = await res.json();
-                console.log('[CHECKBOX] Response - success:', data.success, 'data:', JSON.stringify(data.data));
-                console.log('[CHECKBOX] Response commitment value:', data.data?.has_methodology_commitment);
-                if (res.ok && data.data) {
-                  const newGaps = calculateGaps(data.data);
-                  const newReadinessScore = calculateLocalReadinessScore(data.data, newGaps);
-                  const newCanRunOutreach = newReadinessScore >= 80 && newGaps.length === 0;
-                  setProduct((prev: any) => ({
-                    ...prev,
-                    validation: data.data,
-                    gaps: newGaps,
-                    readiness_score: newReadinessScore,
-                    can_run_outreach_now: newCanRunOutreach
-                  }));
-                  console.log('[CHECKBOX] Updated local state, gaps:', newGaps, 'readiness:', newReadinessScore, 'canRunOutreach:', newCanRunOutreach);
-                }
-              } catch (err) {
-                console.error('[CHECKBOX] Error:', err);
-              }
-            }}
-            className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
-          />
-          <span className="text-gray-700">
-            I commit to running the 4-week validation pipeline for this product
-          </span>
-        </label>
-      </div>
-
-      {/* STEP 6: Product URL - Enter the deployed URL */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
-          <h2 className="text-lg font-semibold text-gray-900">Product Deployment</h2>
+          <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 2</span>
+          <h2 className="text-lg font-semibold text-gray-900">Website / Product URL</h2>
           {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          {product.validation?.mvp_url 
-            ? "Product URL is set. You can run validation tests."
-            : "Enter the deployed product URL to enable testing. If no URL exists, you need to design and build the product first."}
+          {product.validation?.mvp_url
+            ? "Product URL is set — survey mode can run against it (Step 3)."
+            : "Enter the deployed product URL. If none exists yet, there's nothing to survey — you go straight to design & build (Step 3 → Stage 2)."}
         </p>
-        
+
         {product.validation?.mvp_url ? (
           <div className="flex items-center gap-4">
-            <a 
-              href={product.validation.mvp_url} 
-              target="_blank" 
+            <a
+              href={product.validation.mvp_url}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline flex items-center gap-2"
             >
@@ -419,11 +458,11 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded">
-              ⚠️ No product URL found. You need to either:
+              ⚠️ No product URL found. Either:
             </p>
             <ol className="text-sm text-gray-600 list-decimal list-inside space-y-1">
               <li>Enter an existing deployed URL below if the product already exists</li>
-              <li>Design and build the product (then come back and enter URL)</li>
+              <li>Or design & build it first (Step 3 → Stage 2), then come back and enter the URL</li>
             </ol>
             <div className="flex gap-2 mt-4">
               <input
@@ -462,419 +501,546 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         )}
       </div>
 
-      {/* STEP 7: Design & Build - greyed if URL exists */}
-      <div className={`rounded-lg shadow p-6 ${product.validation?.mvp_url ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
+      {/* STEP 3: Survey gate — the front door. Shows the recorded verdict + branches. */}
+      <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
-          <h2 className="text-lg font-semibold text-gray-900">Design & Build</h2>
-          {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
+          <span className="bg-slate-700 text-white text-xs font-bold px-2 py-1 rounded">STEP 3</span>
+          <h2 className="text-lg font-semibold text-gray-900">Survey gate</h2>
+          {isRenovation && <CheckCircle className="text-green-600" size={18} />}
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          {product.validation?.mvp_url 
-            ? "Product is built and deployed. Skip to compliance tests."
-            : "Design and build the product. Once deployed, enter the URL in Step 6."}
+          The post-build verdict on the live MVP, scored by survey mode against what the site/repo actually
+          evidences (the 14 spec fields + PRE-HARD checks).
+          <span className="text-green-700"> RENOVATION</span> advances to Stage 5;
+          <span className="text-yellow-700"> TEARDOWN</span> re-enters Stage 2 design→build;
+          <span className="text-red-700"> INCOMPLETE-SPEC</span> goes back to the spec.
         </p>
-        
-        {product.validation?.mvp_url ? (
-          <p className="text-sm text-gray-500 italic">
-            ✅ Product deployed - design & build complete
-          </p>
-        ) : (
-          <button
-            onClick={() => window.open('https://github.com/new', '_blank')}
-            className="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-          >
-            Start Design & Build →
-          </button>
+
+        {/* Branch UI */}
+        {isIncompleteSpec && (
+          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <AlertTriangle className="text-red-600 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-red-700">
+              <strong>INCOMPLETE-SPEC.</strong> The spec couldn&apos;t be evidenced. Complete Step 1 above, then
+              re-run survey mode against the live build.
+            </p>
+          </div>
+        )}
+
+        {isTeardown && (
+          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STAGE 2</span>
+              <h3 className="font-semibold text-gray-900">Design &amp; Build</h3>
+            </div>
+            <p className="text-sm text-gray-700 mb-3">
+              {frontDoor === 'NO-URL'
+                ? "No URL yet, so there's nothing to survey. This is a whole new design/build — you can't target distributors/end-users on a site that doesn't exist. Build it, deploy, set the URL in Step 2, then run survey mode."
+                : "TEARDOWN — the build doesn't evidence the spec (or a PRE-HARD failed). Re-enter Stage 2: redesign/rebuild to fit the spec, redeploy, then re-run survey mode."}
+            </p>
+            <button
+              onClick={() => window.open('https://github.com/new', '_blank')}
+              className="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+            >
+              Start Design &amp; Build →
+            </button>
+          </div>
+        )}
+
+        {frontDoor === 'NOT-SURVEYED' && (
+          <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <Search className="text-gray-500 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-gray-600">
+              A URL is set but no survey verdict is recorded. Run the <code className="text-blue-600">naive-tester</code>{' '}
+              <strong>survey mode</strong> against the live build — it scores the 14 evidenced fields + PRE-HARD
+              checks and POSTs the verdict here. This panel shows the recorded result; it does not run the survey itself.
+            </p>
+          </div>
+        )}
+
+        {isRenovation && (
+          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <CheckCircle className="text-green-600" size={20} />
+            <span className="text-green-700 font-medium">RENOVATION — downstream steps unlocked below.</span>
+          </div>
         )}
       </div>
 
-      {/* STEP 8: Compliance Tests */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 8</span>
-          <h2 className="text-lg font-semibold text-gray-900">Compliance Tests</h2>
-          {complianceTests.every(t => t.status === 'passed') && <CheckCircle className="text-green-600" size={18} />}
+      {/* ═══════════════ DOWNSTREAM (locked until RENOVATION) ═══════════════ */}
+
+      {downstreamLocked && (
+        <div className="flex items-start gap-2 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+          <Lock className="text-slate-500 shrink-0 mt-0.5" size={18} />
+          <p className="text-sm text-slate-600">
+            <strong>Downstream steps are locked.</strong> Founder commitment, compliance, validation, scoring and
+            outreach only matter once the survey records a <span className="text-green-700 font-medium">RENOVATION</span>{' '}
+            verdict. Resolve the branch above first.
+          </p>
         </div>
-        
-        {/* Dataset Completeness Check */}
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="text-blue-600" size={16} />
-            <span className="font-medium text-blue-900">InvestorPilot Data Completeness</span>
+      )}
+
+      <div className={downstreamLocked ? 'opacity-50 pointer-events-none select-none space-y-6' : 'space-y-6'} aria-disabled={downstreamLocked}>
+
+        {/* Readiness summary + progress — only meaningful post-RENOVATION */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h2 className="font-semibold text-blue-900 mb-2">Readiness: {product.readiness_score}%</h2>
+          <p className="text-blue-800 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
+          <p className="text-blue-700 text-sm">{product.action_items.length} action{product.action_items.length !== 1 ? 's' : ''} needed to reach outreach readiness</p>
+          <div className="mt-3 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${
+                product.readiness_score >= 80
+                  ? 'bg-green-500'
+                  : product.readiness_score >= 50
+                    ? 'bg-yellow-500'
+                    : 'bg-red-500'
+              }`}
+              style={{ width: `${product.readiness_score}%` }}
+            />
           </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {getInvestorPilotFieldsStatus(product.validation).map((field) => (
-              <div key={field.label} className={`flex items-center gap-1 ${field.complete ? 'text-green-700' : 'text-orange-600'}`}>
-                {field.complete ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
-                {field.label}
+        </div>
+
+        {/* STEP 4: Founder Commitment */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 4</span>
+            <h2 className="text-lg font-semibold text-gray-900">Founder Commitment</h2>
+            {product.validation?.has_methodology_commitment && <CheckCircle className="text-green-600" size={18} />}
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Tick to confirm you are committed to running the 4-week validation pipeline.
+            <br /><strong>This item is for:</strong> confirming you will actually validate this product.
+            <br /><strong>When done:</strong> run compliance tests (Step 5) ↓
+          </p>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={product.validation?.has_methodology_commitment || false}
+              onChange={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[CHECKBOX] Clicked, value:', e.target.checked);
+                try {
+                  const res = await fetch(`/api/admin/pipeline/${productId}/validation`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ has_methodology_commitment: e.target.checked }),
+                  });
+                  const data = await res.json();
+                  console.log('[CHECKBOX] Response - success:', data.success, 'data:', JSON.stringify(data.data));
+                  console.log('[CHECKBOX] Response commitment value:', data.data?.has_methodology_commitment);
+                  if (res.ok && data.data) {
+                    const newGaps = calculateGaps(data.data);
+                    const newReadinessScore = calculateLocalReadinessScore(data.data, newGaps);
+                    const newCanRunOutreach = newReadinessScore >= 80 && newGaps.length === 0;
+                    setProduct((prev: any) => ({
+                      ...prev,
+                      validation: data.data,
+                      gaps: newGaps,
+                      readiness_score: newReadinessScore,
+                      can_run_outreach_now: newCanRunOutreach
+                    }));
+                    console.log('[CHECKBOX] Updated local state, gaps:', newGaps, 'readiness:', newReadinessScore, 'canRunOutreach:', newCanRunOutreach);
+                  }
+                } catch (err) {
+                  console.error('[CHECKBOX] Error:', err);
+                }
+              }}
+              className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+            />
+            <span className="text-gray-700">
+              I commit to running the 4-week validation pipeline for this product
+            </span>
+          </label>
+        </div>
+
+        {/* STEP 5: Compliance Tests */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 5</span>
+            <h2 className="text-lg font-semibold text-gray-900">Compliance Tests</h2>
+            {complianceTests.every(t => t.status === 'passed') && <CheckCircle className="text-green-600" size={18} />}
+          </div>
+
+          {/* Dataset Completeness Check */}
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="text-blue-600" size={16} />
+              <span className="font-medium text-blue-900">InvestorPilot Data Completeness</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {getInvestorPilotFieldsStatus(product.validation).map((field) => (
+                <div key={field.label} className={`flex items-center gap-1 ${field.complete ? 'text-green-700' : 'text-orange-600'}`}>
+                  {field.complete ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
+                  {field.label}
+                </div>
+              ))}
+            </div>
+            {product.gaps?.some((g: string) => g.includes('Missing')) && (
+              <p className="text-xs text-orange-700 mt-2">
+                ⚠️ Complete missing fields above before executing to InvestorPilot
+              </p>
+            )}
+          </div>
+
+          <p className="text-sm text-gray-600 mb-4">
+            Run compliance checks to ensure the product meets technical and legal requirements.
+            <br /><strong>When done:</strong> run validation tests (Step 6) ↓
+          </p>
+
+          <div className="space-y-3">
+            {complianceTests.map((test) => (
+              <div key={test.id} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {test.status === 'passed' && <CheckCircle className="text-green-600" size={20} />}
+                    {test.status === 'failed' && <XCircle className="text-red-600" size={20} />}
+                    {test.status === 'warning' && <AlertTriangle className="text-yellow-600" size={20} />}
+                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
+                    {test.status === 'running' && <Loader2 className="text-blue-600 animate-spin" size={20} />}
+
+                    <div>
+                      <h4 className="font-medium text-gray-900">{test.name}</h4>
+                      <p className="text-sm text-gray-500">{test.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
+                      <button
+                        onClick={async () => {
+                          setRunningTest(test.id);
+                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
+                          try {
+                            const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                testType: test.id,
+                                testId: test.id,
+                                mvpUrl: product.validation?.mvp_url
+                              }),
+                            });
+                            const data = await res.json();
+                            console.log('[COMPLIANCE TEST] Result:', data);
+
+                            // Handle both automated and manual test results
+                            let newStatus: TestStatus = 'passed';
+                            let newFindings: string[] = [];
+
+                            if (data.status === 'manual_required') {
+                              // Show instructions for manual tests
+                              newStatus = 'warning';
+                              newFindings = data.instructions ? [data.instructions] : ['Manual review required'];
+                              if (data.steps) {
+                                newFindings = data.steps;
+                              }
+                            } else if (data.findings?.length > 0) {
+                              newStatus = data.status === 'warning' ? 'warning' : 'failed';
+                              newFindings = data.findings;
+                            }
+
+                            setComplianceTests(prev => prev.map(t => t.id === test.id ? {
+                              ...t,
+                              status: newStatus,
+                              findings: newFindings
+                            } : t));
+                            // handleRefresh(); // DISABLED - keeps stale data
+                          } catch (err) {
+                            console.error('[COMPLIANCE TEST] Error:', err);
+                            setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
+                          }
+                          setRunningTest(null);
+                        }}
+                        disabled={runningTest === test.id}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {runningTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                        Run Test
+                      </button>
+                    ) : null}
+
+                    {test.status === 'failed' && (
+                      <button
+                        onClick={async () => {
+                          setFixingTest(test.id);
+                          await new Promise(r => setTimeout(r, 2000));
+                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
+                          setFixingTest(null);
+                        }}
+                        disabled={fixingTest === test.id}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {fixingTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}
+                        Fix Now
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {test.findings && test.findings.length > 0 && (
+                  <div className="mt-3 pl-8">
+                    <div className="text-sm text-red-600 font-medium">Findings:</div>
+                    <ul className="text-sm text-red-500 list-disc list-inside">
+                      {test.findings.map((finding, i) => (
+                        <li key={i}>{finding}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
+
+            {complianceTests.every(t => t.status === 'passed') && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="text-green-600" size={20} />
+                <span className="text-green-700 font-medium">All compliance tests passed!</span>
+              </div>
+            )}
+            {complianceTests.some(t => t.status === 'warning') && !complianceTests.every(t => t.status === 'passed') && (
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <AlertCircle className="text-yellow-600" size={20} />
+                <span className="text-yellow-700 font-medium">{complianceTests.filter(t => t.status === 'warning').length} compliance tests with warnings</span>
+              </div>
+            )}
+            {complianceTests.some(t => t.status === 'failed') && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <XCircle className="text-red-600" size={20} />
+                <span className="text-red-700 font-medium">{complianceTests.filter(t => t.status === 'failed').length} compliance tests failed</span>
+              </div>
+            )}
           </div>
-          {product.gaps?.some((g: string) => g.includes('Missing')) && (
-            <p className="text-xs text-orange-700 mt-2">
-              ⚠️ Complete missing fields above before executing to InvestorPilot
-            </p>
-          )}
         </div>
-        
-        <p className="text-sm text-gray-600 mb-4">
-          Run compliance checks to ensure the product meets technical and legal requirements.
-          <br /><strong>When done:</strong> Move to Step 9 (Validation Tests) ↓
-        </p>
-        
-        <div className="space-y-3">
-          {complianceTests.map((test) => (
-            <div key={test.id} className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {test.status === 'passed' && <CheckCircle className="text-green-600" size={20} />}
-                  {test.status === 'failed' && <XCircle className="text-red-600" size={20} />}
-                  {test.status === 'warning' && <AlertTriangle className="text-yellow-600" size={20} />}
-                  {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
-                  {test.status === 'running' && <Loader2 className="text-blue-600 animate-spin" size={20} />}
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900">{test.name}</h4>
-                    <p className="text-sm text-gray-500">{test.description}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
-                    <button
-                      onClick={async () => {
-                        setRunningTest(test.id);
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
-                        try {
-                          const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                              testType: test.id, 
-                              testId: test.id,
-                              mvpUrl: product.validation?.mvp_url 
-                            }),
-                          });
-                          const data = await res.json();
-                          console.log('[COMPLIANCE TEST] Result:', data);
-                          
-                          // Handle both automated and manual test results
-                          let newStatus: TestStatus = 'passed';
-                          let newFindings: string[] = [];
-                          
-                          if (data.status === 'manual_required') {
-                            // Show instructions for manual tests
-                            newStatus = 'warning';
-                            newFindings = data.instructions ? [data.instructions] : ['Manual review required'];
-                            if (data.steps) {
-                              newFindings = data.steps;
+        {/* STEP 6: Validation Tests */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
+            <h2 className="text-lg font-semibold text-gray-900">Validation Tests</h2>
+            {validationTests.every(t => t.status === 'passed') && <CheckCircle className="text-green-600" size={18} />}
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Run validation tests using gstack skills (naive-tester, voice-auditor, gtm-auditor, qa).
+            <br /><strong>When done:</strong> check the final score (Step 7) ↓
+          </p>
+
+          <div className="space-y-3">
+            {validationTests.map((test) => (
+              <div key={test.id} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {test.status === 'passed' && <CheckCircle className="text-green-600" size={20} />}
+                    {test.status === 'failed' && <XCircle className="text-red-600" size={20} />}
+                    {test.status === 'warning' && <AlertTriangle className="text-yellow-600" size={20} />}
+                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
+                    {test.status === 'running' && <Loader2 className="text-blue-600 animate-spin" size={20} />}
+
+                    <div>
+                      <h4 className="font-medium text-gray-900">{test.name}</h4>
+                      <p className="text-sm text-gray-500">{test.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
+                      <button
+                        onClick={async () => {
+                          setRunningTest('val-' + test.id);
+                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
+                          try {
+                            const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                testType: test.id,
+                                testId: test.id,
+                                mvpUrl: product.validation?.mvp_url
+                              }),
+                            });
+                            const data = await res.json();
+                            console.log('[VALIDATION TEST] Result:', data);
+
+                            // Handle both automated and manual test results
+                            let newStatus: TestStatus = 'passed';
+                            let newFindings: string[] = [];
+
+                            if (data.status === 'manual_required') {
+                              newStatus = 'warning';
+                              newFindings = data.steps || [data.instructions].filter(Boolean);
+                            } else if (data.findings?.length > 0) {
+                              newStatus = data.status === 'warning' ? 'warning' : 'failed';
+                              newFindings = data.findings;
                             }
-                          } else if (data.findings?.length > 0) {
-                            newStatus = data.status === 'warning' ? 'warning' : 'failed';
-                            newFindings = data.findings;
+
+                            setValidationTests(prev => prev.map(t => t.id === test.id ? {
+                              ...t,
+                              status: newStatus,
+                              findings: newFindings
+                            } : t));
+                            // handleRefresh(); // DISABLED - keeps stale data
+                          } catch (err) {
+                            console.error('[VALIDATION TEST] Error:', err);
+                            setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
                           }
-                          
-                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { 
-                            ...t, 
-                            status: newStatus,
-                            findings: newFindings
-                          } : t));
-                          // handleRefresh(); // DISABLED - keeps stale data
-                        } catch (err) {
-                          console.error('[COMPLIANCE TEST] Error:', err);
-                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
-                        }
-                        setRunningTest(null);
-                      }}
-                      disabled={runningTest === test.id}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {runningTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                      Run Test
-                    </button>
-                  ) : null}
+                          setRunningTest(null);
+                        }}
+                        disabled={runningTest === 'val-' + test.id}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {runningTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                        Run Test
+                      </button>
+                    ) : null}
 
-                  {test.status === 'failed' && (
-                    <button
-                      onClick={async () => {
-                        setFixingTest(test.id);
-                        await new Promise(r => setTimeout(r, 2000));
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
-                        setFixingTest(null);
-                      }}
-                      disabled={fixingTest === test.id}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {fixingTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}
-                      Fix Now
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {test.findings && test.findings.length > 0 && (
-                <div className="mt-3 pl-8">
-                  <div className="text-sm text-red-600 font-medium">Findings:</div>
-                  <ul className="text-sm text-red-500 list-disc list-inside">
-                    {test.findings.map((finding, i) => (
-                      <li key={i}>{finding}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {complianceTests.every(t => t.status === 'passed') && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle className="text-green-600" size={20} />
-              <span className="text-green-700 font-medium">All compliance tests passed!</span>
-            </div>
-          )}
-          {complianceTests.some(t => t.status === 'warning') && !complianceTests.every(t => t.status === 'passed') && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <AlertCircle className="text-yellow-600" size={20} />
-              <span className="text-yellow-700 font-medium">{complianceTests.filter(t => t.status === 'warning').length} compliance tests with warnings</span>
-            </div>
-          )}
-          {complianceTests.some(t => t.status === 'failed') && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <XCircle className="text-red-600" size={20} />
-              <span className="text-red-700 font-medium">{complianceTests.filter(t => t.status === 'failed').length} compliance tests failed</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* STEP 9: Validation Tests */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 9</span>
-          <h2 className="text-lg font-semibold text-gray-900">Validation Tests</h2>
-          {validationTests.every(t => t.status === 'passed') && <CheckCircle className="text-green-600" size={18} />}
-        </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Run validation tests using gstack skills (naive-tester, voice-auditor, gtm-auditor, qa).
-          <br /><strong>When done:</strong> Move to Step 10 (Final Score) ↓
-        </p>
-        
-        <div className="space-y-3">
-          {validationTests.map((test) => (
-            <div key={test.id} className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {test.status === 'passed' && <CheckCircle className="text-green-600" size={20} />}
-                  {test.status === 'failed' && <XCircle className="text-red-600" size={20} />}
-                  {test.status === 'warning' && <AlertTriangle className="text-yellow-600" size={20} />}
-                  {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
-                  {test.status === 'running' && <Loader2 className="text-blue-600 animate-spin" size={20} />}
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900">{test.name}</h4>
-                    <p className="text-sm text-gray-500">{test.description}</p>
+                    {test.status === 'failed' && (
+                      <button
+                        onClick={async () => {
+                          setFixingTest('val-' + test.id);
+                          await new Promise(r => setTimeout(r, 2000));
+                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
+                          setFixingTest(null);
+                        }}
+                        disabled={fixingTest === 'val-' + test.id}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {fixingTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}
+                        Fix Now
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
-                    <button
-                      onClick={async () => {
-                        setRunningTest('val-' + test.id);
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
-                        try {
-                          const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                              testType: test.id, 
-                              testId: test.id,
-                              mvpUrl: product.validation?.mvp_url 
-                            }),
-                          });
-                          const data = await res.json();
-                          console.log('[VALIDATION TEST] Result:', data);
-                          
-                          // Handle both automated and manual test results
-                          let newStatus: TestStatus = 'passed';
-                          let newFindings: string[] = [];
-                          
-                          if (data.status === 'manual_required') {
-                            newStatus = 'warning';
-                            newFindings = data.steps || [data.instructions].filter(Boolean);
-                          } else if (data.findings?.length > 0) {
-                            newStatus = data.status === 'warning' ? 'warning' : 'failed';
-                            newFindings = data.findings;
-                          }
-                          
-                          setValidationTests(prev => prev.map(t => t.id === test.id ? { 
-                            ...t, 
-                            status: newStatus,
-                            findings: newFindings
-                          } : t));
-                          // handleRefresh(); // DISABLED - keeps stale data
-                        } catch (err) {
-                          console.error('[VALIDATION TEST] Error:', err);
-                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t));
-                        }
-                        setRunningTest(null);
-                      }}
-                      disabled={runningTest === 'val-' + test.id}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {runningTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                      Run Test
-                    </button>
-                  ) : null}
-
-                  {test.status === 'failed' && (
-                    <button
-                      onClick={async () => {
-                        setFixingTest('val-' + test.id);
-                        await new Promise(r => setTimeout(r, 2000));
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
-                        setFixingTest(null);
-                      }}
-                      disabled={fixingTest === 'val-' + test.id}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {fixingTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}
-                      Fix Now
-                    </button>
-                  )}
-                </div>
+                {test.findings && test.findings.length > 0 && (
+                  <div className="mt-3 pl-8">
+                    <div className="text-sm text-red-600 font-medium">Findings:</div>
+                    <ul className="text-sm text-red-500 list-disc list-inside">
+                      {test.findings.map((finding, i) => (
+                        <li key={i}>{finding}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
+            ))}
 
-              {test.findings && test.findings.length > 0 && (
-                <div className="mt-3 pl-8">
-                  <div className="text-sm text-red-600 font-medium">Findings:</div>
-                  <ul className="text-sm text-red-500 list-disc list-inside">
-                    {test.findings.map((finding, i) => (
-                      <li key={i}>{finding}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {validationTests.every(t => t.status === 'passed') && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle className="text-green-600" size={20} />
-              <span className="text-green-700 font-medium">All validation tests passed!</span>
-            </div>
-          )}
+            {validationTests.every(t => t.status === 'passed') && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="text-green-600" size={20} />
+                <span className="text-green-700 font-medium">All validation tests passed!</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* STEP 10: Gaps Summary + Submit */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 10</span>
-          <h2 className="text-lg font-semibold text-gray-900">Final Score Check</h2>
-          {product.readiness_score >= 80 && <CheckCircle className="text-green-600" size={18} />}
-        </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Your validation score must be ≥80% to run outreach.
-          <br /><strong>This item is for:</strong> Reviewing remaining gaps and confirming readiness.
-          <br /><strong>When score ≥80%:</strong> Submit for automated outreach to InvestorPilot ↓
-        </p>
-        <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
-        
-        {/* Force Score Recalculation */}
-        <div className="mt-4">
-          <button
-            onClick={async () => {
-              try {
-                const res = await fetch(`/api/admin/pipeline/${productId}/recalculate-score`, { method: 'POST' });
-                const data = await res.json();
-                console.log('[RECALCULATE] Result:', data);
-                if (data.success) {
-                  setProduct((prev: any) => ({
-                    ...prev,
-                    validation: data.data,
-                    readiness_score: data.readiness_score
-                  }));
+        {/* STEP 7: Final Score + gaps + recalculate + submit + IP login */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
+            <h2 className="text-lg font-semibold text-gray-900">Final Score Check</h2>
+            {product.readiness_score >= 80 && <CheckCircle className="text-green-600" size={18} />}
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Your validation score must be ≥80% to run outreach.
+            <br /><strong>This item is for:</strong> reviewing remaining gaps and confirming readiness.
+            <br /><strong>When score ≥80%:</strong> submit for automated outreach to InvestorPilot ↓
+          </p>
+          <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
+
+          {/* Force Score Recalculation */}
+          <div className="mt-4">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/admin/pipeline/${productId}/recalculate-score`, { method: 'POST' });
+                  const data = await res.json();
+                  console.log('[RECALCULATE] Result:', data);
+                  if (data.success) {
+                    setProduct((prev: any) => ({
+                      ...prev,
+                      validation: data.data,
+                      readiness_score: data.readiness_score
+                    }));
+                  }
+                } catch (err) {
+                  console.error('[RECALCULATE] Error:', err);
                 }
-              } catch (err) {
-                console.error('[RECALCULATE] Error:', err);
-              }
-            }}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
-          >
-            Recalculate Score (debug)
-          </button>
-        </div>
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              Recalculate Score (debug)
+            </button>
+          </div>
 
-        {/* Submit for Outreach Button */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <button
-            onClick={handleSubmitForOutreach}
-            disabled={!isReadyForOutreach || submitting}
-            className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all ${
-              isReadyForOutreach
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'bg-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <Send size={20} />
-                {isReadyForOutreach 
-                  ? 'Submit for Automated Outreach →' 
-                  : `Submit for Outreach (${product.readiness_score}%/80%)`}
-              </>
+          {/* Submit for Outreach Button */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <button
+              onClick={handleSubmitForOutreach}
+              disabled={!isReadyForOutreach || submitting}
+              className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all ${
+                isReadyForOutreach
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Send size={20} />
+                  {isReadyForOutreach
+                    ? 'Submit for Automated Outreach →'
+                    : `Submit for Outreach (${product.readiness_score}%/80%)`}
+                </>
+              )}
+            </button>
+            {isReadyForOutreach && (
+              <p className="text-center text-sm text-green-600 mt-2">
+                ✅ Product will be sent to InvestorPilot for distributor outreach
+              </p>
             )}
-          </button>
-          {isReadyForOutreach && (
-            <p className="text-center text-sm text-green-600 mt-2">
-              ✅ Product will be sent to InvestorPilot for distributor outreach
+          </div>
+
+          {/* Login to InvestorPilot - Same Account */}
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 mb-3">
+              Already have an InvestorPilot account? Click below to open InvestorPilot, then click Sign in to log in.
             </p>
-          )}
-        </div>
-
-        {/* Login to InvestorPilot - Same Account */}
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800 mb-3">
-            Already have an InvestorPilot account? Click below to open InvestorPilot, then click Sign in to log in.
-          </p>
-          <button
-            onClick={handleLoginToInvestorPilot}
-            disabled={investorPilotLogin}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-all"
-          >
-            {investorPilotLogin ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                Sending login link...
-              </>
-            ) : (
-              <>
-                <ExternalLink size={18} />
-                Login to InvestorPilot →
-              </>
-            )}
-          </button>
-          <p className="text-xs text-blue-600 mt-2">
-            Sends a magic link to your email for instant access
-          </p>
+            <button
+              onClick={handleLoginToInvestorPilot}
+              disabled={investorPilotLogin}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-all"
+            >
+              {investorPilotLogin ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  Sending login link...
+                </>
+              ) : (
+                <>
+                  <ExternalLink size={18} />
+                  Login to InvestorPilot →
+                </>
+              )}
+            </button>
+            <p className="text-xs text-blue-600 mt-2">
+              Sends a magic link to your email for instant access
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Right Column - Category + Audit (less critical) */}
+      {/* Category + Audit (bottom, unchanged) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2" />
         <div>
           <div id="category">
-            <CategoryEditor 
-              productId={productId} 
-              currentCategory={product.manifest.category} 
-              onRefresh={handleRefresh} 
+            <CategoryEditor
+              productId={productId}
+              currentCategory={product.manifest.category}
+              onRefresh={handleRefresh}
             />
           </div>
           <div className="mt-6" id="audit">
@@ -885,4 +1051,3 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     </div>
   );
 }
-

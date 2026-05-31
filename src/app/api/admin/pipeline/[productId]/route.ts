@@ -32,26 +32,26 @@ export async function GET(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    
+
     console.log('[GET] Querying product_validation_status for product_slug:', productId);
-    
+
     // First do a raw count query to see what's in the table
     const { count } = await supabase
       .from('product_validation_status')
       .select('*', { count: 'exact', head: true })
       .eq('product_slug', productId);
     console.log('[GET] Row count for', productId, ':', count);
-    
+
     const { data: freshValidation, error: freshError } = await supabase
       .from('product_validation_status')
       .select('*')
       .eq('product_slug', productId)
       .single();
 
-    console.log('[GET] DB query result:', { 
-      found: !!freshValidation, 
+    console.log('[GET] DB query result:', {
+      found: !!freshValidation,
       error: freshError,
-      commitment: freshValidation?.has_methodology_commitment, 
+      commitment: freshValidation?.has_methodology_commitment,
       mvp_url: freshValidation?.mvp_url,
       promise: freshValidation?.promise,
       distributor: freshValidation?.distributor,
@@ -65,13 +65,28 @@ export async function GET(
       console.log('[GET] No fresh validation found, using cached');
     }
 
-    console.log('[GET] Returning product with validation:', { 
+    // Attach the latest recorded SURVEY verdict from the pipeline_gates ledger so the client
+    // can surface RENOVATION / TEARDOWN / INCOMPLETE-SPEC. Same query the methodology card uses
+    // (src/app/admin/methodology/[slug]/page.tsx): product_slug === productId, gate === 'survey',
+    // newest first. The verdict itself is parsed client-side from `reason` (see SurveyGatePanel).
+    const { data: surveyGate } = await supabase
+      .from('pipeline_gates')
+      .select('status, reason, deployment_id, artifact_ref, recorded_by, created_at')
+      .eq('product_slug', productId)
+      .eq('gate', 'survey')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    product.survey_gate = surveyGate ?? null;
+    console.log('[GET] survey_gate:', surveyGate ? `${surveyGate.status} · ${surveyGate.reason}` : 'none');
+
+    console.log('[GET] Returning product with validation:', {
       has_validation: !!product.validation,
       commitment: product.validation?.has_methodology_commitment,
       mvp_url: product.validation?.mvp_url
     });
     console.log('[GET] ========== END GET SUCCESS ==========');
-    
+
     return NextResponse.json(product, {
       status: 200,
       headers: {

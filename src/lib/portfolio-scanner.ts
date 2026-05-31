@@ -1,9 +1,9 @@
 /**
  * Portfolio Scanner
- * 
+ *
  * Reads portfolio-manifest.yaml and enriches with real-time validation state from Supabase.
  * Answers: "Which products can run outreach RIGHT NOW?" and "What gaps exist?"
- * 
+ *
  * Used by:
  * - /admin/pipeline dashboard (list + filter all products)
  * - /admin/pipeline/[productId] detail view (show gaps + fix actions)
@@ -81,6 +81,17 @@ export interface EnrichedProduct {
     security: 'ok' | 'warning';
     cost: 'ok' | 'warning' | 'over_budget';
   };
+  // Latest recorded survey verdict from the pipeline_gates ledger (gate==='survey'), attached by
+  // the GET route. Optional/null until a survey has run. Structurally matches SurveyGateRecord in
+  // components/methodology/SurveyGatePanel.tsx — the client reads the verdict from `reason`.
+  survey_gate?: {
+    status: 'pass' | 'fail';
+    reason: string | null;
+    deployment_id: string | null;
+    artifact_ref: string | null;
+    recorded_by: string;
+    created_at: string;
+  } | null;
 }
 
 // 7-Stage Lifecycle mapping based on validation state
@@ -97,7 +108,7 @@ const STAGE_MAPPING = [
 
 function determineStage(validation: ProductValidationStatus | null, readinessScore: number): { stage: number; name: string } {
   if (!validation) return { stage: 0, name: 'Not Started' };
-  
+
   // Count how many fields are filled
   const fieldsFilled = [
     validation.has_promise,
@@ -105,33 +116,33 @@ function determineStage(validation: ProductValidationStatus | null, readinessSco
     validation.has_end_user,
     validation.has_friction
   ].filter(Boolean).length;
-  
+
   // Stage 5+: Passed validation tests (Certification & Sign-off)
   const testStatus = validation.validation_test_status;
   if (testStatus === 'passed') {
     return { stage: 5, name: 'Certification & Sign-off' };
   }
-  
+
   // Stage 4: Construction - has all methodology fields + high score but not tested
   if (fieldsFilled >= 4 && readinessScore >= 60) {
     return { stage: 4, name: 'Construction' };
   }
-  
+
   // Stage 3: Compliance & Standards - has all 4 fields filled
   if (fieldsFilled >= 4) {
     return { stage: 3, name: 'Compliance & Standards' };
   }
-  
+
   // Stage 2: Design & Planning - has 2-3 fields filled
   if (fieldsFilled >= 2) {
     return { stage: 2, name: 'Design & Planning' };
   }
-  
+
   // Stage 1: Pre-Development - has at least 1 field or some validation started
   if (fieldsFilled >= 1 || validation.promise || validation.distributor) {
     return { stage: 1, name: 'Pre-Development' };
   }
-  
+
   // Stage 0: Not Started - no meaningful data
   return { stage: 0, name: 'Not Started' };
 }
@@ -140,26 +151,26 @@ function getCertificateStatus(validation: ProductValidationStatus | null): Enric
   if (!validation) {
     return { status: 'missing' };
   }
-  
+
   const testStatus = validation.validation_test_status;
   const score = validation.weighted_score_percent || 0;
-  
+
   if (testStatus === 'passed' && score >= 80) {
-    return { 
-      status: 'valid', 
+    return {
+      status: 'valid',
       valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      readiness_score: score 
+      readiness_score: score
     };
   }
-  
+
   if (testStatus === 'failed') {
     return { status: 'issues_reported' };
   }
-  
+
   if (testStatus === 'warning') {
     return { status: 'pending_review' };
   }
-  
+
   return { status: 'missing' };
 }
 
@@ -167,21 +178,21 @@ function getSmartSensorsStatus(validation: ProductValidationStatus | null): Enri
   // In Phase 1, we derive sensor status from existing validation data
   // Real implementation would read from sensor-data files
   const defaultStatus = { health: 'ok' as const, security: 'ok' as const, cost: 'ok' as const };
-  
+
   if (!validation) {
     return { ...defaultStatus, health: 'down' };
   }
-  
+
   // If tests failed, mark health as warning
   if (validation.validation_test_status === 'failed') {
     return { health: 'warning', security: 'ok', cost: 'ok' };
   }
-  
+
   // If score is low, cost might be a concern
   if ((validation.weighted_score_percent || 0) < 50) {
     return { health: 'ok', security: 'ok', cost: 'warning' };
   }
-  
+
   return defaultStatus;
 }
 
@@ -216,18 +227,18 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'platform-trust', vercel_project_id: 'prj_NTvBNN6cBAoAOoIgp84dYvxZCNtf', category: 'infrastructure' },
       { name: 'property-services', vercel_project_id: 'prj_bzS0HfyExXQXMsQAK9bH6SkrwQb0', category: 'infrastructure' },
       { name: 'storefront-mcp', vercel_project_id: 'prj_7fXPw71NH0cwx5xHHov1OM5dhAr3', category: 'infrastructure' },
-      
+
       // ============ OWN-TOOLS (internal factory use) ============
        { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
-       
+
        // ============ CLIENT PRODUCTS (paid custom builds for specific clients) ============
        { name: 'mmcbuild', vercel_project_id: 'prj_qKKLAkGGGVH5KocDfoGZQOqIZGvj', category: 'client-product' },
-       
+
        // ============ PRODUCTS (Lane 1: Paid Distributor SaaS) ============
        // Pipeline: validation engine for distributors (sales agencies, marketing agencies, dev shops, accountants, consultants)
        // Currently hosted in corporate-ai-solutions repo, will be separated later
        { name: 'pipeline', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'product' },
-       
+
        // ============ PRODUCTS (distributor production) ============
        // Lane 1: Paid Distributor SaaS (primary revenue)
       { name: 'deal-findrs', vercel_project_id: 'prj_B0pKJM1fTAD5FtbZudh4kUEhaqQM', category: 'product' },
@@ -237,11 +248,11 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'r-and-d-tax', vercel_project_id: 'prj_r_and_d_tax', category: 'product' },
       { name: 'tenderwatch', vercel_project_id: 'prj_tenderwatch', category: 'product' },
       { name: 'f2k-fund-tokenisation', vercel_project_id: 'prj_f2k_fund_tokenisation', category: 'product' },
-      
+
       // Lane 4: Free BYOK Products (awareness/marketing)
       { name: 'easy-claude-code', vercel_project_id: 'prj_sedjiKhnHUBginSeK2jP555u4wAp', category: 'product' },
       { name: 'sayfix', vercel_project_id: 'prj_7N65GURc3slhs5QL013Bo95AxD7i', category: 'product' },
-      
+
       // Lane 2/3: Studio-in-Residence & Contract Builds (some revenue, validation in progress)
       { name: 'connexions', vercel_project_id: 'prj_pG5gak2uSAQQCKLvf39G72wcaqnG', category: 'product' },
       { name: 'kira', vercel_project_id: 'prj_itVurDE9CD77K9rGWEQZNDmn33yz', category: 'product' },
@@ -250,7 +261,7 @@ function readManifest(): { projects: ManifestProduct[] } {
       { name: 'raiseready-template', vercel_project_id: 'prj_fKuIr7tWjKyWTgXDMCJYuhKQIylD', category: 'product' },
       { name: 'partner-pilot', vercel_project_id: 'prj_partner_pilot', category: 'product' },
       { name: 'outreach-ready', vercel_project_id: 'prj_outreach_ready', category: 'product' },
-      
+
       // Unaudited/In-Progress (will be categorized after manifest audit)
       { name: 'smart-board', vercel_project_id: 'prj_BUzAZzsnUyARewFEpO6OpXV7zqac', category: 'product' },
       { name: 'hair-stylist-ai', vercel_project_id: 'prj_sJ6UwGIaO05WnortzlLP5cIx9Azi', category: 'product' },
@@ -458,7 +469,7 @@ async function fetchCertificates(supabase: any): Promise<Map<string, any>> {
   const map = new Map<string, any>();
   (data || []).forEach((row: any) => {
     map.set(row.product_slug, {
-      status: row.user_feedback_flag === 'no_issues' ? 'valid' : 
+      status: row.user_feedback_flag === 'no_issues' ? 'valid' :
              row.user_feedback_flag === 'issues_reported' ? 'issues_reported' : 'missing',
       valid_until: row.valid_until,
       readiness_score: row.readiness_score,
@@ -534,7 +545,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
 
     // Check new tables first, fall back to calculated values
     const dbStage = lifecycleStages.get(product.name);
-    const { stage, name } = dbStage 
+    const { stage, name } = dbStage
       ? { stage: dbStage.stage, name: dbStage.name }
       : determineStage(validation, readiness_score);
 

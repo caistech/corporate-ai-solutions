@@ -4,6 +4,10 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
+// Dynamic admin page — opt out of static prerendering so the browser Supabase client isn't
+// constructed during the build (it needs runtime env, not build-time inlining).
+export const dynamic = 'force-dynamic'
+
 interface Review {
   id: string
   client_name: string
@@ -25,53 +29,53 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
   const [loading, setLoading] = useState(true)
-  
+
   useEffect(() => {
     loadReviews()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
-  
+
   async function loadReviews() {
     setLoading(true)
-    
+
     let query = supabase
       .from('client_reviews')
       .select('*')
       .order('created_at', { ascending: false })
-    
+
     if (filter !== 'all') {
       query = query.eq('status', filter)
     }
-    
+
     const { data, error } = await query
-    
+
     if (!error && data) {
       setReviews(data)
     }
-    
+
     setLoading(false)
   }
-  
+
   async function updateReview(id: string, updates: Partial<Review>) {
     const { error } = await supabase
       .from('client_reviews')
       .update(updates)
       .eq('id', id)
-    
+
     if (!error) {
       loadReviews()
-      
+
       // If approving, trigger sync
       if (updates.status === 'approved') {
         await fetch('/api/sync-reviews', { method: 'POST' })
       }
     }
   }
-  
+
   async function toggleFeatured(id: string, currentState: boolean) {
     await updateReview(id, { featured: !currentState })
   }
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
@@ -84,7 +88,7 @@ export default function AdminReviewsPage() {
             Sync to Website
           </button>
         </div>
-        
+
         {/* Filter tabs */}
         <div className="flex gap-2 mb-6">
           {['all', 'pending', 'approved', 'rejected'].map((f) => (
@@ -101,7 +105,7 @@ export default function AdminReviewsPage() {
             </button>
           ))}
         </div>
-        
+
         {/* Reviews list */}
         {loading ? (
           <div className="text-center py-12">Loading reviews...</div>
@@ -133,7 +137,7 @@ export default function AdminReviewsPage() {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <span
                       className={`px-3 py-1 rounded text-sm ${
@@ -146,7 +150,7 @@ export default function AdminReviewsPage() {
                     >
                       {review.status}
                     </span>
-                    
+
                     {review.featured && (
                       <span className="px-3 py-1 rounded text-sm bg-purple-100 text-purple-800">
                         ⭐ Featured
@@ -154,15 +158,15 @@ export default function AdminReviewsPage() {
                     )}
                   </div>
                 </div>
-                
+
                 <p className="text-gray-700 mb-4 whitespace-pre-wrap">
                   {review.review_text}
                 </p>
-                
+
                 <div className="text-xs text-gray-500 mb-4">
                   Submitted: {new Date(review.created_at).toLocaleString()}
                 </div>
-                
+
                 {/* Actions */}
                 {review.status === 'pending' && (
                   <div className="flex gap-2">
@@ -180,7 +184,7 @@ export default function AdminReviewsPage() {
                     </button>
                   </div>
                 )}
-                
+
                 {review.status === 'approved' && (
                   <div className="flex gap-2">
                     <button
