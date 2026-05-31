@@ -161,7 +161,8 @@ export async function POST(
       // Additional fields for InvestorPilot
       product_pitch: productPitch,
       core_mechanism: product.core_mechanism || null,
-      customer_outcomes: product.customer_outcomes || null,
+      distributor_outcomes: product.distributor_outcomes || null,
+      end_user_outcomes: product.end_user_outcomes || null,
       icp_company_size: product.icp_company_size || null,
       icp_stage: product.icp_stage || null,
       icp_verticals: product.icp_verticals || null,
@@ -195,16 +196,40 @@ export async function POST(
     if (!investorPilotUrl) {
       console.warn('[execute] No webhook URL - skipping');
     } else {
+
       const webhookPayload = {
-        product_id: productId,
-        product_name: product.display_name,
-        description: product.promise,
-        landing_page_url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
-        distributor_icp: product.distributor,
-        end_user_icp: product.end_user,
-        friction: product.friction,
-        submitter_email: submitterEmail.toLowerCase(),
-        timestamp: new Date().toISOString(),
+          product_id: productId,
+          product_name: product.display_name,
+          description: product.promise,
+          landing_page_url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
+          distributor_icp: product.distributor,
+          end_user_icp: product.end_user,
+          friction: product.friction,
+          product_pitch: productPitch,
+          distributor_pitch: null,
+          core_mechanism: product.core_mechanism || null,
+          distributor_outcomes: product.distributor_outcomes || null,
+          end_user_outcomes: product.end_user_outcomes || null,
+          icp_company_size: product.icp_company_size || null,
+          icp_stage: product.icp_stage || null,
+          icp_verticals: product.icp_verticals || null,
+          target_verticals: product.icp_verticals || null, // receiving insert reads this key
+          icp_geography: product.icp_geography || null,
+          one_pager_url: product.mvp_url || null,
+          pitch_deck_url: product.pitch_deck_url || null,
+          partner_types: product.partner_types || 'referral',
+          regulated_flag: product.regulated_flag ?? false,
+          cta_spec: {
+              destination: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
+              events: ['click'],
+          },
+          validation_summary: {
+              hard_gates_passed: product.hard_gates_passed,
+              weighted_score: product.weighted_score_percent,
+              gates_ready: product.gate1_ready,
+          },
+          submitter_email: submitterEmail.toLowerCase(),
+          timestamp: new Date().toISOString(),
       };
 
       const webhookBody = JSON.stringify(webhookPayload);
