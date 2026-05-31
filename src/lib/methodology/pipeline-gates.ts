@@ -5,6 +5,13 @@
 // dialogue lands both pool hypotheses on the card — the long-stubbed office-hours slot, now wired.
 // Same table, same shape; an in-app write so the gate is recorded as part of the cockpit flow
 // rather than only via the external CLI.
+//
+// Deployment binding (plan §3 edit #2): like the CLI's recordGate, this now accepts an optional
+// deploymentId and writes it to deployment_id. Resolution stays in the CLI (gate-check.mjs
+// `prod-deployment <slug>` / getLiveProductionDeployment) per §2.4 — the web app never calls
+// Vercel; it only PERSISTS an id a caller hands it. Omit it (e.g. a cockpit button) → null →
+// unbound/provisional, exactly the prior behaviour. Pass it (e.g. the survey skill, which fetches
+// the live id first) → the gate is bound to that build (Delta 2).
 
 import { supabaseAdmin } from '@/lib/supabase'
 
@@ -17,6 +24,7 @@ export type GateName =
   | 'gate-2'
   | 'naive-tester'
   | 'provisioned'
+  | 'survey'
 
 /** Latest record for (slug, gate) — true when the most recent one is a PASS. */
 export async function hasPassedGate(slug: string, gate: GateName): Promise<boolean> {
@@ -40,6 +48,8 @@ export async function recordGate(opts: {
   slug: string
   gate: GateName
   status: 'pass' | 'fail'
+  /** Deployment this verdict judges (Delta 2). null/omitted → unbound/provisional. */
+  deploymentId?: string | null
   artifactRef?: string | null
   reason?: string | null
   isOverride?: boolean
@@ -50,6 +60,7 @@ export async function recordGate(opts: {
     product_slug: opts.slug,
     gate: opts.gate,
     status: opts.status,
+    deployment_id: opts.deploymentId ?? null,
     artifact_ref: opts.artifactRef ?? null,
     reason: opts.reason ?? null,
     is_override: opts.isOverride ?? false,

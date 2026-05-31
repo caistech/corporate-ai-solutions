@@ -9,6 +9,7 @@ import { CockpitControls } from '@/components/methodology/CockpitControls'
 import { CockpitClarifier } from '@/components/methodology/CockpitClarifier'
 import { IdeaCardEditor } from '@/components/methodology/IdeaCardEditor'
 import { ReadinessPanel } from '@/components/methodology/ReadinessPanel'
+import { SurveyGatePanel } from '@/components/methodology/SurveyGatePanel'
 import { PoolDiscoveryPanel } from '@/components/methodology/PoolDiscoveryPanel'
 import { gateCriticalStatus } from '@/lib/methodology/gate-critical'
 import { loadCardScore } from '@/lib/methodology/readiness'
@@ -183,6 +184,9 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
     .order('created_at', { ascending: false })
 
   const gateRecords = (gateData ?? []) as GateRecord[]
+
+  // The latest recorded survey verdict (ledger is created_at-desc, so first match wins).
+  const latestSurveyGate = gateRecords.find((g) => g.gate === 'survey') ?? null
 
   // Gate-1 readiness — computed from the rubric + the card's recorded per-check verdicts.
   const readiness = await loadCardScore(params.slug)
@@ -410,6 +414,9 @@ export default async function HypothesisCardDetailPage({ params }: PageProps) {
 
       {/* Gate-1 readiness score — the harness's verdict (rubric + recorded audits). */}
       <ReadinessPanel data={readiness} />
+
+      {/* Survey gate — the post-build verdict last recorded to the ledger. */}
+      <SurveyGatePanel gate={latestSurveyGate} />
 
       {/* Pipeline & kick-off */}
       <section className="mb-10">

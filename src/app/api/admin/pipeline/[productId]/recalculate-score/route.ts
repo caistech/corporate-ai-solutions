@@ -1,111 +1,93 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/**
+ * POST /api/admin/pipeline/[productId]/recalculate-score
+ *
+ * RETIRED FORMULA (plan §2.1). This route no longer computes its own score. The old body —
+ * 30% hard-gates(9) + 30% test A/B/C/D + 20% fields(4) + 10% methodology bonus, writing
+ * testScore into weighted_score_percent — was the broken five-boolean math that DISAGREED with
+ * score.ts. It is gone. This route is now a thin adapter: it runs the single canonical scorer
+ * (score.ts via loadCardScore) and writes that one result into the legacy columns, so the number
+ * in weighted_score_percent comes from score.ts and nowhere else.
+ *
+ * score.ts scores 0–10 (null until the HARD gate passes); the legacy column is an INT 0–100, so
+ * the 0–10 is ×10'd into it. When the HARD gate hasn't passed, score is null → 0% (not "ready").
+ *
+ * ⚠ OTHER WRITER TO RECONCILE: the mandated grep (plan §2.1) found a second live writer of
+ * weighted_score_percent — src/app/api/admin/pipeline/[productId]/run-test/route.ts (writes
+ * `weighted_score_percent: newScore`). For a true single source it must also stop computing its
+ * own number and either call this route or loadCardScore. That edit is outside this file; flagged
+ * here so it isn't forgotten.
+ *
+ * Caller: src/components/admin/ProductDetailView.tsx (the "recalculate" button) — kept working,
+ * so this route is gutted, not deleted.
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { NextRequest, NextResponse } from 'next/server';
+import { loadCardScore } from '@/lib/methodology/readiness';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { productId: string } }
+  _request: NextRequest,
+  { params }: { params: { productId: string } },
 ) {
-  console.log('[RECALCULATE] ========== START ==========');
+  console.log('[RECALCULATE] ========== START (score.ts-backed) ==========');
   try {
-    const productSlug = params.productId;
+    const slug = params.productId.trim().toLowerCase();
 
-    // Fetch current validation data
-    const { data: validation, error } = await supabase
-      .from('product_validation_status')
-      .select('*')
-      .eq('product_slug', productSlug)
-      .single();
+    // The single canonical scorer. Reads the ratified criteria + the card's features + the
+    // latest recorded verdicts, runs score.ts. No formula here.
+    const card = await loadCardScore(slug);
 
-    if (error || !validation) {
-      console.log('[RECALCULATE] No validation found');
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!card.found) {
+      // Not in the methodology system → score.ts has no input. Don't fabricate a number.
+      return NextResponse.json(
+        { error: `No methodology card for "${slug}" — score.ts cannot score it. (weighted_score_percent left unchanged.)` },
+        { status: 404 },
+      );
     }
 
-    console.log('[RECALCULATE] Current data:', {
-      has_promise: validation.has_promise,
-      has_distributor: validation.has_distributor,
-      has_end_user: validation.has_end_user,
-      has_friction: validation.has_friction,
-      has_methodology_commitment: validation.has_methodology_commitment,
-      test_part_a: validation.test_part_a_admin_portal,
-      test_part_b: validation.test_part_b_user_portal,
-      test_part_c: validation.test_part_c_auth_flows,
-      test_part_d: validation.test_part_d_scaffold_verify,
-    });
+    const s = card.score;
+    if (!s) {
+      return NextResponse.json(
+        { error: 'No score yet — the criteria catalogue or the card verdicts are missing.' },
+        { status: 422 },
+      );
+    }
 
-    // Calculate hard gates passed
-    let hardGatesPassed = 0;
-    if (validation.has_promise) hardGatesPassed++;
-    if (validation.has_distributor) hardGatesPassed++;
-    if (validation.has_end_user) hardGatesPassed++;
-    if (validation.has_friction) hardGatesPassed++;
-    if (validation.has_methodology_commitment) hardGatesPassed++;
-    if (validation.test_part_a_admin_portal === 'passed') hardGatesPassed++;
-    if (validation.test_part_b_user_portal === 'passed') hardGatesPassed++;
-    if (validation.test_part_c_auth_flows === 'passed') hardGatesPassed++;
-    if (validation.test_part_d_scaffold_verify === 'passed') hardGatesPassed++;
+    // 0–10 (null pre-HARD-gate) → legacy 0–100 INT.
+    const weighted = Math.round((s.score ?? 0) * 10);
+    const hardPassed = s.hardGate.total - s.hardGate.failing.length;
 
-    // Calculate weighted score
-    const calcScore = (status: string) => {
-      if (status === 'passed') return 25;
-      if (status === 'warning') return 20;
-      return 0;
-    };
-
-    const testScore = 
-      calcScore(validation.test_part_a_admin_portal) +
-      calcScore(validation.test_part_b_user_portal) +
-      calcScore(validation.test_part_c_auth_flows) +
-      calcScore(validation.test_part_d_scaffold_verify);
-
-    // Validation fields score (20 points)
-    const fieldsScore = 
-      (validation.has_promise ? 5 : 0) +
-      (validation.has_distributor ? 5 : 0) +
-      (validation.has_end_user ? 5 : 0) +
-      (validation.has_friction ? 5 : 0);
-
-    // Calculate final readiness score (same formula as frontend)
-    let readinessScore = 0;
-    readinessScore += (hardGatesPassed / 9) * 30; // 30 pts for hard gates
-    readinessScore += (testScore / 100) * 30; // 30 pts for tests
-    readinessScore += fieldsScore; // 20 pts for fields
-    if (validation.has_methodology_commitment) readinessScore = Math.min(100, readinessScore + 10); // 10 pt bonus
-
-    console.log('[RECALCULATE] Calculated:', { hardGatesPassed, testScore, fieldsScore, readinessScore });
-
-    // Update DB
-    const { data: updated, error: updateError } = await supabase
+    const supabase = supabaseAdmin();
+    const { data: updated, error } = await supabase
       .from('product_validation_status')
       .update({
-        hard_gates_passed: hardGatesPassed,
-        hard_gates_total: 9,
-        weighted_score_percent: testScore,
-        last_scoring_run: new Date().toISOString()
+        weighted_score_percent: weighted,
+        hard_gates_passed: hardPassed,
+        hard_gates_total: s.hardGate.total,
+        gate1_ready: card.mvpReady,
+        last_scoring_run: new Date().toISOString(),
       })
-      .eq('product_slug', productSlug)
+      .eq('product_slug', slug)
       .select()
       .single();
 
-    if (updateError) {
-      console.error('[RECALCULATE] Update error:', updateError);
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (error) {
+      console.error('[RECALCULATE] update error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log('[RECALCULATE] Updated:', { 
-      hard_gates_passed: updated.hard_gates_passed,
-      weighted_score_percent: updated.weighted_score_percent,
-      readiness_score: Math.round(readinessScore)
-    });
+    console.log('[RECALCULATE] score.ts →', { score: s.score, band: s.band, weighted, gate1_ready: card.mvpReady });
+    console.log('[RECALCULATE] ========== END ==========');
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
+      slug,
+      source: 'score.ts',
+      score: s.score,
+      band: s.band,
+      gate1_ready: card.mvpReady,
+      weighted_score_percent: weighted,
       data: updated,
-      readiness_score: Math.round(readinessScore)
     });
   } catch (error) {
     console.error('[RECALCULATE] Error:', error);
