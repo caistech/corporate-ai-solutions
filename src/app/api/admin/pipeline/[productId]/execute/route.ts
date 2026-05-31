@@ -1,5 +1,15 @@
 /**
  * POST /api/admin/pipeline/[productId]/execute
+ *
+ * 2026-05-31 (Path 2):
+ *  - webhookPayload now carries the full ICP set, including the three fields
+ *    that were missing entirely (icp_partner_type, icp_buyer_title,
+ *    exclusions). icp_company_size / icp_stage / icp_verticals were already
+ *    referenced but read as null until the Path 2 migration added those
+ *    columns to product_validation_status — they now carry real data.
+ *  - partner_types is forced to 'distributor' (was defaulting to 'referral',
+ *    wrong for the distributor model and ignored by the distributor-only
+ *    receiver).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -74,7 +84,7 @@ export async function POST(
   const productId = resolvedParams.productId;
   console.log('[execute] extracted productId:', productId);
   console.log('[execute] START', { productId });
-  
+
   try {
     console.log('[execute] ENTERED TRY');
     console.log('[execute] ENV CHECK:', {
@@ -91,25 +101,25 @@ export async function POST(
     console.log('[execute] Getting user from auth...');
     const { data: { user }, error: authError } = await authClient.auth.getUser();
     console.log('[execute] Auth result:', { userId: user?.id, email: user?.email, authError: authError?.message });
-    
+
     if (authError || !user?.email) {
       console.log('[execute] AUTH FAILED - returning 401');
       return NextResponse.json({ error: 'Unauthorized - must be logged in' }, { status: 401 });
     }
-    
+
     const submitterEmail = user.email;
     console.log('[execute] Logged in user email:', submitterEmail);
 
     console.log('[execute] Fetching product from DB...');
     const supabase = getDbClient();
-    
+
     // Get user's organisation from Pipeline's DB
     const { data: profile } = await supabase
       .from('profiles')
       .select('active_organisation_id')
       .eq('id', user.id)
       .single();
-    
+
     const organisationId = profile?.active_organisation_id;
     console.log('[execute] User org ID:', organisationId);
 
@@ -158,7 +168,6 @@ export async function POST(
       distributor_target: product.distributor,
       end_user: product.end_user,
       friction: product.friction,
-      // Additional fields for InvestorPilot
       product_pitch: productPitch,
       core_mechanism: product.core_mechanism || null,
       distributor_outcomes: product.distributor_outcomes || null,
@@ -167,10 +176,12 @@ export async function POST(
       icp_stage: product.icp_stage || null,
       icp_verticals: product.icp_verticals || null,
       icp_geography: product.icp_geography || null,
+      icp_partner_type: product.icp_partner_type || 'buyer',
+      icp_buyer_title: product.icp_buyer_title || null,
+      exclusions: product.exclusions || null,
       one_pager_url: product.mvp_url || null,
       pitch_deck_url: product.pitch_deck_url || null,
-      partner_types: product.partner_types || 'referral',
-      // Validation scores
+      partner_types: 'distributor',
       validation_summary: {
         hard_gates_passed: product.hard_gates_passed,
         weighted_score: product.weighted_score_percent,
@@ -213,11 +224,18 @@ export async function POST(
           icp_company_size: product.icp_company_size || null,
           icp_stage: product.icp_stage || null,
           icp_verticals: product.icp_verticals || null,
-          target_verticals: product.icp_verticals || null, // receiving insert reads this key
+          target_verticals: product.icp_verticals || null, // receiver reads either key
           icp_geography: product.icp_geography || null,
+          // Path 2 — ICP-targeting fields now collected on the validation card.
+          icp_partner_type: product.icp_partner_type || 'buyer',
+          icp_buyer_title: product.icp_buyer_title || null,
+          exclusions: product.exclusions || null,
           one_pager_url: product.mvp_url || null,
           pitch_deck_url: product.pitch_deck_url || null,
-          partner_types: product.partner_types || 'referral',
+          // Distributor-only intake: force 'distributor' so the receiver tags
+          // the product correctly. (Was defaulting to 'referral', wrong for
+          // the distributor model.)
+          partner_types: 'distributor',
           regulated_flag: product.regulated_flag ?? false,
           cta_spec: {
               destination: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${productId}`,
