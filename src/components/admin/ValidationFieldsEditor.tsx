@@ -16,7 +16,8 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
     distributor: product.validation?.distributor || '',
     end_user: product.validation?.end_user || '',
     friction: product.validation?.friction || '',
-    customer_outcomes: product.validation?.customer_outcomes || '',
+    distributor_outcomes: product.validation?.distributor_outcomes || '',
+    end_user_outcomes: product.validation?.end_user_outcomes || '',
     core_mechanism: product.validation?.core_mechanism || '',
     icp_geography: product.validation?.icp_geography || '',
   });
@@ -28,11 +29,12 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
       distributor: product.validation?.distributor || '',
       end_user: product.validation?.end_user || '',
       friction: product.validation?.friction || '',
-      customer_outcomes: product.validation?.customer_outcomes || '',
+      distributor_outcomes: product.validation?.distributor_outcomes || '',
+      end_user_outcomes: product.validation?.end_user_outcomes || '',
       core_mechanism: product.validation?.core_mechanism || '',
       icp_geography: product.validation?.icp_geography || '',
     });
-  }, [product.validation?.promise, product.validation?.distributor, product.validation?.end_user, product.validation?.friction, product.validation?.customer_outcomes, product.validation?.core_mechanism, product.validation?.icp_geography]);
+  }, [product.validation?.promise, product.validation?.distributor, product.validation?.end_user, product.validation?.friction, product.validation?.distributor_outcomes, product.validation?.end_user_outcomes, product.validation?.core_mechanism, product.validation?.icp_geography]);
 
   const getProductSlug = () => product.validation?.product_slug || product.manifest?.name || product.id || 'unknown';
 
@@ -153,13 +155,14 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
   };
 
   const fields = [
-    { key: 'promise', label: 'Product Promise', placeholder: '1-2 sentence promise of what this product delivers...' },
-    { key: 'distributor', label: 'Distributor', placeholder: 'Who sells/delivers this to end users?' },
-    { key: 'end_user', label: 'End User', placeholder: 'Who uses this product?' },
-    { key: 'friction', label: 'Friction/Pain Point', placeholder: 'What problem does this solve?' },
-    { key: 'customer_outcomes', label: 'Customer Outcomes', placeholder: 'What results do users get after 90 days? (e.g., 50% faster onboarding, 2x engagement)' },
-    { key: 'core_mechanism', label: 'Core Mechanism', placeholder: 'How does your AI work? (e.g., voice analysis, predictive models, NLP)' },
-    { key: 'icp_geography', label: 'Target Geography', placeholder: 'Where do you want to target? (e.g., Australia, US, UK, Global, APAC)' },
+    { key: 'promise', label: 'Product Promise', placeholder: '1-2 sentence promise of what this product delivers...', section: 'common' },
+    { key: 'friction', label: 'Friction/Pain Point', placeholder: 'What problem does this solve?', section: 'common' },
+    { key: 'core_mechanism', label: 'Core Mechanism', placeholder: 'How does your AI work? (e.g., voice analysis, predictive models, NLP)', section: 'common' },
+    { key: 'icp_geography', label: 'Target Geography', placeholder: 'Where do you want to target? (e.g., Australia, US, UK, Global, APAC)', section: 'common' },
+    { key: 'distributor', label: 'Distributor ICP', placeholder: 'Who sells/delivers this to end users? (e.g., singing teachers, academies)', section: 'distributor' },
+    { key: 'distributor_outcomes', label: 'Distributor Outcomes', placeholder: 'What value does this give to your distributors and their clients? (e.g., Clients get better singing, distributors earn 20% commission)', section: 'distributor' },
+    { key: 'end_user', label: 'End User ICP', placeholder: 'Who uses this product? (e.g., students, karaoke enthusiasts)', section: 'enduser' },
+    { key: 'end_user_outcomes', label: 'End User Outcomes', placeholder: 'What results do end users get after 90 days? (e.g., I can sing better, more confidence)', section: 'enduser' },
   ];
 
   const missingCount = fields.filter(f => !product.validation?.[f.key]).length;
@@ -183,9 +186,14 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
           </button>
         )}
       </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {fields.map((field) => (
-          <div key={field.key} className="p-4 bg-gray-50 rounded-lg">
+          <div key={field.key} className={`p-4 rounded-lg ${
+            field.section === 'distributor' ? 'bg-blue-50 border border-blue-100' : 
+            field.section === 'enduser' ? 'bg-green-50 border border-green-100' : 
+            'bg-gray-50 border border-gray-200'
+          }`}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-600">{field.label}</p>
               <div className="flex items-center gap-2">
