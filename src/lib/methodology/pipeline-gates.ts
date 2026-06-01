@@ -25,6 +25,7 @@ export type GateName =
   | 'naive-tester'
   | 'provisioned'
   | 'survey'
+  | 'design-build'
 
 /** Latest record for (slug, gate) — true when the most recent one is a PASS. */
 export async function hasPassedGate(slug: string, gate: GateName): Promise<boolean> {
