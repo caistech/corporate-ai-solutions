@@ -83,6 +83,91 @@ const VERDICT_BANNER: Record<FrontDoorState, { box: string; text: string; label:
   },
 };
 
+// ── Survey kickoff (Option A — the bridge) ────────────────────────────────────────────────────
+// The card cannot RUN the survey (that's an LLM+browser judgment job — the naive-tester agent
+// skill, not an app function). What it CAN do is kill the "where do I even start" gap: a copy-to-
+// clipboard block with the exact, product-specific invocation to paste into Claude Code, plus the
+// manual record-back curl. Option B (a real "Run survey" button that dispatches a headless agent
+// job via workflow_dispatch) replaces this once it's proven end-to-end.
+//
+// GH_OWNER + slug build the repo ref the naive-tester audit reads. If a product's repo doesn't
+// follow `${GH_OWNER}/${slug}`, that's the one line to adjust.
+const COCKPIT_BASE = 'https://corporate-ai-solutions.vercel.app';
+const GH_OWNER = 'dennissolver';
+
+/** Copy-to-clipboard button + the (light-themed) block it copies. */
+function CopyBlock({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">{label}</span>
+        <button
+          onClick={copy}
+          className="text-xs px-2 py-0.5 rounded border border-gray-300 bg-white text-gray-600 hover:text-blue-600 hover:border-blue-400 transition-colors"
+        >
+          {copied ? 'Copied ✓' : 'Copy'}
+        </button>
+      </div>
+      <pre className="rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-800 overflow-x-auto whitespace-pre-wrap break-words font-mono">{value}</pre>
+    </div>
+  );
+}
+
+/** The kickoff bridge: product-specific invocation to paste into Claude Code + manual curl. */
+function SurveyKickoff({ productSlug, productUrl }: { productSlug: string; productUrl: string | null }) {
+  const url = productUrl?.trim() || `https://${productSlug}.vercel.app/`;
+  const repo = `${GH_OWNER}/${productSlug}`;
+  const surveyEndpoint = `${COCKPIT_BASE}/api/admin/pipeline/${productSlug}/survey`;
+
+  const prompt =
+`Run naive-tester survey mode against ${productSlug}.
+
+Live URL: ${url}
+Repo: ${repo}
+Skill: product-factory/pipeline-cockpit/skills/naive-tester/SURVEY_MODE.md (cais-shared-services)
+
+For each of the 14 spec fields, record evidenced:true/false with an exact citation
+(a quoted DOM string or a repo path:line) — never guess, never omit. Run PRE-HARD P1-P4.
+Emit survey.json, then POST it (with the prod deployment_id) to:
+${surveyEndpoint}`;
+
+  const curl =
+`# from your cais-shared-services repo root, after survey.json exists:
+COCKPIT_BASE=${COCKPIT_BASE}
+DEP=$(node scripts/gate-check.mjs prod-deployment ${productSlug} | sed -n 's/.*deployment[: ]*\\([a-zA-Z0-9_]*\\).*/\\1/p')
+curl -sS -X POST "$COCKPIT_BASE/api/admin/pipeline/${productSlug}/survey" \\
+  -H 'Content-Type: application/json' \\
+  -d "$(jq --arg d "$DEP" '. + {deployment_id:$d}' survey.json)"`;
+
+  return (
+    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <h3 className="text-sm font-semibold text-gray-800">Kick off a survey</h3>
+      <p className="mt-1 text-xs text-gray-600 max-w-2xl">
+        The survey is an agent judgment job (live DOM + repo evidence), so it runs in Claude Code with
+        the <code className="text-blue-600">naive-tester</code> skill — not from this button. Copy the
+        invocation below and paste it into Claude Code. When it records the verdict, this card updates.
+      </p>
+      <CopyBlock label="Paste into Claude Code" value={prompt} />
+      <details className="mt-3">
+        <summary className="text-xs text-gray-500 cursor-pointer hover:text-blue-600">
+          Manual record-back curl (if you POST survey.json yourself)
+        </summary>
+        <CopyBlock label="Record verdict" value={curl} />
+      </details>
+    </div>
+  );
+}
+
 export default function ProductDetailView({ productId }: ProductDetailViewProps) {
   const [product, setProduct] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -684,6 +769,11 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             ) : null}
           </div>
         )}
+
+        {/* Kickoff bridge — shown whenever a URL exists, so it works in NOT-SURVEYED, TEARDOWN,
+            INCOMPLETE-SPEC and RENOVATION (you'll re-run after a fix, not only on first survey).
+            Hidden only when there's no URL (NO-URL) — nothing to survey yet. */}
+        {hasUrl && <SurveyKickoff productSlug={productId} productUrl={product.validation?.mvp_url ?? null} />}
       </div>
 
       {/* ═══════════════ DOWNSTREAM (locked until RENOVATION) ═══════════════ */}
