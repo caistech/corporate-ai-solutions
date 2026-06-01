@@ -31,7 +31,7 @@
  * Step 3 surfaces the recorded verdict and how to run survey mode; it does NOT fake-run in-browser.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import GapsSection from './GapsSection';
 import ValidationFieldsEditor from './ValidationFieldsEditor';
 import QuickActionsPanel from './QuickActionsPanel';
@@ -39,6 +39,7 @@ import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
 import ValidationTestResults from './ValidationTestResults';
 import type { SurveyGateRecord } from '@/components/methodology/SurveyGatePanel';
+import { parseVerdict, type Verdict } from '@/lib/methodology/survey-verdict';
 import { CheckCircle, Send, Loader2, ExternalLink, Play, Wrench, XCircle, AlertTriangle, AlertCircle, Lock, Search } from 'lucide-react';
 
 interface ProductDetailViewProps {
@@ -50,14 +51,7 @@ interface ProductDetailViewProps {
 // SurveyGateRecord shape and parse semantics but render a light banner so it fits the card.
 // parseVerdict MUST stay byte-identical to SurveyGatePanel.parseVerdict — the route writes the
 // `reason` as "VERDICT → next stage · evidenced X/14 · PRE-HARD …" and both readers split the
-// leading token off it. If you change one, change the other (or export it from the panel).
-type Verdict = 'RENOVATION' | 'TEARDOWN' | 'INCOMPLETE-SPEC' | 'UNKNOWN';
-
-function parseVerdict(rec: SurveyGateRecord): Verdict {
-  const head = (rec.reason ?? '').trim().split(/[\s→]/)[0]?.toUpperCase();
-  if (head === 'RENOVATION' || head === 'TEARDOWN' || head === 'INCOMPLETE-SPEC') return head;
-  return rec.status === 'pass' ? 'RENOVATION' : 'UNKNOWN';
-}
+// leading token off it. parseVerdict + Verdict now live in one place (survey-verdict.ts, imported above).
 
 // The card's effective front-door state: a recorded verdict, or a synthetic pre-survey state.
 type FrontDoorState = Verdict | 'NOT-SURVEYED' | 'NO-URL';
@@ -117,6 +111,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
   const [runningTest, setRunningTest] = useState<string | null>(null);
   const [fixingTest, setFixingTest] = useState<string | null>(null);
+  // Gates the persist effect so it doesn't fire while hydrating from the DB on load.
+  const didHydrateTests = useRef(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -136,6 +132,23 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         console.log('[FETCH] Got data, has_methodology_commitment:', data.validation?.has_methodology_commitment, 'survey_gate:', data.survey_gate?.reason ?? 'none');
         setProduct(data);
         console.log('[FETCH] Set product state');
+
+        // Hydrate the nine checks from the persisted breakdown so they survive reload.
+        const stored = data.validation?.validation_test_results as
+          | Record<string, { status: TestStatus; findings?: string[] }>
+          | null
+          | undefined;
+        if (stored) {
+          didHydrateTests.current = false;
+          setComplianceTests((prev) =>
+            prev.map((t) => (stored[t.id] ? { ...t, status: stored[t.id].status, findings: stored[t.id].findings ?? [] } : t)),
+          );
+          setValidationTests((prev) =>
+            prev.map((t) => (stored[t.id] ? { ...t, status: stored[t.id].status, findings: stored[t.id].findings ?? [] } : t)),
+          );
+        }
+        // Re-enable persistence only after this hydrate render settles.
+        setTimeout(() => { didHydrateTests.current = true; }, 0);
       } catch (err) {
         console.error('[FETCH] Error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -147,6 +160,46 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
     fetchProduct();
   }, [productId, refreshTrigger]);
+
+  // Persist the nine checks whenever they change (after hydrate). The route rolls them up into
+  // validation_test_results + validation_test_status + hard_gates_*; we mirror those back onto
+  // product.validation so the readiness score and gaps recompute without a refetch.
+  useEffect(() => {
+    if (!didHydrateTests.current) return;
+    const all = [...complianceTests, ...validationTests];
+    if (all.every((t) => t.status === 'pending' || t.status === 'running')) return;
+    const tests = all.map((t) => ({ id: t.id, status: t.status, findings: t.findings }));
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/pipeline/${productId}/validation-test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tests }),
+        });
+        if (!res.ok) {
+          console.error('[validation-test persist] failed:', res.status);
+          return;
+        }
+        const data = await res.json();
+        setProduct((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                validation: {
+                  ...prev.validation,
+                  validation_test_results: data.validation_test_results,
+                  validation_test_status: data.validation_test_status,
+                  hard_gates_passed: data.hard_gates_passed,
+                  hard_gates_total: data.hard_gates_total,
+                },
+              }
+            : prev,
+        );
+      } catch (err) {
+        console.error('[validation-test persist] error:', err);
+      }
+    })();
+  }, [complianceTests, validationTests, productId]);
 
   const handleRefresh = async () => {
     console.log('[REFRESH] handleRefresh called, current trigger:', refreshTrigger);
@@ -562,6 +615,73 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
             <CheckCircle className="text-green-600" size={20} />
             <span className="text-green-700 font-medium">RENOVATION — downstream steps unlocked below.</span>
+          </div>
+        )}
+
+        {/* Full recorded detail — what the survey actually found, passed/failed, and what to fix.
+            Renders whenever a structured result was persisted (pipeline_gates.result). */}
+        {surveyGate?.result && (
+          <div className="mt-4 space-y-4">
+            <div className="text-xs text-gray-500">
+              Evidenced {surveyGate.result.site?.evidencedCount}/{surveyGate.result.site?.total} fields
+              {' · '}PRE-HARD {surveyGate.result.preHard?.passed ? 'pass' : 'fail'}
+              {surveyGate.result.mvp ? <>{' · '}live URL {surveyGate.result.mvp.ok ? 'up' : 'down'}</> : null}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Field evidence</h3>
+              <ul className="space-y-1.5">
+                {surveyGate.result.fields?.map((f) => (
+                  <li key={f.field} className="flex items-start gap-2 text-sm">
+                    {f.evidenced
+                      ? <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={16} />
+                      : <XCircle className="text-gray-400 shrink-0 mt-0.5" size={16} />}
+                    <span className="text-gray-700">
+                      <span className="font-medium">{f.label}</span>
+                      {f.evidence
+                        ? <span className="text-gray-500"> — {f.evidence}</span>
+                        : <span className="text-gray-400 italic"> — not evidenced</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {surveyGate.result.preHard?.results?.length ? (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">PRE-HARD checks</h3>
+                <ul className="space-y-1.5">
+                  {surveyGate.result.preHard.results.map((p) => (
+                    <li key={p.code} className="flex items-start gap-2 text-sm">
+                      {p.status === 'pass'
+                        ? <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={16} />
+                        : <XCircle className="text-red-500 shrink-0 mt-0.5" size={16} />}
+                      <span className="text-gray-700">
+                        <span className="font-medium">{p.code}</span>
+                        <span className="text-gray-500"> — {p.status}{p.evidence ? `: ${p.evidence}` : ''}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {surveyGate.result.toReach?.length ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <h3 className="text-sm font-semibold text-amber-800 mb-2">What needs to happen to reach RENOVATION</h3>
+                <ul className="space-y-1.5">
+                  {surveyGate.result.toReach.map((t, i) => (
+                    <li key={`${t.code}-${i}`} className="flex items-start gap-2 text-sm">
+                      <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={16} />
+                      <span className="text-amber-900">
+                        <span className="font-medium">{t.label}</span>
+                        <span className="text-amber-700"> — {t.need}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

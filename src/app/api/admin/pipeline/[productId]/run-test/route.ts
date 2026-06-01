@@ -1,6 +1,6 @@
 /**
  * POST /api/admin/pipeline/[productId]/run-test
- * 
+ *
  * Run validation tests - either automated or instructions for manual
  * Body: { testType: string, testId: string, mvpUrl: string }
  */
@@ -8,14 +8,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const TEST_CONFIGS: Record<string, { 
-  skill: string; 
+const TEST_CONFIGS: Record<string, {
+  skill: string;
   description: string;
   runnable: 'auto' | 'manual';
   autoCheck?: (url: string) => Promise<{ status: string; findings: string[] }>;
 }> = {
-  auth: { 
-    skill: 'naive-tester', 
+  auth: {
+    skill: 'naive-tester',
     description: 'Auth flows test',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -33,8 +33,8 @@ const TEST_CONFIGS: Record<string, {
       }
     }
   },
-  branding: { 
-    skill: 'qa', 
+  branding: {
+    skill: 'qa',
     description: 'Branding check',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -47,20 +47,20 @@ const TEST_CONFIGS: Record<string, {
         const hasStyles = html.includes('color:') || html.includes('background') || html.includes('.css');
         // Check for favicon
         const hasFavicon = html.includes('favicon') || html.includes('icon');
-        
+
         if (!hasLogo && !hasFavicon) findings.push('No logo or brand element detected');
         if (!hasStyles) findings.push('No inline styles found - brand may be inconsistent');
-        
-        return findings.length > 0 
-          ? { status: 'warning', findings } 
+
+        return findings.length > 0
+          ? { status: 'warning', findings }
           : { status: 'passed', findings: [] };
       } catch (e) {
         return { status: 'failed', findings: [`Could not check branding: ${e}`] };
       }
     }
   },
-  metadata: { 
-    skill: 'qa', 
+  metadata: {
+    skill: 'qa',
     description: 'Metadata check',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -71,16 +71,16 @@ const TEST_CONFIGS: Record<string, {
         const findings = [];
         if (!hasTitle) findings.push('Missing <title> tag');
         if (!hasOgImage) findings.push('Missing OG image meta tag');
-        return findings.length > 0 
-          ? { status: 'failed', findings } 
+        return findings.length > 0
+          ? { status: 'failed', findings }
           : { status: 'passed', findings: [] };
       } catch (e) {
         return { status: 'failed', findings: [`Could not fetch page: ${e}`] };
       }
     }
   },
-  security: { 
-    skill: 'qa', 
+  security: {
+    skill: 'qa',
     description: 'Security headers check',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -91,16 +91,16 @@ const TEST_CONFIGS: Record<string, {
         if (!headers.get('x-frame-options') && !headers.get('content-security-policy')) {
           findings.push('Missing security headers (X-Frame-Options, CSP)');
         }
-        return findings.length > 0 
-          ? { status: 'warning', findings } 
+        return findings.length > 0
+          ? { status: 'warning', findings }
           : { status: 'passed', findings: [] };
       } catch (e) {
         return { status: 'failed', findings: [`Could not check headers: ${e}`] };
       }
     }
   },
-  privacy: { 
-    skill: 'qa', 
+  privacy: {
+    skill: 'qa',
     description: 'Privacy compliance check',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -109,27 +109,27 @@ const TEST_CONFIGS: Record<string, {
         // Check for terms page
         const termsRes = await fetch(url + '/terms', { method: 'HEAD' });
         const privacyRes = await fetch(url + '/privacy', { method: 'HEAD' });
-        
+
         if (!termsRes.ok && termsRes.status !== 404) findings.push('Terms page check failed');
         if (!privacyRes.ok && privacyRes.status !== 404) findings.push('Privacy page check failed');
-        
+
         // Check for cookie consent in HTML
         const html = await fetch(url).then(r => r.text());
         const hasCookieConsent = html.toLowerCase().includes('cookie') || html.toLowerCase().includes('consent');
-        
+
         if (!termsRes.ok && termsRes.status === 404) findings.push('No /terms page found');
         if (!privacyRes.ok && privacyRes.status === 404) findings.push('No /privacy page found');
-        
-        return findings.length > 0 
-          ? { status: 'warning', findings } 
+
+        return findings.length > 0
+          ? { status: 'warning', findings }
           : { status: 'passed', findings: [] };
       } catch (e) {
         return { status: 'failed', findings: [`Could not check privacy: ${e}`] };
       }
     }
   },
-  naive: { 
-    skill: 'naive-tester', 
+  naive: {
+    skill: 'naive-tester',
     description: 'Human walkthrough test',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -153,8 +153,8 @@ const TEST_CONFIGS: Record<string, {
       }
     }
   },
-  voice: { 
-    skill: 'voice-auditor', 
+  voice: {
+    skill: 'voice-auditor',
     description: 'Voice agent placement',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -171,8 +171,8 @@ const TEST_CONFIGS: Record<string, {
       }
     }
   },
-  gtm: { 
-    skill: 'gtm-auditor', 
+  gtm: {
+    skill: 'gtm-auditor',
     description: 'Distribution loop check',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -191,8 +191,8 @@ const TEST_CONFIGS: Record<string, {
       }
     }
   },
-  qa: { 
-    skill: 'qa', 
+  qa: {
+    skill: 'qa',
     description: 'Automated browser QA',
     runnable: 'auto',
     autoCheck: async (url) => {
@@ -205,8 +205,8 @@ const TEST_CONFIGS: Record<string, {
         if (!res.ok) findings.push(`Page returned ${res.status}`);
         if (loadTime > 5000) findings.push(`Slow load time: ${loadTime}ms`);
         // Check for console errors placeholder - in real implementation would use Playwright
-        return findings.length > 0 
-          ? { status: 'warning', findings } 
+        return findings.length > 0
+          ? { status: 'warning', findings }
           : { status: 'passed', findings: [] };
       } catch (e) {
         return { status: 'failed', findings: [`Could not load page: ${e}`] };
@@ -230,9 +230,9 @@ export async function POST(
     const testConfig = TEST_CONFIGS[testType];
 
     if (!testConfig) {
-      return NextResponse.json({ 
-        error: 'Unknown test type', 
-        available: Object.keys(TEST_CONFIGS) 
+      return NextResponse.json({
+        error: 'Unknown test type',
+        available: Object.keys(TEST_CONFIGS)
       }, { status: 400 });
     }
 
@@ -242,13 +242,13 @@ export async function POST(
     if (testConfig.runnable === 'auto' && testConfig.autoCheck) {
       const result = await testConfig.autoCheck(productUrl);
       console.log('[RUN-TEST] Auto result:', result);
-      
+
       // Save results to DB
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      
+
       // Map testId to DB field
       const fieldMap: Record<string, string> = {
         'auth': 'test_part_c_auth_flows',
@@ -261,63 +261,21 @@ export async function POST(
         'gtm': 'test_part_b_user_portal',
         'qa': 'test_part_d_scaffold_verify'
       };
-      
+
       const dbField = fieldMap[testId];
       if (dbField) {
         const dbStatus = result.status === 'passed' ? 'passed' : result.status === 'warning' ? 'warning' : 'failed';
         await supabase
           .from('product_validation_status')
-          .update({ 
+          .update({
             [dbField]: dbStatus,
             last_validation_test_run: new Date().toISOString()
           })
           .eq('product_slug', productSlug);
 
-        // Recalculate weighted score after test update
-        const { data: currentData } = await supabase
-          .from('product_validation_status')
-          .select('test_part_a_admin_portal, test_part_b_user_portal, test_part_c_auth_flows, test_part_d_scaffold_verify, has_promise, has_distributor, has_end_user, has_friction, has_methodology_commitment, hard_gates_passed, hard_gates_total')
-          .eq('product_slug', productSlug)
-          .single();
-
-        if (currentData) {
-          const calcScore = (status: string) => {
-            if (status === 'passed') return 25;
-            if (status === 'warning') return 20;
-            return 0;
-          };
-          const newScore = 
-            calcScore(currentData.test_part_a_admin_portal) +
-            calcScore(currentData.test_part_b_user_portal) +
-            calcScore(currentData.test_part_c_auth_flows) +
-            calcScore(currentData.test_part_d_scaffold_verify);
-
-          // Calculate hard gates passed
-          let hardGatesPassed = 0;
-          if (currentData.has_promise) hardGatesPassed++;
-          if (currentData.has_distributor) hardGatesPassed++;
-          if (currentData.has_end_user) hardGatesPassed++;
-          if (currentData.has_friction) hardGatesPassed++;
-          if (currentData.has_methodology_commitment) hardGatesPassed++;
-          // Add test parts as hard gates
-          if (currentData.test_part_a_admin_portal === 'passed') hardGatesPassed++;
-          if (currentData.test_part_b_user_portal === 'passed') hardGatesPassed++;
-          if (currentData.test_part_c_auth_flows === 'passed') hardGatesPassed++;
-          if (currentData.test_part_d_scaffold_verify === 'passed') hardGatesPassed++;
-
-          console.log('[run-test] Updating score:', newScore, 'hard_gates:', hardGatesPassed);
-
-          await supabase
-            .from('product_validation_status')
-            .update({ 
-              weighted_score_percent: newScore,
-              hard_gates_passed: hardGatesPassed,
-              hard_gates_total: 9
-            })
-            .eq('product_slug', productSlug);
-        }
+        // Score + hard_gates are NOT written here. Single source of truth: weighted_score_percent <- score.ts via /recalculate-score (Step 7), hard_gates_passed/total + validation_test_status <- /validation-test (the card persist effect). run-test only runs a check and returns its result.
       }
-      
+
       return NextResponse.json({
         testId,
         testType,
@@ -342,7 +300,7 @@ export async function POST(
     });
   } catch (error) {
     console.error('[RUN-TEST] Error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Test execution failed',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });

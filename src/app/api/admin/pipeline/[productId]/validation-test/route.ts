@@ -1,6 +1,6 @@
 /**
  * POST /api/admin/pipeline/[productId]/validation-test
- * 
+ *
  * Submit validation test results (Parts A–D) for a product
  * - Admin-only endpoint (auth gate + ADMIN_EMAILS check via middleware)
  * - Accepts test results JSON with Part A/B/C/D status + findings
@@ -28,30 +28,52 @@ interface ValidationTestRequest {
   duration_minutes?: number;
 }
 
+// ── Hybrid nine-check path (the card's checks are canonical) ─────────────────────────────────
+// The card persists its 5 compliance + 4 validation checks here. We store the full breakdown in
+// validation_test_results keyed by check id (/validation-workflow already reads .qa/.naive/.gtm),
+// roll the 5 compliance checks into hard_gates_passed/total (the score's compliance slice), and
+// compute the composite validation_test_status (the outreach gate + the score's validation slice).
+type RawStatus = string;
+interface CheckResult { id: string; status: RawStatus; findings?: string[] }
+const COMPLIANCE_IDS = new Set(['auth', 'branding', 'metadata', 'security', 'privacy']);
+
+function normStatus(s: RawStatus): 'passed' | 'warning' | 'failed' | 'not_run' {
+  return s === 'passed' || s === 'warning' || s === 'failed' ? s : 'not_run';
+}
+
+function compositeOf(checks: CheckResult[]): 'passed' | 'warning' | 'failed' | 'not_run' {
+  const norm = checks.map((c) => normStatus(c.status));
+  if (norm.length === 0) return 'not_run';
+  if (norm.some((s) => s === 'failed')) return 'failed';
+  if (norm.every((s) => s === 'not_run')) return 'not_run';
+  if (norm.every((s) => s === 'passed')) return 'passed';
+  return 'warning';
+}
+
 function calculateValidationTestScore(parts: ValidationTestRequest['parts']): number {
   // Each part is worth 25% when passed = 0.25 per part
   // Warning = 0.20, Failed = 0 , Not run = 0
   let score = 0;
-  
+
   const weight = 0.25; // 25% per part
-  
+
   const scorePart = (status: string) => {
     if (status === 'passed') return weight;
     if (status === 'warning') return weight * 0.8; // 80% credit for warning
     return 0;
   };
-  
+
   score += scorePart(parts.a_admin_portal);
   score += scorePart(parts.b_user_portal);
   score += scorePart(parts.c_auth_flows);
   score += scorePart(parts.d_scaffold);
-  
+
   return Math.round(score * 100); // Convert to 0-100 scale
 }
 
 function determineCompositeStatus(parts: ValidationTestRequest['parts']): 'passed' | 'warning' | 'failed' | 'not_run' {
   const statuses = Object.values(parts);
-  
+
   if (statuses.includes('failed')) return 'failed';
   if (statuses.includes('warning')) return 'warning';
   if (statuses.every(s => s === 'passed')) return 'passed';
@@ -73,8 +95,66 @@ export async function POST(
     }
 
     // Parse request body
-    const body = await request.json() as ValidationTestRequest;
-    
+    const body = await request.json();
+    const productId = params.productId;
+    // Initialize Supabase client with service role (for updating product_validation_status)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // ── New path: the card's nine compliance/validation checks ──
+    if (Array.isArray(body.tests)) {
+      const checks: CheckResult[] = body.tests;
+      const results: Record<string, { status: string; findings: string[] }> = {};
+      for (const c of checks) results[c.id] = { status: normStatus(c.status), findings: c.findings ?? [] };
+
+      const compliance = checks.filter((c) => COMPLIANCE_IDS.has(c.id));
+      const hardTotal = compliance.length;
+      const hardPassed = compliance.filter((c) => normStatus(c.status) === 'passed').length;
+      const composite = compositeOf(checks);
+      const findings = checks.flatMap((c) => (c.findings ?? []).map((f) => `${c.id}: ${f}`));
+
+      const { data, error } = await supabase
+        .from('product_validation_status')
+        .update({
+          validation_test_results: results,
+          validation_test_status: composite,
+          hard_gates_passed: hardPassed,
+          hard_gates_total: hardTotal,
+          validation_test_findings: findings,
+          last_validation_test_run: new Date().toISOString(),
+          last_validation_test_by: auth.user.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('product_slug', productId)
+        .select();
+
+      if (error) {
+        console.error('[validation-test] nine-check update error:', error);
+        return NextResponse.json({ error: 'Failed to persist test results', details: error.message }, { status: 500 });
+      }
+      if (!data || data.length === 0) {
+        return NextResponse.json({ error: 'Product not found in validation pipeline' }, { status: 404 });
+      }
+
+      await supabase.from('validation_events').insert({
+        product_slug: productId,
+        event_type: 'validation_test_submitted',
+        status: composite,
+        metadata: { results, hard_gates_passed: hardPassed, hard_gates_total: hardTotal, tester_id: auth.user.id },
+        created_by: auth.user.id,
+      });
+
+      return NextResponse.json({
+        success: true,
+        productId,
+        validation_test_status: composite,
+        hard_gates_passed: hardPassed,
+        hard_gates_total: hardTotal,
+        validation_test_results: results,
+        product_updated: data[0],
+      });
+    }
+
+    // ── Legacy path: Parts A–D ──
     // Validate required fields
     if (!body.parts || !body.findings || !body.overall_status) {
       return NextResponse.json(
@@ -83,12 +163,8 @@ export async function POST(
       );
     }
 
-    const productId = params.productId;
     const testScore = calculateValidationTestScore(body.parts);
     const compositeStatus = determineCompositeStatus(body.parts);
-
-    // Initialize Supabase client with service role (for updating product_validation_status)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Update product_validation_status with test results
     const { data, error } = await supabase
@@ -126,7 +202,7 @@ export async function POST(
 
     // Log validation event for audit trail
     const updatedProduct = data[0];
-    
+
     await supabase
       .from('validation_events')
       .insert({

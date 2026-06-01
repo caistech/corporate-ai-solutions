@@ -71,7 +71,7 @@ export async function GET(
     // newest first. The verdict itself is parsed client-side from `reason` (see SurveyGatePanel).
     const { data: surveyGate } = await supabase
       .from('pipeline_gates')
-      .select('status, reason, deployment_id, artifact_ref, recorded_by, created_at')
+      .select('status, reason, deployment_id, artifact_ref, recorded_by, created_at, result')
       .eq('product_slug', productId)
       .eq('gate', 'survey')
       .order('created_at', { ascending: false })

@@ -52,6 +52,9 @@ export async function recordGate(opts: {
   deploymentId?: string | null
   artifactRef?: string | null
   reason?: string | null
+  /** Full structured verdict (SurveyResult etc.) persisted to the `result` jsonb column so
+   *  consumers can render per-field evidence + remediation, not just the one-line reason. */
+  result?: unknown
   isOverride?: boolean
   recordedBy?: string
 }): Promise<void> {
@@ -63,6 +66,7 @@ export async function recordGate(opts: {
     deployment_id: opts.deploymentId ?? null,
     artifact_ref: opts.artifactRef ?? null,
     reason: opts.reason ?? null,
+    result: opts.result ?? null,
     is_override: opts.isOverride ?? false,
     recorded_by: opts.recordedBy ?? 'cockpit',
   })

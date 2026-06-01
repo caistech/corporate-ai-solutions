@@ -9,6 +9,8 @@
 // complete CardSurvey. Surfacing that here would mean persisting each run's survey.json — a
 // survey_results table — which is deferred. Until then this panel surfaces the recorded verdict.)
 
+import { parseVerdict, type Verdict } from '@/lib/methodology/survey-verdict'
+
 /** The subset of a pipeline_gates row this panel renders (structurally a GateRecord). */
 export interface SurveyGateRecord {
   status: 'pass' | 'fail'
@@ -17,9 +19,10 @@ export interface SurveyGateRecord {
   artifact_ref: string | null
   recorded_by: string
   created_at: string
+  /** Full structured verdict from the survey route (per-field evidence + PRE-HARD + toReach),
+   *  persisted to pipeline_gates.result. Null on legacy rows recorded before the column existed. */
+  result?: import('@/lib/methodology/survey').SurveyResult | null
 }
-
-type Verdict = 'RENOVATION' | 'TEARDOWN' | 'INCOMPLETE-SPEC' | 'UNKNOWN'
 
 const VERDICT_STYLE: Record<Verdict, { box: string; text: string }> = {
   RENOVATION: { box: 'border-emerald-500/40 bg-emerald-500/10', text: 'text-emerald-300' },
@@ -28,13 +31,7 @@ const VERDICT_STYLE: Record<Verdict, { box: string; text: string }> = {
   UNKNOWN: { box: 'border-gray-border bg-gray-dark/40', text: 'text-gray-light' },
 }
 
-/** The route records reason as "VERDICT → next stage · evidenced X/14 · PRE-HARD …".
- *  Recover the verdict from the leading token; fall back to the pass/fail status. */
-function parseVerdict(rec: SurveyGateRecord): Verdict {
-  const head = (rec.reason ?? '').trim().split(/[\s→]/)[0]?.toUpperCase()
-  if (head === 'RENOVATION' || head === 'TEARDOWN' || head === 'INCOMPLETE-SPEC') return head
-  return rec.status === 'pass' ? 'RENOVATION' : 'UNKNOWN'
-}
+// parseVerdict is imported from survey-verdict.ts (shared with ProductDetailView).
 
 export function SurveyGatePanel({ gate }: { gate: SurveyGateRecord | null }) {
   return (

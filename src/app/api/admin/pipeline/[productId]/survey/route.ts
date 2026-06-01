@@ -126,6 +126,7 @@ export async function POST(
       deploymentId: parsed.data.deployment_id ?? null,
       artifactRef: r.mvp.url,
       reason: `${r.verdict} → ${r.nextStage} · evidenced ${r.site.evidencedCount}/${r.site.total} · PRE-HARD ${r.preHard.passed ? 'pass' : 'fail'}`,
+      result: r,
     });
 
     console.log('[SURVEY] ========== END ==========');

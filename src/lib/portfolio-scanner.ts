@@ -91,6 +91,7 @@ export interface EnrichedProduct {
     artifact_ref: string | null;
     recorded_by: string;
     created_at: string;
+    result?: unknown;
   } | null;
 }
 
