@@ -123,7 +123,7 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
       const res = await fetch(`/api/admin/pipeline/${slug}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: [field], productDetails }),
+        body: JSON.stringify({ fields: [field], productDetails, mvpUrl: product.validation?.mvp_url }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -165,7 +165,7 @@ export default function ValidationFieldsEditor({ product, onUpdate }: Validation
       const res = await fetch(`/api/admin/pipeline/${slug}/validation/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: missing, productDetails }),
+        body: JSON.stringify({ fields: missing, productDetails, mvpUrl: product.validation?.mvp_url }),
       });
       if (res.ok) {
         const data = await res.json();
