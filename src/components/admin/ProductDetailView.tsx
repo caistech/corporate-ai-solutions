@@ -123,11 +123,42 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** The kickoff bridge: product-specific invocation to paste into Claude Code + manual curl. */
+/** The kickoff bridge.
+ *  Primary path (B): a "Run survey" button that dispatches the headless CI job (OpenCode +
+ *  naive-tester) via /survey/kickoff. The job browses the live site + repo, writes survey.json,
+ *  and the workflow POSTs it back — the card updates on refresh.
+ *  Fallback path (A): the same invocation, copy-to-clipboard, to run manually in your agent. */
 function SurveyKickoff({ productSlug, productUrl }: { productSlug: string; productUrl: string | null }) {
   const url = productUrl?.trim() || `https://${productSlug}.vercel.app/`;
   const repo = `${GH_OWNER}/${productSlug}`;
   const surveyEndpoint = `${COCKPIT_BASE}/api/admin/pipeline/${productSlug}/survey`;
+
+  const [running, setRunning] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [kickError, setKickError] = useState<string | null>(null);
+
+  const runSurvey = async () => {
+    setRunning(true);
+    setStarted(false);
+    setKickError(null);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/survey/kickoff`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.started) {
+        setStarted(true);
+      } else {
+        setKickError(data.error || `kickoff failed (${res.status})`);
+      }
+    } catch (err) {
+      setKickError(err instanceof Error ? err.message : 'kickoff failed');
+    } finally {
+      setRunning(false);
+    }
+  };
 
   const prompt =
 `Run naive-tester survey mode against ${productSlug}.
@@ -153,16 +184,32 @@ curl -sS -X POST "$COCKPIT_BASE/api/admin/pipeline/${productSlug}/survey" \\
     <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
       <h3 className="text-sm font-semibold text-gray-800">Kick off a survey</h3>
       <p className="mt-1 text-xs text-gray-600 max-w-2xl">
-        The survey is an agent judgment job (live DOM + repo evidence), so it runs in Claude Code with
-        the <code className="text-blue-600">naive-tester</code> skill — not from this button. Copy the
-        invocation below and paste it into Claude Code. When it records the verdict, this card updates.
+        Runs the <code className="text-blue-600">naive-tester</code> survey headless in CI against the
+        live site + repo, then records the verdict here. Takes ~3–4 min — refresh the card when it finishes.
       </p>
-      <CopyBlock label="Paste into Claude Code" value={prompt} />
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          onClick={runSurvey}
+          disabled={running}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm rounded hover:bg-slate-800 disabled:opacity-50"
+        >
+          {running ? <><Loader2 className="animate-spin" size={16} /> Starting…</> : <><Search size={16} /> Run survey</>}
+        </button>
+        {started && (
+          <span className="text-sm text-green-700">Started — running in CI. Refresh in ~3–4 min.</span>
+        )}
+        {kickError && (
+          <span className="text-sm text-red-600">Couldn&apos;t start: {kickError}</span>
+        )}
+      </div>
+
       <details className="mt-3">
         <summary className="text-xs text-gray-500 cursor-pointer hover:text-blue-600">
-          Manual record-back curl (if you POST survey.json yourself)
+          Run it manually instead (copy into Claude Code / OpenCode)
         </summary>
-        <CopyBlock label="Record verdict" value={curl} />
+        <CopyBlock label="Paste into your agent" value={prompt} />
+        <CopyBlock label="Record verdict (if you POST survey.json yourself)" value={curl} />
       </details>
     </div>
   );
