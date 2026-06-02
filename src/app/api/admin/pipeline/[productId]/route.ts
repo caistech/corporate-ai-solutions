@@ -8,6 +8,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getProductPipeline } from '@/lib/portfolio-scanner';
 import { createClient } from '@supabase/supabase-js';
 
+// Force this route to run fresh on every request — never statically cached, and
+// no Next.js data-cache on the server-side Supabase reads. Without this, the
+// pipeline_gates query can return a cached stale verdict even though the DB has newer rows.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { productId: string } }
