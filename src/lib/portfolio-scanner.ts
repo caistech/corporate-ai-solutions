@@ -93,6 +93,20 @@ export interface EnrichedProduct {
     created_at: string;
     result?: unknown;
   } | null;
+    // Latest recorded design-build outcome from the pipeline_gates ledger (gate==='design-build'),
+  // attached by the GET route. artifact_ref holds the PR url; result holds {pr_url, branch,
+  // verdict_in, summary, decisions[]} for the card's PR link + override checklist.
+  design_build?: {
+    status: 'pass' | 'fail';
+    reason: string | null;
+    deployment_id: string | null;
+    artifact_ref: string | null;
+    recorded_by: string;
+    created_at: string;
+    result?: unknown;
+  } | null;
+
+
 }
 
 // 7-Stage Lifecycle mapping based on validation state

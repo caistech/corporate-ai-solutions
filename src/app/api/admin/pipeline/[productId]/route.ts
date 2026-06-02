@@ -80,6 +80,20 @@ export async function GET(
     product.survey_gate = surveyGate ?? null;
     console.log('[GET] survey_gate:', surveyGate ? `${surveyGate.status} · ${surveyGate.reason}` : 'none');
 
+    // Attach the latest recorded DESIGN-BUILD outcome from the pipeline_gates ledger so the
+    // client can surface the PR link (artifact_ref) + the agent's logged decision forks (result).
+    // Same shape as survey_gate above: product_slug === productId, gate === 'design-build', newest.
+    const { data: designBuild } = await supabase
+      .from('pipeline_gates')
+      .select('status, reason, deployment_id, artifact_ref, recorded_by, created_at, result')
+      .eq('product_slug', productId)
+      .eq('gate', 'design-build')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    product.design_build = designBuild ?? null;
+    console.log('[GET] design_build:', designBuild ? `${designBuild.status} · ${designBuild.reason}` : 'none');
+
     console.log('[GET] Returning product with validation:', {
       has_validation: !!product.validation,
       commitment: product.validation?.has_methodology_commitment,
