@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, ArrowRight, Package, Lightbulb } from 'lucide-react'
 
@@ -6,22 +5,26 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
+// The 14 graded validation fields — EXACT column names on product_validation_status
+// (source of truth: ValidationFieldsEditor.tsx + api/admin/pipeline/[productId]/validation
+// ALLOWED_FIELDS). A "new idea" is a row with <14 of these populated (INCOMPLETE-SPEC).
+// Do NOT add why_now / mvp_url here — those are not graded spec fields.
 const SPEC_FIELDS = [
-  'promise_statement',
-  'distributor_model',
+  'promise',
+  'distributor',
   'end_user',
-  'pain_point',
-  'competitors',
-  'differentiation',
-  'pricing_model',
-  'go_to_market',
-  'mvp_url',
-  'why_now',
-  'revenue_model',
-  'target_market',
-  'competitive_advantage',
-  'success_metrics'
-]
+  'friction',
+  'distributor_outcomes',
+  'end_user_outcomes',
+  'core_mechanism',
+  'icp_geography',
+  'icp_partner_type',
+  'icp_buyer_title',
+  'icp_verticals',
+  'icp_company_size',
+  'icp_stage',
+  'exclusions',
+] as const
 
 interface IdeaProduct {
   product_slug: string
@@ -37,32 +40,38 @@ async function getIdeas(): Promise<IdeaProduct[]> {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { data: products } = await supabase
+  // .returns<>() pins the row shape so supabase-js skips type-level parsing of the
+  // dynamic select string (otherwise the row collapses to a ParserError type).
+  const { data: products, error } = await supabase
     .from('product_validation_status')
-    .select('product_slug, display_name, created_at, promise_statement, distributor_model, end_user, pain_point, competitors, differentiation, pricing_model, go_to_market, mvp_url, why_now, revenue_model, target_market, competitive_advantage, success_metrics')
+    .select(`product_slug, display_name, created_at, ${SPEC_FIELDS.join(', ')}`)
     .order('created_at', { ascending: false })
+    .returns<Record<string, unknown>[]>()
 
+  if (error) {
+    console.error('getIdeas: select failed', error.message)
+    return []
+  }
   if (!products) return []
 
-  const ideas: IdeaProduct[] = products
-    .map((p: Record<string, unknown>) => {
-      let populatedFields = 0
+  return products
+    .map((p) => {
+      let populated = 0
       for (const field of SPEC_FIELDS) {
-        if (p[field] !== null && p[field] !== '') {
-          populatedFields++
-        }
+        const v = p[field]
+        // Uniform presence check: non-null and non-empty (matches the survey's
+        // fixed-denominator-14 rule; not the has_* flags).
+        if (v !== null && v !== undefined && String(v).trim() !== '') populated++
       }
-
       return {
         product_slug: p.product_slug as string,
-        display_name: p.display_name as string | null,
+        display_name: (p.display_name as string | null) ?? null,
         created_at: p.created_at as string,
-        populated_fields: populatedFields
+        populated_fields: populated,
       }
     })
-    .filter(p => p.populated_fields < 14)
-
-  return ideas
+    // A new idea = INCOMPLETE-SPEC = fewer than all 14 graded fields present.
+    .filter((p) => p.populated_fields < SPEC_FIELDS.length)
 }
 
 export default async function NewIdeasPage() {
@@ -74,33 +83,32 @@ export default async function NewIdeasPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Link
-              href="/admin/pipeline"
-              className="text-blue-400 hover:text-blue-300 text-sm"
-            >
+            <Link href="/admin/pipeline" className="text-blue-400 hover:text-blue-300 text-sm">
               ← Back to Pipeline
             </Link>
           </div>
           <h1 className="text-3xl font-bold mb-2">New Idea — Onboarding</h1>
           <p className="text-gray-400">
-            Capture new product ideas and walk them through the feasibility gate
+            Walk a new idea through the 7-node ideation chain, derive the 14-field spec, and admit it
+            to the pipeline.
           </p>
         </div>
 
-        {/* Onboarding Shell - TODO */}
+        {/* Onboarding shell — coach skill + write path pending (spec settled) */}
         <div className="bg-gray-800 rounded-xl p-6 mb-8 border border-gray-700">
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-5 h-5 text-yellow-400" />
             <h2 className="text-lg font-semibold">Start a New Idea</h2>
           </div>
-          
+
           <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 mb-4">
             <p className="text-yellow-200 text-sm">
-              <strong>TODO:</strong> office-hours question set + answer→field mapping — pending spec.
+              <strong>Pending build:</strong> the conversational coach (7-node walk) and the
+              admission write path.
             </p>
             <p className="text-yellow-300/70 text-xs mt-2">
-              The questions and the answer→field mapping are still being specced. 
-              Once ready, this section will guide you through the ideation process.
+              Spec is settled (ONBOARDING_NEW_IDEAS_BUILD_BRIEF) — chain backbone, node→field
+              mapping, distributor dependency, robustness bars. This panel becomes the coach UI.
             </p>
           </div>
 
@@ -113,7 +121,7 @@ export default async function NewIdeasPage() {
           </button>
         </div>
 
-        {/* Existing Ideas List */}
+        {/* Existing ideas (INCOMPLETE-SPEC rows) */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Existing Ideas</h2>
@@ -125,11 +133,11 @@ export default async function NewIdeasPage() {
           {ideas.length === 0 ? (
             <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 text-center">
               <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No ideas yet. Click &quot;Submit Idea&quot; above when ready.</p>
+              <p className="text-gray-400">No ideas in progress.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {ideas.map(idea => (
+              {ideas.map((idea) => (
                 <Link
                   key={idea.product_slug}
                   href={`/admin/pipeline/${idea.product_slug}`}
@@ -141,7 +149,7 @@ export default async function NewIdeasPage() {
                         {idea.display_name || idea.product_slug}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {idea.populated_fields}/14 fields populated
+                        {idea.populated_fields}/{SPEC_FIELDS.length} fields populated
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400 group-hover:text-blue-400 transition-colors">
@@ -151,9 +159,9 @@ export default async function NewIdeasPage() {
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-700 rounded-full h-1.5">
-                      <div 
-                        className="bg-blue-500 h-1.5 rounded-full" 
-                        style={{ width: `${(idea.populated_fields / 14) * 100}%` }}
+                      <div
+                        className="bg-blue-500 h-1.5 rounded-full"
+                        style={{ width: `${(idea.populated_fields / SPEC_FIELDS.length) * 100}%` }}
                       />
                     </div>
                   </div>
