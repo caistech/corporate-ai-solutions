@@ -177,14 +177,39 @@ const TEST_CONFIGS: Record<string, {
     runnable: 'auto',
     autoCheck: async (url) => {
       try {
+        const base = url.replace(/\/+$/, '');
         const html = await fetch(url).then(r => r.text());
         const findings = [];
-        const hasShare = html.includes('share') || html.includes('Share') || html.includes('social');
         const hasCTA = html.includes('Get started') || html.includes('Sign up') || html.includes('Try') || html.includes('Start');
         const hasBenefit = html.includes('save') || html.includes('free') || html.includes('benefit') || html.includes('improve');
         if (!hasCTA) findings.push('No clear conversion CTA');
         if (!hasBenefit) findings.push('No clear benefit/offer');
-        if (!hasShare) findings.push('No distribution loop (share/referral)');
+
+        // Distribution loop = "does the output create the next user?" — a share / referral / invite
+        // mechanism. The loop usually lives OFF the homepage (e.g. /api/share mints a token, a public
+        // /share/<token> page is the acquisition path), so grepping the homepage for the word "share"
+        // gives false negatives. Verify the REAL surface deterministically: probe the conventional
+        // loop endpoints (any handled status that isn't 404 means the route exists), OR accept the
+        // loop if it's explicitly surfaced in the homepage copy. (Mirrors the deterministic survey:
+        // check the artifact, not a proxy string.)
+        const probe = async (path: string): Promise<boolean> => {
+          try {
+            const r = await fetch(base + path, { cache: 'no-store' });
+            return r.status !== 404; // 200/400/401/405/3xx → the route handler exists
+          } catch {
+            return false;
+          }
+        };
+        const loopEndpointExists =
+          (await probe('/api/share')) ||
+          (await probe('/api/referral')) ||
+          (await probe('/api/invite'));
+        const homepageSurfacesLoop = /\b(share|refer(?:ral)?|invite|social)\b/i.test(html);
+        const hasLoop = loopEndpointExists || homepageSurfacesLoop;
+        if (!hasLoop) {
+          findings.push('No distribution loop (no share/referral/invite endpoint, and none surfaced on the homepage)');
+        }
+
         return findings.length > 0 ? { status: 'warning', findings } : { status: 'passed', findings: [] };
       } catch (e) {
         return { status: 'failed', findings: [`GTM check failed: ${e}`] };
