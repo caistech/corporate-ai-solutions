@@ -58,44 +58,35 @@ const VERDICT_BANNER: Record<FrontDoorState, { box: string; text: string; label:
 };
 
 const COCKPIT_BASE = 'https://corporate-ai-solutions.vercel.app';
-const GH_OWNER = 'dennissolver';
 
-function CopyBlock({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      setCopied(false);
-    }
-  };
-  return (
-    <div className="mt-3">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">{label}</span>
-        <button onClick={copy} className="text-xs px-2 py-0.5 rounded border border-gray-300 bg-white text-gray-600 hover:text-blue-600 hover:border-blue-400 transition-colors">
-          {copied ? 'Copied ✓' : 'Copy'}
-        </button>
-      </div>
-      <pre className="rounded-md border border-gray-200 bg-white p-3 text-xs text-gray-800 overflow-x-auto whitespace-pre-wrap break-words font-mono">{value}</pre>
-    </div>
-  );
-}
+type SurveyRunResult = {
+  success?: boolean;
+  verdict?: string;
+  result?: {
+    verdict?: string;
+    nextStage?: string;
+    site?: { evidencedCount?: number; total?: number };
+    preHard?: { passed?: boolean };
+    toReach?: unknown;
+  } | null;
+  survey?: {
+    manifest_ok?: boolean;
+    routes_fetched?: number;
+    why_now_present?: boolean;
+    markers?: unknown;
+  } | null;
+};
 
 function SurveyKickoff({ productSlug, productUrl, onStarted }: { productSlug: string; productUrl: string | null; onStarted?: () => void }) {
   const url = productUrl?.trim() || `https://${productSlug}.vercel.app/`;
-  const repo = `${GH_OWNER}/${productSlug}`;
-  const surveyEndpoint = `${COCKPIT_BASE}/api/admin/pipeline/${productSlug}/survey`;
 
   const [running, setRunning] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [result, setResult] = useState<SurveyRunResult | null>(null);
   const [kickError, setKickError] = useState<string | null>(null);
 
   const runSurvey = async () => {
     setRunning(true);
-    setStarted(false);
+    setResult(null);
     setKickError(null);
     try {
       const res = await fetch(`/api/admin/pipeline/${productSlug}/survey/kickoff`, {
@@ -104,58 +95,79 @@ function SurveyKickoff({ productSlug, productUrl, onStarted }: { productSlug: st
         body: JSON.stringify({ url }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data.started) {
-        setStarted(true);
-        onStarted?.();
+      // The survey is now SYNCHRONOUS: a 2xx with success:true carries the verdict in the body AND
+      // has already recorded the gate row server-side. (The old async-CI contract returned
+      // {started:true} and the card polled for a callback — that field no longer exists.)
+      if (res.ok && data.success) {
+        setResult(data as SurveyRunResult);
+        onStarted?.(); // refresh the parent so product.survey_gate / the front-door banner update
       } else {
-        setKickError(data.error || `kickoff failed (${res.status})`);
+        setKickError(data.error || `survey failed (${res.status})`);
       }
     } catch (err) {
-      setKickError(err instanceof Error ? err.message : 'kickoff failed');
+      setKickError(err instanceof Error ? err.message : 'survey failed');
     } finally {
       setRunning(false);
     }
   };
 
-  const prompt =
-`Run naive-tester survey mode against ${productSlug}.
-
-Live URL: ${url}
-Repo: ${repo}
-Skill: product-factory/pipeline-cockpit/skills/naive-tester/SURVEY_MODE.md (cais-shared-services)
-
-For each of the 14 spec fields, record evidenced:true/false with an exact citation
-(a quoted DOM string or a repo path:line) — never guess, never omit. Run PRE-HARD P1-P4.
-Emit survey.json, then POST it (with the prod deployment_id) to:
-${surveyEndpoint}`;
-
-  const curl =
-`# from your cais-shared-services repo root, after survey.json exists:
-COCKPIT_BASE=${COCKPIT_BASE}
-DEP=$(node scripts/gate-check.mjs prod-deployment ${productSlug} | sed -n 's/.*deployment[: ]*\\([a-zA-Z0-9_]*\\).*/\\1/p')
-curl -sS -X POST "$COCKPIT_BASE/api/admin/pipeline/${productSlug}/survey" \\
-  -H 'Content-Type: application/json' \\
-  -d "$(jq --arg d "$DEP" '. + {deployment_id:$d}' survey.json)"`;
+  const hasRun = !!result;
+  const verdict = result?.verdict ?? result?.result?.verdict ?? null;
+  const isRenovation = verdict === 'RENOVATION';
+  const site = result?.result?.site;
+  const evidenced = typeof site?.evidencedCount === 'number' ? site.evidencedCount : null;
+  const total = typeof site?.total === 'number' ? site.total : 14;
+  const preHardPass = result?.result?.preHard?.passed;
+  const survey = result?.survey;
+  const toReach = result?.result?.toReach;
+  const toReachItems = Array.isArray(toReach) ? toReach : [];
 
   return (
     <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <h3 className="text-sm font-semibold text-gray-800">Kick off a survey</h3>
+      <h3 className="text-sm font-semibold text-gray-800">Run the survey</h3>
       <p className="mt-1 text-xs text-gray-600 max-w-2xl">
-        Runs the <code className="text-blue-600">naive-tester</code> survey headless in CI against the
-        live site + repo, then records the verdict here. Takes ~3–4 min — the card refreshes itself when it lands.
+        Deterministic, in-process gate: fetches the live site against the survey manifest, greps the
+        14 spec markers the build plants, and derives the verdict in plain code — no CI, no model.
+        Same input ⇒ same verdict. Runs in ~2s and records the result here.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button onClick={runSurvey} disabled={running} className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm rounded hover:bg-slate-800 disabled:opacity-50">
-          {running ? <><Loader2 className="animate-spin" size={16} /> Starting…</> : <><Search size={16} /> Run survey</>}
+          {running
+            ? <><Loader2 className="animate-spin" size={16} /> Running…</>
+            : <><Search size={16} /> {hasRun ? 'Re-run survey' : 'Run survey'}</>}
         </button>
-        {started && <span className="text-sm text-green-700">Started — running in CI, watching for the verdict…</span>}
-        {kickError && <span className="text-sm text-red-600">Couldn&apos;t start: {kickError}</span>}
+        {kickError && <span className="text-sm text-red-600">Couldn&apos;t run: {kickError}</span>}
       </div>
-      <details className="mt-3">
-        <summary className="text-xs text-gray-500 cursor-pointer hover:text-blue-600">Run it manually instead (copy into Claude Code / OpenCode)</summary>
-        <CopyBlock label="Paste into your agent" value={prompt} />
-        <CopyBlock label="Record verdict (if you POST survey.json yourself)" value={curl} />
-      </details>
+
+      {hasRun && (
+        <div className={`mt-3 rounded-lg border p-3 ${isRenovation ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isRenovation
+              ? <CheckCircle className="text-green-600 shrink-0" size={18} />
+              : <XCircle className="text-red-500 shrink-0" size={18} />}
+            <span className={`text-sm font-semibold uppercase tracking-wider ${isRenovation ? 'text-green-700' : 'text-red-700'}`}>
+              {verdict ?? 'UNKNOWN'}
+            </span>
+            {evidenced !== null && <span className="text-xs text-gray-600">· evidenced {evidenced}/{total}</span>}
+            {typeof preHardPass === 'boolean' && <span className="text-xs text-gray-600">· PRE-HARD {preHardPass ? 'pass' : 'fail'}</span>}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+            <span>manifest {survey?.manifest_ok ? 'ok ✓' : 'missing ✗'}</span>
+            {typeof survey?.routes_fetched === 'number' && <span>routes fetched: {survey.routes_fetched}</span>}
+            <span>why-now {survey?.why_now_present ? 'present ✓' : 'absent ✗'}</span>
+          </div>
+          {!isRenovation && toReachItems.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs font-medium text-gray-700">To reach RENOVATION:</p>
+              <ul className="mt-1 list-disc list-inside text-xs text-gray-600 space-y-0.5">
+                {toReachItems.map((item, i) => (
+                  <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
