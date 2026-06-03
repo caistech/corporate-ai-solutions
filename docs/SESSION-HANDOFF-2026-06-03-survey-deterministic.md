@@ -166,6 +166,20 @@ what's needed to reach RENOVATION — feed it into the card.
    - **DECIDED: keep ONE human gate at the final merge.** Everything else chains automatically; the
      merge (the one near-irreversible step) always waits for a human click, even in "automatic" mode.
 
+**Concrete first tasks (observed on the live RENOVATION card 2026-06-03 — start here):**
+1. **Step 3 copy is stale.** It still reads "Runs the naive-tester survey headless in CI… Takes ~3–4
+   min" and offers "Run it manually (copy into Claude Code / OpenCode)". Both are dead — the survey is
+   now in-process (~2s, no CI, no model). Update the copy to reflect the deterministic in-app survey
+   and remove the manual-OpenCode affordance. (This is principle (c)/(d): the card must tell the truth
+   about what its buttons do.)
+2. **Survey-gate vs validation-score legibility.** The card shows RENOVATION (Step 3) at the top while
+   Step 7 shows "Weighted score 0%, 2 actions needed". Both are CORRECT — they're different gates
+   (Step 3 = does the live build evidence the spec; Steps 5–7 = has the validation pipeline been run +
+   scored ≥80%) — but the card doesn't make the relationship legible, so a human sees "RENOVATION!" and
+   "0%, not ready" and can't tell which governs. Make the two gates' relationship explicit on the card
+   (e.g. "build evidences spec ✓ → now run validation tests to reach outreach readiness"). Not a bug;
+   a clarity gap the UX build-out should close.
+
 ## Open decision carried forward
 - **PR-time presence lint** (offered, not built). `markerProps` guarantees VALUE validity (throws on
   generic/off-enum) but not that the agent CALLED it for all 14. A lazy agent could plant 11 → the
