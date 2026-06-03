@@ -22,7 +22,7 @@ import CategoryEditor from './CategoryEditor';
 import ValidationTestResults from './ValidationTestResults';
 import type { SurveyGateRecord } from '@/components/methodology/SurveyGatePanel';
 import { parseVerdict, type Verdict } from '@/lib/methodology/survey-verdict';
-import { CheckCircle, Send, Loader2, ExternalLink, Play, Wrench, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer } from 'lucide-react';
+import { CheckCircle, Send, Loader2, ExternalLink, Play, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -281,7 +281,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   ]);
 
   const [runningTest, setRunningTest] = useState<string | null>(null);
-  const [fixingTest, setFixingTest] = useState<string | null>(null);
   const didHydrateTests = useRef(false);
 
   useEffect(() => {
@@ -329,35 +328,41 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
   const startPolling = () => setPolling(true);
 
-  useEffect(() => {
-    if (!didHydrateTests.current) return;
-    const all = [...complianceTests, ...validationTests];
+  // Persist the full nine-check set to validation-test (the canonical writer). Called directly when a
+  // test result lands, with the freshly-updated arrays passed in, so it never reads stale state and is
+  // not gated by the hydration flag / 20s auto-refresh (that gate was the persist race — results would
+  // not save while the timestamp moved via run-test). validation-test writes validation_test_results,
+  // validation_test_status, and hard_gates_* — the columns the score actually reads.
+  const persistTests = async (
+    compliance: typeof complianceTests,
+    validation: typeof validationTests,
+  ) => {
+    const all = [...compliance, ...validation];
+    // only persist once at least one check has a real (non-pending/running) status
     if (all.every((t) => t.status === 'pending' || t.status === 'running')) return;
     const tests = all.map((t) => ({ id: t.id, status: t.status, findings: t.findings }));
-    (async () => {
-      try {
-        const res = await fetch(`/api/admin/pipeline/${productId}/validation-test`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tests }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setProduct((prev: any) => prev ? {
-          ...prev,
-          validation: {
-            ...prev.validation,
-            validation_test_results: data.validation_test_results,
-            validation_test_status: data.validation_test_status,
-            hard_gates_passed: data.hard_gates_passed,
-            hard_gates_total: data.hard_gates_total,
-          },
-        } : prev);
-      } catch (err) {
-        console.error('[validation-test persist] error:', err);
-      }
-    })();
-  }, [complianceTests, validationTests, productId]);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productId}/validation-test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tests }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setProduct((prev: any) => prev ? {
+        ...prev,
+        validation: {
+          ...prev.validation,
+          validation_test_results: data.validation_test_results,
+          validation_test_status: data.validation_test_status,
+          hard_gates_passed: data.hard_gates_passed,
+          hard_gates_total: data.hard_gates_total,
+        },
+      } : prev);
+    } catch (err) {
+      console.error('[validation-test persist] error:', err);
+    }
+  };
 
   const handleRefresh = async () => {
     await new Promise(r => setTimeout(r, 500));
@@ -768,23 +773,23 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                           let newStatus: TestStatus = 'passed'; let newFindings: string[] = [];
                           if (data.status === 'manual_required') { newStatus = 'warning'; newFindings = data.instructions ? [data.instructions] : ['Manual review required']; if (data.steps) newFindings = data.steps; }
                           else if (data.findings?.length > 0) { newStatus = data.status === 'warning' ? 'warning' : 'failed'; newFindings = data.findings; }
-                          setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: newStatus, findings: newFindings } : t));
-                        } catch (err) { setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t)); }
+                          setComplianceTests(prev => {
+                            const next = prev.map(t => t.id === test.id ? { ...t, status: newStatus, findings: newFindings } : t);
+                            void persistTests(next, validationTests);
+                            return next;
+                          });
+                        } catch (err) {
+                          setComplianceTests(prev => {
+                            const next = prev.map(t => t.id === test.id ? { ...t, status: 'failed' as TestStatus, findings: ['Test run errored'] } : t);
+                            void persistTests(next, validationTests);
+                            return next;
+                          });
+                        }
                         setRunningTest(null);
                       }} disabled={runningTest === test.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50">
                         {runningTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}Run Test
                       </button>
                     ) : null}
-                    {test.status === 'failed' && (
-                      <button onClick={async () => {
-                        setFixingTest(test.id);
-                        await new Promise(r => setTimeout(r, 2000));
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
-                        setFixingTest(null);
-                      }} disabled={fixingTest === test.id} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50">
-                        {fixingTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}Fix Now
-                      </button>
-                    )}
                   </div>
                 </div>
                 {test.findings && test.findings.length > 0 && (
@@ -828,23 +833,23 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                           let newStatus: TestStatus = 'passed'; let newFindings: string[] = [];
                           if (data.status === 'manual_required') { newStatus = 'warning'; newFindings = data.steps || [data.instructions].filter(Boolean); }
                           else if (data.findings?.length > 0) { newStatus = data.status === 'warning' ? 'warning' : 'failed'; newFindings = data.findings; }
-                          setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: newStatus, findings: newFindings } : t));
-                        } catch (err) { setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'failed' } : t)); }
+                          setValidationTests(prev => {
+                            const next = prev.map(t => t.id === test.id ? { ...t, status: newStatus, findings: newFindings } : t);
+                            void persistTests(complianceTests, next);
+                            return next;
+                          });
+                        } catch (err) {
+                          setValidationTests(prev => {
+                            const next = prev.map(t => t.id === test.id ? { ...t, status: 'failed' as TestStatus, findings: ['Test run errored'] } : t);
+                            void persistTests(complianceTests, next);
+                            return next;
+                          });
+                        }
                         setRunningTest(null);
                       }} disabled={runningTest === 'val-' + test.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50">
                         {runningTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}Run Test
                       </button>
                     ) : null}
-                    {test.status === 'failed' && (
-                      <button onClick={async () => {
-                        setFixingTest('val-' + test.id);
-                        await new Promise(r => setTimeout(r, 2000));
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'passed', findings: [] } : t));
-                        setFixingTest(null);
-                      }} disabled={fixingTest === 'val-' + test.id} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50">
-                        {fixingTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}Fix Now
-                      </button>
-                    )}
                   </div>
                 </div>
                 {test.findings && test.findings.length > 0 && (
