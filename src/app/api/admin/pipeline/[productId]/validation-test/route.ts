@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getAuth } from '@/lib/auth-utils';
+import { upsertReadinessResult } from '@/lib/methodology/readiness-results';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -142,6 +143,26 @@ export async function POST(
         metadata: { results, hard_gates_passed: hardPassed, hard_gates_total: hardTotal, tester_id: auth.user.id },
         created_by: auth.user.id,
       });
+
+      // Tier-1: Persist validation-test results to readiness_results (VT_A*-D*)
+      const vtResults = Object.entries(results)
+      for (const [checkId, result] of vtResults) {
+        const { status, findings } = result as { status: string; findings: string[] }
+        const vtCode = `VT_${checkId}`
+        const statusMap: Record<string, 'pass' | 'fail' | 'na'> = {
+          passed: 'pass',
+          warning: 'pass', // treat warning as pass for now (can refine later)
+          failed: 'fail',
+          not_run: 'na',
+        }
+        await upsertReadinessResult({
+          productSlug: productId,
+          checkCode: vtCode,
+          status: statusMap[status] || 'na',
+          source: 'naive-tester',
+          evidence: findings?.join('; ') || null,
+        })
+      }
 
       return NextResponse.json({
         success: true,

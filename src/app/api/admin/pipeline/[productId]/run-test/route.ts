@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { upsertReadinessResult } from '@/lib/methodology/readiness-results';
 
 const TEST_CONFIGS: Record<string, {
   skill: string;
@@ -299,6 +300,22 @@ export async function POST(
           .eq('product_slug', productSlug);
 
         // Score + hard_gates are NOT written here. Single source of truth: weighted_score_percent <- score.ts via /recalculate-score (Step 7), hard_gates_passed/total + validation_test_status <- /validation-test (the card persist effect). run-test only runs a check and returns its result.
+      }
+
+      // Tier-1: Persist metadata check result to readiness_results (code 7)
+      if (testId === 'metadata') {
+        const statusMap: Record<string, 'pass' | 'fail' | 'na'> = {
+          passed: 'pass',
+          warning: 'pass',
+          failed: 'fail',
+        }
+        await upsertReadinessResult({
+          productSlug,
+          checkCode: '7',
+          status: statusMap[result.status] || 'na',
+          source: 'auto',
+          evidence: result.findings?.join('; ') || null,
+        })
       }
 
       return NextResponse.json({

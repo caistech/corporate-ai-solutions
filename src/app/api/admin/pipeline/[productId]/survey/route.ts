@@ -36,6 +36,7 @@ import { z } from 'zod'
 import { loadCardSurvey, type SurveyEvidence } from '@/lib/methodology/load-card-survey'
 import { recordGate } from '@/lib/methodology/pipeline-gates'
 import { deriveSurveyFromDom } from '@/lib/methodology/survey-markers'
+import { upsertReadinessResult } from '@/lib/methodology/readiness-results'
 
 // Live-state route: never serve a cached DOM/verdict (the recurring "card never updates" class).
 export const dynamic = 'force-dynamic'
@@ -160,6 +161,41 @@ export async function POST(
       artifactRef: r.mvp.url,
       reason: `${r.verdict} → ${r.nextStage} · evidenced ${r.site.evidencedCount}/${r.site.total} · PRE-HARD ${r.preHard.passed ? 'pass' : 'fail'}`,
       result: r,
+    })
+
+    // Tier-1: Persist survey verdicts to readiness_results
+    const deploymentId = parsed.data.deployment_id ?? null
+    
+    // P1: Survey ran (always pass/fail when survey runs)
+    await upsertReadinessResult({
+      productSlug,
+      checkCode: 'P1',
+      status: status, // pass if RENOVATION, fail otherwise
+      source: 'auto',
+      evidence: `evidenced ${r.site.evidencedCount}/${r.site.total}`,
+      deploymentId,
+    })
+
+    // P2: Named distributor archetype (from survey gate)
+    const p2Status = r.preHard.passed ? 'pass' : 'fail'
+    await upsertReadinessResult({
+      productSlug,
+      checkCode: 'P2',
+      status: p2Status,
+      source: 'judge',
+      evidence: r.preHard.passed ? 'Named distributor found' : 'No named distributor archetype',
+      deploymentId,
+    })
+
+    // P3: Gate questions answered (survey ran and produced verdict)
+    const p3Status = r.verdict === 'RENOVATION' ? 'pass' : 'fail'
+    await upsertReadinessResult({
+      productSlug,
+      checkCode: 'P3',
+      status: p3Status,
+      source: 'judge',
+      evidence: `Survey verdict: ${r.verdict}`,
+      deploymentId,
     })
 
     console.log('[SURVEY] ========== END ==========')
