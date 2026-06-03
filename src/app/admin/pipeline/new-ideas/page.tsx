@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Plus, ArrowRight, Package, Lightbulb } from 'lucide-react'
+import { ArrowRight, Package } from 'lucide-react'
+import OnboardingCoach from '@/components/admin/OnboardingCoach'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -94,32 +95,8 @@ export default async function NewIdeasPage() {
           </p>
         </div>
 
-        {/* Onboarding shell — coach skill + write path pending (spec settled) */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8 border border-gray-700">
-          <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="w-5 h-5 text-yellow-400" />
-            <h2 className="text-lg font-semibold">Start a New Idea</h2>
-          </div>
-
-          <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 mb-4">
-            <p className="text-yellow-200 text-sm">
-              <strong>Pending build:</strong> the conversational coach (7-node walk) and the
-              admission write path.
-            </p>
-            <p className="text-yellow-300/70 text-xs mt-2">
-              Spec is settled (ONBOARDING_NEW_IDEAS_BUILD_BRIEF) — chain backbone, node→field
-              mapping, distributor dependency, robustness bars. This panel becomes the coach UI.
-            </p>
-          </div>
-
-          <button
-            disabled
-            className="px-4 py-2 bg-gray-600 text-gray-300 rounded-lg font-medium cursor-not-allowed opacity-50"
-          >
-            <Plus className="w-4 h-4 inline mr-2" />
-            Submit Idea (coming soon)
-          </button>
-        </div>
+        {/* The conversational coach (create → converse → admit) */}
+        <OnboardingCoach />
 
         {/* Existing ideas (INCOMPLETE-SPEC rows) */}
         <div>

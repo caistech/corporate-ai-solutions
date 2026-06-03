@@ -1,169 +1,106 @@
 /**
  * POST /api/admin/pipeline/new-ideas
- * 
- * Conversational onboarding - the "facilitative coach" LLM that conducts
- * office-hours Q&A with the ideator.
- * 
- * Two layers:
- * - Layer A: Feasibility discovery (hard gate: proof_of_demand required)
- * - Layer B: Spec elicitation (14 fields to robustness bars)
+ *
+ * The conversational onboarding coach. Runs the 7-node ideation walk using the
+ * shared coach SKILL as the system prompt. Conversation ONLY — it does not write to
+ * the DB. When the walk is complete it emits an admit-ready payload (resolved 14
+ * graded fields + feasibility) which the client hands to POST …/new-ideas/admit.
+ *
+ * Persona/structure live in the coach SKILL (cais-shared-services), NOT inline here,
+ * so this route and the skill can't drift. Field names + enums match the verified
+ * product_validation_status schema (2026-06-04).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const MODEL = 'claude-sonnet-4-20250514'
 
-const DEMAND_TIER_ORDER = ['intuition', 'anecdote', 'article', 'search', 'waitlist']
+// Matches the live CHECK constraint feasibility_demand_tier_valid.
+const DEMAND_TIERS = ['intuition', 'anecdote', 'article', 'data', 'traction'] as const
+const BENEFIT_MODES = ['paid', 'value-add'] as const
+
+// The 14 graded fields the coach resolves (exact column names).
+const GRADED_FIELDS = [
+  'promise', 'distributor', 'end_user', 'friction', 'distributor_outcomes',
+  'end_user_outcomes', 'core_mechanism', 'icp_geography', 'icp_partner_type',
+  'icp_buyer_title', 'icp_verticals', 'icp_company_size', 'icp_stage', 'exclusions',
+] as const
+
+type GradedField = (typeof GRADED_FIELDS)[number]
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-interface ConversationState {
-  layer: 'A' | 'B' | 'complete'
-  productName?: string
-  feasibility?: {
+interface AdmitPayload {
+  fields: Partial<Record<GradedField, string>>
+  feasibility: {
     proof_of_demand?: string
     demand_tier?: string
     why_now?: string
     status_quo?: string
     product_type?: string
+    distributor_benefit_mode?: string
   }
-  specFields?: Record<string, string>
-  fieldsBelowBar?: string[]
 }
 
-const SPEC_FIELD_ROBUSTNESS_BARS: Record<string, string> = {
-  promise_statement: 'One specific, falsifiable outcome — not a category ("AI tool"). Names the change for the user.',
-  pain_point: 'A concrete situation a real person hits, not "it\'s hard".',
-  core_mechanism: 'How it works in one line — the mechanism, not the benefit.',
-  target_market: 'A named market, not "global".',
-  icp_partner_type: 'A specific named archetype (e.g. "buyers\' agent firm") — reject generic ("reseller", "users").',
-  icp_buyer_title: 'A real decision-maker title, not "the team".',
-  icp_verticals: 'Named verticals, not "any industry".',
-  icp_company_size: 'A band, not "all sizes".',
-  icp_stage: 'On the allowed enum (e.g. "operating business") — reject off-enum.',
-  exclusions: 'Who this is explicitly NOT for — must be non-empty.',
-  distributor_model: 'A single coherent distributor archetype, not a multi-audience list.',
-  distributor_outcomes: 'What the distributor gains — concrete.',
-  end_user: 'A single named end-user, not a category.',
-  end_user_outcomes: 'The outcome for the end user — concrete.',
+interface ConversationState {
+  layer: 'A' | 'B' | 'complete'
+  productName?: string
+  payload?: AdmitPayload
 }
 
-function buildSystemPrompt(state: ConversationState): string {
-  if (state.layer === 'A') {
-    return `You are a facilitative coach conducting an exploratory conversation about a new product idea.
+// Load the coach SKILL as the system prompt. Single source of truth for the 7-node
+// walk, distributor dependency enforcement, robustness bars, and the write contract.
+// Path: the skill ships in cais-shared-services and is vendored/synced into the app
+// (adjust SKILL_PATH to wherever the sync drops it in this repo).
+const SKILL_PATH =
+  process.env.ONBOARDING_COACH_SKILL_PATH ||
+  join(process.cwd(), 'src', 'skills', 'onboarding-coach', 'SKILL.md')
 
-Your role is NOT to judge or reject — it's to DRAW OUT the strongest, most robust rationale from the ideator through Socratic probing. You listen, reflect back what you heard, and push back where the rationale is thin.
-
-Core principles:
-- Be conversational, warm, curious — not interrogative or coercive
-- When something feels thin, probe: "What makes you confident of that?" or "What would have to be true for this to work?"
-- Never lead to a preset answer or shame weak answers
-- The goal is substance, not speed — take your time with each topic
-
-Topics to explore (Layer A - Feasibility Discovery):
-
-1. **Proof of demand** — "What makes you believe anyone wants this?"
-   - Explore, don't just accept. Ask for evidence.
-   - Gently test any claimed tier: "you mentioned data — which source?"
-   - Acceptable tiers (capture the honest one, not aspirational):
-     * intuition (just a gut feeling)
-     * anecdote (someone said they wanted it)
-     * article (read about the problem)
-     * search/competitor-data (researched the market)
-     * waitlist (people have signed up or paid)
-   - If they have NO evidence at all, that's OK — just capture it honestly. You won't block them, but you must be honest about the tier.
-
-2. **Why now** — "Why is this the right time to build this?"
-
-3. **Status quo** — "What do people do today instead of this?"
-
-4. **Product type** — "What kind of product is this?" (SaaS / custom / internal / infra / white-label)
-
-Start by asking them to describe their idea in their own words. Then explore each topic naturally through conversation.`
+let cachedSkill: string | null = null
+function loadCoachSkill(): string {
+  if (cachedSkill) return cachedSkill
+  try {
+    cachedSkill = readFileSync(SKILL_PATH, 'utf8')
+  } catch (e) {
+    console.error('[onboarding] coach SKILL not found at', SKILL_PATH, e)
+    // Fail loud rather than silently running a different persona than the canon.
+    throw new Error('coach SKILL missing')
   }
-
-  if (state.layer === 'B') {
-    const fieldsBelowBar = state.fieldsBelowBar || Object.keys(SPEC_FIELD_ROBUSTNESS_BARS)
-    const fieldsToPrompt = fieldsBelowBar.slice(0, 3).join(', ')
-    
-    return `You are a facilitative coach helping an ideator flesh out their product specification.
-
-The ideator has completed Layer A (feasibility discovery). Now you're moving to Layer B - eliciting the 14 specification fields.
-
-Current feasibility context:
-- Proof of demand: ${state.feasibility?.proof_of_demand || 'not captured'}
-- Demand tier: ${state.feasibility?.demand_tier || 'not captured'}
-- Why now: ${state.feasibility?.why_now || 'not captured'}
-- Status quo: ${state.feasibility?.status_quo || 'not captured'}
-- Product type: ${state.feasibility?.product_type || 'not captured'}
-
-Fields still below robustness bar: ${fieldsToPrompt}
-
-For each field, you must probe until the answer meets its robustness bar:
-
-${Object.entries(SPEC_FIELD_ROBUSTNESS_BARS).map(([field, bar]) => `**${field}**: ${bar}`).join('\n')}
-
-Instructions:
-1. Ask about ONE field at a time
-2. If their answer is generic or vague, push back: "Can you be more specific?" "What does that actually look like?"
-3. Propose a specific value based on what they said, then ask them to confirm or refine
-4. Move to the next field only after this one is solid
-
-Remember: you want answers that will PASS THE SURVEY. Generic answers will fail. Push for specificity.`
-  }
-
-  return `You are a facilitative coach. The onboarding conversation is complete.`
+  return cachedSkill
 }
 
-function validateFieldRobustness(field: string, value: string): boolean {
-  const bar = SPEC_FIELD_ROBUSTNESS_BARS[field]
-  if (!bar) return true
-
-  const lowerValue = value.toLowerCase()
-  const lowerBar = bar.toLowerCase()
-
-  if (field === 'target_market') {
-    const genericTerms = ['global', 'worldwide', 'everywhere', 'all markets', 'any market']
-    return !genericTerms.some(t => lowerValue.includes(t))
+// The coach is instructed (in the SKILL) to emit, when the walk is done, a fenced
+// block:  ```admit { ...AdmitPayload json... } ```  — we parse that out if present.
+function extractAdmitPayload(text: string): AdmitPayload | null {
+  const m = text.match(/```admit\s*([\s\S]*?)```/)
+  if (!m) return null
+  try {
+    const parsed = JSON.parse(m[1].trim()) as AdmitPayload
+    return parsed
+  } catch (e) {
+    console.error('[onboarding] admit block present but unparseable', e)
+    return null
   }
-
-  if (field === 'icp_partner_type') {
-    const genericTerms = ['reseller', 'users', 'businesses', 'companies', 'customers', 'partners']
-    return !genericTerms.some(t => lowerValue === t || lowerValue.includes(t + 's') && !lowerValue.includes('firm'))
-  }
-
-  if (field === 'icp_company_size') {
-    const genericTerms = ['all', 'any', 'every', 'unlimited']
-    return !genericTerms.some(t => lowerValue.includes(t))
-  }
-
-  if (field === 'exclusions') {
-    return value.trim().length > 10
-  }
-
-  if (field.includes('outcomes') || field.includes('point') || field.includes('mechanism')) {
-    return value.trim().length > 20
-  }
-
-  return value.trim().length > 5
 }
 
-function extractFeasibilityFromMessages(messages: Message[], state: ConversationState): Partial<ConversationState['feasibility']> {
-  const allText = messages.map(m => m.content).join(' ')
-  
-  const extracted: Partial<ConversationState['feasibility']> = {}
-
-  const demandTierMatch = allText.match(/(?:demand[ -]?tier|evidence.*?(?:intuition|anecdote|article|search|waitlist))/i)
-  if (demandTierMatch) {
-    const tier = DEMAND_TIER_ORDER.find(t => demandTierMatch[0].toLowerCase().includes(t))
-    if (tier) extracted.demand_tier = tier
-  }
-
-  return extracted
+// Light, non-authoritative validation so the client can show progress. The real
+// gate is /admit (which re-validates against the schema + CHECK constraints).
+function summariseReadiness(p: AdmitPayload | null) {
+  if (!p) return { complete: false, fieldsBelowBar: [...GRADED_FIELDS] }
+  const present = (v: unknown) => v !== null && v !== undefined && String(v).trim() !== ''
+  const fieldsBelowBar = GRADED_FIELDS.filter((f) => !present(p.fields?.[f]))
+  const f = p.feasibility || {}
+  const feasibilityOk =
+    present(f.proof_of_demand) &&
+    DEMAND_TIERS.includes(f.demand_tier as (typeof DEMAND_TIERS)[number]) &&
+    BENEFIT_MODES.includes(f.distributor_benefit_mode as (typeof BENEFIT_MODES)[number])
+  return { complete: fieldsBelowBar.length === 0 && feasibilityOk, fieldsBelowBar }
 }
 
 export async function POST(request: NextRequest) {
@@ -178,16 +115,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing messages or state' }, { status: 400 })
     }
 
-    const systemPrompt = buildSystemPrompt(clientState)
-
-    const anthropicMessages = [
-      { role: 'user', content: systemPrompt },
-      ...messages.map(m => ({ role: m.role, content: m.content }))
-    ]
-
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
+    }
+
+    let systemPrompt: string
+    try {
+      systemPrompt = loadCoachSkill()
+    } catch {
+      return NextResponse.json({ error: 'coach skill unavailable' }, { status: 500 })
     }
 
     const response = await fetch(ANTHROPIC_API_URL, {
@@ -195,13 +132,14 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1024,
-        messages: anthropicMessages
-      })
+        system: systemPrompt, // <-- top-level system param, NOT a user turn
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      }),
     })
 
     if (!response.ok) {
@@ -211,40 +149,26 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await response.json()
-    const assistantMessage = result.content?.[0]?.text
-
+    const assistantMessage: string | undefined = result.content?.[0]?.text
     if (!assistantMessage) {
       return NextResponse.json({ error: 'No response from LLM' }, { status: 500 })
     }
 
-    const updatedState: ConversationState = { ...clientState }
+    // If the coach emitted a completed payload, surface it for the client to send to /admit.
+    const payload = extractAdmitPayload(assistantMessage)
+    const readiness = summariseReadiness(payload ?? clientState.payload ?? null)
 
-    if (clientState.layer === 'A') {
-      updatedState.feasibility = {
-        ...clientState.feasibility,
-        ...extractFeasibilityFromMessages(messages, clientState)
-      }
-
-      const allText = messages.map(m => m.content).join(' ')
-      if (allText.toLowerCase().includes('proof of demand') || 
-          allText.toLowerCase().includes('evidence') ||
-          allText.toLowerCase().includes('want') ||
-          allText.toLowerCase().includes('need')) {
-        const proofOfDemandMatch = allText.match(/(?:proof of demand|evidence|someone said|i read|i researched|i saw|people asked)/i)
-        if (proofOfDemandMatch) {
-          updatedState.feasibility = {
-            ...updatedState.feasibility,
-            proof_of_demand: proofOfDemandMatch[0]
-          }
-        }
-      }
+    const updatedState: ConversationState = {
+      ...clientState,
+      payload: payload ?? clientState.payload,
+      layer: readiness.complete ? 'complete' : clientState.layer,
     }
 
     return NextResponse.json({
       message: assistantMessage,
-      state: updatedState
+      state: updatedState,
+      readiness, // { complete, fieldsBelowBar } — drives the UI + enables the Admit button
     })
-
   } catch (error) {
     console.error('[onboarding] Error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
