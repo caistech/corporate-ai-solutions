@@ -32,6 +32,8 @@ export default function ProductDetailPage() {
             Pipeline
           </Link>
           <span className="text-gray-400">/</span>
+          <span className="text-gray-700 font-medium">Processing</span>
+          <span className="text-gray-400">/</span>
           <span className="text-gray-700 font-medium">{productId}</span>
         </nav>
 

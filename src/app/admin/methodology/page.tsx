@@ -1,36 +1,63 @@
-'use client';
+import fs from 'fs'
+import path from 'path'
+import ReactMarkdown from 'react-markdown'
 
-/**
- * /admin/methodology page
- * 
- * STUB - Phase 3+ (Not implemented in Phase 2)
- * Phase 2: Use /admin/pipeline instead for factory control
- * Phase 3: Will add public tour + request management
- */
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
-import React from 'react';
-import Link from 'next/link';
+async function getMethodologyDoc() {
+  const docPath = path.join(
+    process.cwd(),
+    '..',
+    'cais-shared-services',
+    'product-factory',
+    'PRODUCT_FACTORY_METHODOLOGY.md'
+  )
+  
+  try {
+    return fs.readFileSync(docPath, 'utf-8')
+  } catch {
+    return null
+  }
+}
 
-export default function MethodologyPage() {
-  return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-8">
+export default async function MethodologyPage() {
+  const content = await getMethodologyDoc()
+
+  if (!content) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold mb-4">Methodology</h1>
-          <p className="text-slate-600 mb-6">
-            Phase 3+ feature (not yet implemented in Phase 2)
+          <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4">
+            <p className="text-red-200">
+              Could not load the methodology document. Please ensure the file exists at:
+              <code className="block mt-2 text-sm">cais-shared-services/product-factory/PRODUCT_FACTORY_METHODOLOGY.md</code>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Methodology</h1>
+          <p className="text-gray-400">
+            Canonical source of truth for the product validation factory
           </p>
-          <p className="text-slate-600 mb-6">
-            For now, access the factory control center at:
+          <p className="text-sm text-gray-500 mt-2">
+            Source: cais-shared-services/product-factory/PRODUCT_FACTORY_METHODOLOGY.md
           </p>
-          <Link
-            href="/admin/pipeline"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-          >
-            → Go to Pipeline Dashboard
-          </Link>
+        </div>
+
+        <div className="prose prose-invert prose-sm max-w-none">
+          <ReactMarkdown>{content}</ReactMarkdown>
         </div>
       </div>
     </div>
-  );
+  )
 }

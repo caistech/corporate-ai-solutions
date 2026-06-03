@@ -14,6 +14,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import PipelineTable from '@/components/admin/PipelineTable';
 import PipelineSummary from '@/components/admin/PipelineSummary';
 import { supabase } from '@/lib/supabase';
@@ -123,12 +125,21 @@ export default function PipelineDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-         {/* Header */}
-         <div className="mb-8">
-           <h1 className="text-3xl font-bold mb-2">Portfolio Validation Pipeline</h1>
-           <p className="text-slate-600 mb-2">Which products can run outreach RIGHT NOW? What work is needed for each?</p>
-           <p className="text-slate-600">The validation pipeline decides what to build next and ensures each product has market demand before investing in scale.</p>
-         </div>
+          {/* Header */}
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Portfolio Validation Pipeline</h1>
+              <p className="text-slate-600 mb-2">Which products can run outreach RIGHT NOW? What work is needed for each?</p>
+              <p className="text-slate-600">The validation pipeline decides what to build next and ensures each product has market demand before investing in scale.</p>
+            </div>
+            <Link
+              href="/admin/pipeline/new-ideas"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              New Product
+            </Link>
+          </div>
 
          {/* Summary Stats */}
         <PipelineSummary summary={data.summary} />
