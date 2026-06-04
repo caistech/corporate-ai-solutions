@@ -1,0 +1,7 @@
+[
+  {
+    "code": "38",
+    "status": "pass",
+    "evidence": "advisory: 001_initial_schema.sql: 17 CREATE POLICY but only 0 DROP POLICY IF EXISTS (guard each) (advisory) | 001_initial_schema.sql: unguarded INDEX idx_leads_email, INDEX idx_leads_source, INDEX idx_leads_status, INDEX idx_voice_session... (advisory) | 20260328_client_reviews.sql: 3 CREATE POLICY but only 0 DROP POLICY IF EXISTS (guard each) (advisory) | 20260328_client_reviews.sql: unguarded TABLE client_reviews, INDEX idx_reviews_status, INDEX idx_reviews_published, INDEX idx_reviews_featured... (advisory) | 2026052813454003_20260528_validation_events.sql: 2 CREATE POLICY but only 0 DROP POLICY IF EXISTS (guard each) (advisory) | 20260532000000_icp_geography.sql: malformed date in filename (advisory)"
+  }
+]

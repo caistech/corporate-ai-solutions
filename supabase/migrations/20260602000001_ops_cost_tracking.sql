@@ -39,8 +39,8 @@ create table if not exists public.cost_entries (
 );
 
 -- Indexes
-create index cost_entries_date on public.cost_entries (entry_date desc);
-create index cost_entries_source on public.cost_entries (source_id, entry_date);
+create index if not exists cost_entries_date on public.cost_entries (entry_date desc);
+create index if not exists cost_entries_source on public.cost_entries (source_id, entry_date);
 
 -- View: Monthly by provider
 create or replace view public.v_monthly_by_provider as

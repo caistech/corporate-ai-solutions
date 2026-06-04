@@ -9,11 +9,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { upsertReadinessResult } from '@/lib/methodology/readiness-results';
 
+// Split B — run-test (auto) owns the og:image presence check as its OWN readiness code.
+// The <title>-is-product-name check (code 7) is owned by naive-tester; run-test no longer writes 7.
+// ⚠ Set this to a FREE code from readiness_criteria (verify before deploy). Tentatively '8'.
+const OG_IMAGE_CODE = '8';
+
 const TEST_CONFIGS: Record<string, {
   skill: string;
   description: string;
   runnable: 'auto' | 'manual';
-  autoCheck?: (url: string) => Promise<{ status: string; findings: string[] }>;
+  autoCheck?: (url: string) => Promise<{
+    status: string;
+    findings: string[];
+    // Numeric readiness codes this check OWNS and writes (auto source). Generic so other
+    // auto checks can emit their own codes later without another special-case in the handler.
+    readiness?: { code: string; status: 'pass' | 'fail' | 'na' }[];
+  }>;
 }> = {
   auth: {
     skill: 'naive-tester',
@@ -70,13 +81,23 @@ const TEST_CONFIGS: Record<string, {
         const hasTitle = html.includes('<title>') || html.includes('<title ');
         const hasOgImage = html.includes('og:image') || html.includes('property="og:image"');
         const findings = [];
+        // <title> presence still reported as a finding (UI signal), but run-test does NOT write
+        // a readiness verdict for the title — code 7 (title = product name) is naive-tester's.
         if (!hasTitle) findings.push('Missing <title> tag');
         if (!hasOgImage) findings.push('Missing OG image meta tag');
+        // Split B: run-test owns og:image as its own readiness code.
+        const readiness: { code: string; status: 'pass' | 'fail' | 'na' }[] = [
+          { code: OG_IMAGE_CODE, status: hasOgImage ? 'pass' : 'fail' },
+        ];
         return findings.length > 0
-          ? { status: 'failed', findings }
-          : { status: 'passed', findings: [] };
+          ? { status: 'failed', findings, readiness }
+          : { status: 'passed', findings: [], readiness };
       } catch (e) {
-        return { status: 'failed', findings: [`Could not fetch page: ${e}`] };
+        return {
+          status: 'failed',
+          findings: [`Could not fetch page: ${e}`],
+          readiness: [{ code: OG_IMAGE_CODE, status: 'fail' }],
+        };
       }
     }
   },
@@ -302,20 +323,19 @@ export async function POST(
         // Score + hard_gates are NOT written here. Single source of truth: weighted_score_percent <- score.ts via /recalculate-score (Step 7), hard_gates_passed/total + validation_test_status <- /validation-test (the card persist effect). run-test only runs a check and returns its result.
       }
 
-      // Tier-1: Persist metadata check result to readiness_results (code 7)
-      if (testId === 'metadata') {
-        const statusMap: Record<string, 'pass' | 'fail' | 'na'> = {
-          passed: 'pass',
-          warning: 'pass',
-          failed: 'fail',
+      // Split B: persist any readiness codes this check OWNS (auto source). metadata emits the
+      // og:image code; <title> correctness (code 7) is recorded by naive-tester, not here.
+      // (Replaces the old testId === 'metadata' → code '7' special-case.)
+      if (Array.isArray(result.readiness)) {
+        for (const r of result.readiness) {
+          await upsertReadinessResult({
+            productSlug,
+            checkCode: r.code,
+            status: r.status,
+            source: 'auto',
+            evidence: result.findings?.join('; ') || null,
+          });
         }
-        await upsertReadinessResult({
-          productSlug,
-          checkCode: '7',
-          status: statusMap[result.status] || 'na',
-          source: 'auto',
-          evidence: result.findings?.join('; ') || null,
-        })
       }
 
       return NextResponse.json({

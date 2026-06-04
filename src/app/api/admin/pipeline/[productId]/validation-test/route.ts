@@ -35,8 +35,29 @@ interface ValidationTestRequest {
 // roll the 5 compliance checks into hard_gates_passed/total (the score's compliance slice), and
 // compute the composite validation_test_status (the outreach gate + the score's validation slice).
 type RawStatus = string;
-interface CheckResult { id: string; status: RawStatus; findings?: string[] }
+
+// #2 — a check may carry canonical[] sub-results that map to numeric HARD codes
+// (2 responsive, 22–25 auth flows, …). The tester emits them when it has the per-flow detail;
+// the route persists each as a real readiness_result. No canonical[] ⇒ nothing written for that
+// check's HARD codes — an unwired code stays unearned and the HARD gate honestly can't pass.
+interface CanonicalSubResult {
+  code: string; // canonical readiness_criteria code, e.g. '2', '22', '23', '24', '25'
+  status: 'passed' | 'warning' | 'failed' | 'not_run';
+  evidence?: string | null;
+}
+interface CheckResult { id: string; status: RawStatus; findings?: string[]; canonical?: CanonicalSubResult[] }
+
 const COMPLIANCE_IDS = new Set(['auth', 'branding', 'metadata', 'security', 'privacy']);
+
+// #1 — gate-bearing verdict mapping (single source for both the VT_* loop and the canonical
+// numeric-code loop). A `warning` is a REAL non-fatal finding and must NOT count as a green on a
+// gate-bearing check. This was `warning: 'pass'` ("for now"), which inflated the weighted 80%.
+const READINESS_STATUS: Record<string, 'pass' | 'fail' | 'na'> = {
+  passed: 'pass',
+  warning: 'fail', // was 'pass' — the integrity leak
+  failed: 'fail',
+  not_run: 'na',
+};
 
 function normStatus(s: RawStatus): 'passed' | 'warning' | 'failed' | 'not_run' {
   return s === 'passed' || s === 'warning' || s === 'failed' ? s : 'not_run';
@@ -144,24 +165,33 @@ export async function POST(
         created_by: auth.user.id,
       });
 
-      // Tier-1: Persist validation-test results to readiness_results (VT_A*-D*)
+      // Tier-1: Persist validation-test results to readiness_results (VT_*)
       const vtResults = Object.entries(results)
       for (const [checkId, result] of vtResults) {
         const { status, findings } = result as { status: string; findings: string[] }
         const vtCode = `VT_${checkId}`
-        const statusMap: Record<string, 'pass' | 'fail' | 'na'> = {
-          passed: 'pass',
-          warning: 'pass', // treat warning as pass for now (can refine later)
-          failed: 'fail',
-          not_run: 'na',
-        }
         await upsertReadinessResult({
           productSlug: productId,
           checkCode: vtCode,
-          status: statusMap[status] || 'na',
+          status: READINESS_STATUS[status] ?? 'na', // #1 — warning now fails closed
           source: 'naive-tester',
           evidence: findings?.join('; ') || null,
         })
+      }
+
+      // #2 — Tier-2 HARD codes (2 responsive, 22–25 auth flows, …) when the tester emits them.
+      // Each canonical sub-result is written as a real numeric readiness_result. No fake passes:
+      // a check with no canonical[] writes nothing here, so its HARD code stays unearned.
+      for (const c of checks) {
+        for (const sub of c.canonical ?? []) {
+          await upsertReadinessResult({
+            productSlug: productId,
+            checkCode: sub.code,
+            status: READINESS_STATUS[normStatus(sub.status)] ?? 'na', // same warning→fail mapping
+            source: 'naive-tester',
+            evidence: sub.evidence ?? (c.findings?.join('; ') || null),
+          })
+        }
       }
 
       return NextResponse.json({
