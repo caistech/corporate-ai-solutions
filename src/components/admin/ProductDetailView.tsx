@@ -13,9 +13,13 @@
  * product.survey_gate and product.design_build).
  *
  * Step 5/6 test state is derived from CANONICAL readiness_results (product.readiness_results),
- * NOT from the validation_test_status mirror cell or optimistic client state. A test shows
- * "passed" only when its VT_<id> code has a passing readiness_results row — so the cockpit can
- * never display "All tests passed!" over an empty/partial canonical table (see validation-test-state.ts).
+ * NOT from the validation_test_status mirror cell or optimistic client state.
+ *
+ * SCORING (canonical, single source): readiness_score, gaps, action_items and can_run_outreach_now
+ * ALL come from the server (scanPortfolio -> scoreCard via the GET route). This component holds NO
+ * local scorer — edits (spec fields, commitment) are reflected optimistically then re-fetched, so
+ * the canonical server score is always authoritative. The old mirror-based calculateGaps /
+ * calculateLocalReadinessScore were removed (they could disagree with the gate — the fake-green).
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -318,8 +322,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
         // Hydrate test status from CANONICAL readiness_results — NOT validation_test_results (the
         // mirror cell, which can read 'passed' with nothing behind it). A test is 'passed' only if
-        // its VT_<id> code has a passing row; missing/na → 'pending' (not run). This is the fix that
-        // stops the cockpit showing "All tests passed!" over an empty/partial canonical table.
+        // its mapped code(s) have passing rows; missing/na → 'pending' (not run). This is the fix
+        // that stops the cockpit showing "All tests passed!" over an empty/partial canonical table.
         const latest = latestByCode(data.readiness_results ?? []);
         const storedFindings = (data.validation?.validation_test_results ?? {}) as Record<string, { findings?: string[] }>;
         const applyCanonical = <T extends { id: string; status: TestStatus; findings: string[] }>(t: T): T => ({
@@ -362,10 +366,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
   // Persist the full nine-check set to validation-test (the canonical writer). Called directly when a
   // test result lands, with the freshly-updated arrays passed in, so it never reads stale state and is
-  // not gated by the hydration flag / 20s auto-refresh (that gate was the persist race — results would
-  // not save while the timestamp moved via run-test). validation-test writes validation_test_results,
-  // validation_test_status, hard_gates_*, AND the canonical VT_<id> readiness_results rows the banner
-  // reads. After a successful persist we bump refreshTrigger so the canonical-derived banner updates.
+  // not gated by the hydration flag / 20s auto-refresh. After a successful persist we bump
+  // refreshTrigger so the canonical-derived banner + score update.
   const persistTests = async (
     compliance: typeof complianceTests,
     validation: typeof validationTests,
@@ -392,7 +394,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           hard_gates_total: data.hard_gates_total,
         },
       } : prev);
-      // re-pull canonical readiness_results so the banner reflects the VT_ rows just written
+      // re-pull canonical readiness_results so the banner + canonical score reflect the rows just written
       setRefreshTrigger((n) => n + 1);
     } catch (err) {
       console.error('[validation-test persist] error:', err);
@@ -466,22 +468,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     );
   }
 
-  const calculateGaps = (validation: any) => {
-    const gaps: string[] = [];
-    if (!validation) return gaps;
-    if (!validation.has_promise) gaps.push('Missing product promise');
-    if (!validation.has_distributor) gaps.push('Missing distributor hypothesis');
-    if (!validation.has_end_user) gaps.push('Missing end-user definition');
-    if (!validation.has_friction) gaps.push('Missing friction/pain point');
-    if (!validation.has_methodology_commitment) gaps.push('No founder commitment to validate');
-    if (validation.hard_gates_passed < validation.hard_gates_total) gaps.push(`${validation.hard_gates_total - validation.hard_gates_passed} hard gates not passed`);
-    if ((validation.weighted_score_percent || 0) < 80) gaps.push(`Weighted score ${validation.weighted_score_percent || 0}% (need ≥80%)`);
-    if (!validation.core_mechanism) gaps.push('Missing core mechanism (AI will generate from promise)');
-    if (!validation.customer_outcomes) gaps.push('Missing customer outcomes (AI will generate)');
-    if (!validation.one_pager_url) gaps.push('Missing one-pager URL (required for InvestorPilot)');
-    return gaps;
-  };
-
   const getInvestorPilotFieldsStatus = (validation: any) => {
     const fields = [
       { key: 'has_promise', label: 'Product Promise' },
@@ -495,26 +481,17 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     return fields.map(f => ({ label: f.label, complete: f.key.startsWith('has_') ? validation?.[f.key] : !!validation?.[f.key] }));
   };
 
-  const calculateLocalReadinessScore = (validation: any, gaps: string[]) => {
-    if (!validation) return 0;
-    const fieldsComplete = (validation.has_promise ? 1 : 0) + (validation.has_distributor ? 1 : 0) + (validation.has_end_user ? 1 : 0) + (validation.has_friction ? 1 : 0) + (validation.has_methodology_commitment ? 1 : 0);
-    const fieldsScore = (fieldsComplete / 5) * 40;
-    const deploymentScore = validation.mvp_url ? 20 : 0;
-    const complianceScore = validation.hard_gates_passed && validation.hard_gates_total ? (validation.hard_gates_passed / validation.hard_gates_total) * 20 : 0;
-    const validationScore = validation.validation_test_status === 'passed' ? 20 : 0;
-    return Math.round(fieldsScore + deploymentScore + complianceScore + validationScore);
-  };
-
   const validationFieldsComplete = product.validation?.promise && product.validation?.distributor && product.validation?.end_user && product.validation?.friction;
 
   // ── Step 5/6 pass/fail is derived from CANONICAL readiness_results, not from the test arrays'
   // optimistic state or the validation_test_status mirror cell. The banner cannot show green unless
-  // every test's VT_<id> code has a passing readiness_results row (see validation-test-state.ts).
+  // every test's mapped code(s) have passing readiness_results rows (see validation-test-state.ts).
   const canonicalLatest = latestByCode(product.readiness_results ?? []);
   const allCompliancePassed = allTestsPassedCanonical(complianceTests.map(t => t.id), canonicalLatest);
   const allValidationPassed = allTestsPassedCanonical(validationTests.map(t => t.id), canonicalLatest);
-  // Outreach unlock is the SERVER gate only (the real weighted score / can_run_outreach_now).
-  // Client-side test state must NEVER unlock outreach — that was the fake-green path.
+  // Outreach unlock is the SERVER (canonical) gate only — can_run_outreach_now is computed by
+  // scanPortfolio via scoreCard (isMvpReady + spec complete + commitment). Client-side test state
+  // must NEVER unlock outreach — that was the fake-green path.
   const isReadyForOutreach = !!product.can_run_outreach_now;
 
   const surveyGate: SurveyGateRecord | null = product.survey_gate ?? null;
@@ -580,8 +557,10 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <br /><strong>When done:</strong> set the URL in Step 2 ↓
         </p>
         <ValidationFieldsEditor product={product} onUpdate={(updatedValidation) => {
-          const newGaps = calculateGaps(updatedValidation);
-          setProduct((prev: any) => ({ ...prev, validation: updatedValidation, gaps: newGaps }));
+          // Reflect the edited fields immediately; refetch so gaps/score/gate are re-derived
+          // canonically by the server (scanPortfolio -> scoreCard). No local mirror calc.
+          setProduct((prev: any) => ({ ...prev, validation: updatedValidation }));
+          setRefreshTrigger((n) => n + 1);
         }} />
       </div>
 
@@ -764,10 +743,11 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 const res = await fetch(`/api/admin/pipeline/${productId}/validation`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ has_methodology_commitment: e.target.checked }) });
                 const data = await res.json();
                 if (res.ok && data.data) {
-                  const newGaps = calculateGaps(data.data);
-                  const newReadinessScore = calculateLocalReadinessScore(data.data, newGaps);
-                  const newCanRunOutreach = newReadinessScore >= 80 && newGaps.length === 0;
-                  setProduct((prev: any) => ({ ...prev, validation: data.data, gaps: newGaps, readiness_score: newReadinessScore, can_run_outreach_now: newCanRunOutreach }));
+                  // Optimistically reflect the checkbox; let the server re-score canonically
+                  // (score / gaps / can_run_outreach_now come from scoreCard via the GET route,
+                  // not a local mirror calc). Refetch to pull the authoritative values.
+                  setProduct((prev: any) => ({ ...prev, validation: data.data }));
+                  setRefreshTrigger((n) => n + 1);
                 }
               } catch (err) { console.error('[CHECKBOX] Error:', err); }
             }} className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" />
