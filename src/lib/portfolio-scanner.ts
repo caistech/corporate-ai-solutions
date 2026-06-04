@@ -105,7 +105,15 @@ export interface EnrichedProduct {
     created_at: string;
     result?: unknown;
   } | null;
-
+// Canonical readiness_results verdicts (newest-first), attached by the GET route so the client
+  // derives Step 5/6 test state from the gate rather than the validation_test_status mirror cell.
+  readiness_results?: {
+    check_code: string;
+    status: string;
+    source?: string;
+    evidence?: string | null;
+    scored_at?: string;
+  }[];
 
 }
 

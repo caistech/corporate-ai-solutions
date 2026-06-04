@@ -101,6 +101,18 @@ export async function GET(
     product.design_build = designBuild ?? null;
     console.log('[GET] design_build:', designBuild ? `${designBuild.status} · ${designBuild.reason}` : 'none');
 
+    // Attach the CANONICAL readiness_results verdicts (newest-first) so the client derives Step 5/6
+    // test state from the GATE, not from the validation_test_status mirror cell. Without this the UI
+    // falls back to optimistic client state — the fake-green source (a green banner over an empty
+    // readiness_results table). The component reads VT_<id> per test via validation-test-state.ts.
+    const { data: readinessRows } = await supabase
+      .from('readiness_results')
+      .select('check_code, status, source, evidence, scored_at')
+      .eq('product_slug', productId)
+      .order('scored_at', { ascending: false });
+    product.readiness_results = readinessRows ?? [];
+    console.log('[GET] readiness_results:', readinessRows?.length ?? 0, 'rows');
+
     console.log('[GET] Returning product with validation:', {
       has_validation: !!product.validation,
       commitment: product.validation?.has_methodology_commitment,
