@@ -4,6 +4,17 @@
  * Reads portfolio-manifest.yaml and enriches with real-time validation state from Supabase.
  * Answers: "Which products can run outreach RIGHT NOW?" and "What gaps exist?"
  *
+ * SCORING (2b — canonical): readiness_score, can_run_outreach_now, gaps and action_items are
+ * derived from the canonical Gate-1 scorer (score.ts / scoreCard) — the SAME scorer the /score
+ * route and the methodology card page use — NOT from the product_validation_status mirror columns.
+ * This is the single source of truth: a product is outreach-ready only when its HARD gate passes
+ * AND it reaches the GO band (isMvpReady), with the spec fields + founder commitment in place.
+ * scanPortfolio does three bulk fetches (criteria once, all readiness_results once, cards once) and
+ * runs the PURE scorer in-memory per product — flat query cost regardless of portfolio size.
+ *
+ * NOTE: lifecycle stage, certificate, and smart-sensors below still read the mirror columns; they
+ * are cosmetic dashboard chrome, not the outreach gate, and are a separate future cleanup.
+ *
  * Used by:
  * - /admin/pipeline dashboard (list + filter all products)
  * - /admin/pipeline/[productId] detail view (show gaps + fix actions)
@@ -14,6 +25,13 @@ import { createClient } from '@supabase/supabase-js';
 import YAML from 'yaml';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  scoreCard,
+  isMvpReady,
+  type Criterion,
+  type CheckVerdict,
+  type ScoreResult,
+} from './methodology/score';
 
 export interface ManifestProduct {
   name: string;
@@ -64,10 +82,12 @@ export interface EnrichedProduct {
   manifest: ManifestProduct;
   validation: ProductValidationStatus | null;
   ideaCard: Record<string, string> | null;  // Idea card from methodology_hypothesis_cards
-  gaps: string[];  // List of missing validation fields
-  readiness_score: number;  // 0-100: how ready for outreach?
-  can_run_outreach_now: boolean;  // GREEN: ready to start outreach
+  gaps: string[];  // List of missing validation fields + canonical readiness gaps
+  readiness_score: number;  // 0-100: weighted progress from the canonical scorer
+  can_run_outreach_now: boolean;  // GREEN: canonical Gate-1 passed (isMvpReady) + spec/commitment complete
   action_items: string[];  // What needs to happen next?
+  // Canonical Gate-1 score breakdown (attached by scanPortfolio; the detail view + GET route reuse it).
+  score?: ScoreResult;
   // NEW: 7-Stage House-Building Lifecycle
   current_stage: number;  // 1-7 or 0 if not started
   stage_name: string;
@@ -105,7 +125,7 @@ export interface EnrichedProduct {
     created_at: string;
     result?: unknown;
   } | null;
-// Canonical readiness_results verdicts (newest-first), attached by the GET route so the client
+  // Canonical readiness_results verdicts (newest-first), attached by the GET route so the client
   // derives Step 5/6 test state from the gate rather than the validation_test_status mirror cell.
   readiness_results?: {
     check_code: string;
@@ -114,7 +134,6 @@ export interface EnrichedProduct {
     evidence?: string | null;
     scored_at?: string;
   }[];
-
 }
 
 // 7-Stage Lifecycle mapping based on validation state
@@ -319,7 +338,6 @@ async function fetchValidationStatuses(
   const map = new Map<string, ProductValidationStatus>();
   (data || []).forEach((row: any) => {
     if (row.product_slug) {
-      console.log('Storing validation for:', row.product_slug, 'promise:', row.promise);
       map.set(row.product_slug, row as ProductValidationStatus);
     }
   });
@@ -328,138 +346,140 @@ async function fetchValidationStatuses(
 }
 
 /**
- * Identify gaps in a product's validation
+ * Fetch the ratified readiness criteria catalogue — shared across ALL products, fetched ONCE.
  */
-function identifyGaps(validation: ProductValidationStatus | null): string[] {
+async function fetchCriteria(supabase: any): Promise<Criterion[]> {
+  const { data, error } = await supabase
+    .from('readiness_criteria')
+    .select('code, check_label, tier, weight, method, applies_when, notes')
+    .order('sort_order', { ascending: true });
+  if (error) {
+    console.error('Error fetching readiness_criteria:', error);
+    return [];
+  }
+  return (data ?? []) as Criterion[];
+}
+
+/**
+ * Fetch ALL products' readiness verdicts in ONE query, grouped by slug (newest-first per code,
+ * preserved by the scored_at-desc order — scoreCard's latestVerdicts keeps the first seen).
+ */
+async function fetchAllReadinessResults(supabase: any): Promise<Map<string, CheckVerdict[]>> {
+  const { data, error } = await supabase
+    .from('readiness_results')
+    .select('product_slug, check_code, status, source, evidence, scored_at')
+    .order('scored_at', { ascending: false });
+  const map = new Map<string, CheckVerdict[]>();
+  if (error) {
+    console.error('Error fetching readiness_results:', error);
+    return map;
+  }
+  for (const row of data ?? []) {
+    const slug = row.product_slug as string;
+    if (!slug) continue;
+    if (!map.has(slug)) map.set(slug, []);
+    map.get(slug)!.push(row as CheckVerdict);
+  }
+  return map;
+}
+
+/**
+ * Fetch methodology cards once: both the idea card (display) and the declared `features`
+ * (the conditional flags the scorer needs for applies_when applicability).
+ */
+async function fetchCards(supabase: any): Promise<{
+  ideaCards: Map<string, Record<string, string>>;
+  features: Map<string, string[]>;
+}> {
+  const ideaCards = new Map<string, Record<string, string>>();
+  const features = new Map<string, string[]>();
+  const { data, error } = await supabase
+    .from('methodology_hypothesis_cards')
+    .select('product_slug, idea_card, features');
+  if (error) {
+    console.error('Error fetching methodology_hypothesis_cards:', error);
+    return { ideaCards, features };
+  }
+  (data || []).forEach((row: any) => {
+    if (row.idea_card) ideaCards.set(row.product_slug, row.idea_card);
+    features.set(row.product_slug, (row.features as string[] | null) ?? []);
+  });
+  return { ideaCards, features };
+}
+
+/** Try a map by manifest name, then lowercased name (validation rows are keyed either way). */
+function bySlug<T>(map: Map<string, T>, name: string): T | undefined {
+  return map.get(name) ?? map.get(name.toLowerCase());
+}
+
+/** Are the four spec fields all present? (Step-1 completeness — separate from the readiness gate.) */
+function specComplete(v: ProductValidationStatus | null): boolean {
+  return !!v && !!v.has_promise && !!v.has_distributor && !!v.has_end_user && !!v.has_friction;
+}
+
+/**
+ * Identify gaps — spec-field completeness (from validation) UNION the canonical readiness gaps
+ * (from the scorer). The two halves never contradict the score because the readiness half IS the
+ * score's own output (failing HARD checks + the GO shortfall), not a parallel mirror calculation.
+ */
+function identifyGaps(validation: ProductValidationStatus | null, scored: ScoreResult): string[] {
   if (!validation) {
     return ['Not yet added to validation pipeline'];
   }
 
   const gaps: string[] = [];
 
+  // Spec-field gaps (Step 1) — these are NOT readiness-criteria; the scorer doesn't cover them.
   if (!validation.has_promise) gaps.push('Missing product promise');
   if (!validation.has_distributor) gaps.push('Missing distributor hypothesis');
   if (!validation.has_end_user) gaps.push('Missing end-user definition');
   if (!validation.has_friction) gaps.push('Missing friction/pain point');
   if (!validation.has_methodology_commitment) gaps.push('No founder commitment to validate');
-  if (validation.hard_gates_passed < validation.hard_gates_total) {
-    gaps.push(`${validation.hard_gates_total - validation.hard_gates_passed} hard gates not passed`);
-  }
-  if ((validation.weighted_score_percent || 0) < 80) {
-    gaps.push(`Weighted score ${validation.weighted_score_percent || 0}% (need ≥80%)`);
-  }
 
-  // Validation test gaps
-  const testStatus = validation.validation_test_status;
-  if (!testStatus || testStatus === 'not_run') {
-    gaps.push('Validation tests not yet run (naive-tester / voice-auditor / gtm-auditor / QA)');
-  } else if (testStatus === 'failed') {
-    gaps.push('Validation tests failed — review findings');
-  } else if (testStatus === 'warning') {
-    gaps.push('Validation tests passed with warnings');
+  // Canonical readiness gaps — straight from the scorer (cannot disagree with the gate).
+  for (const f of scored.hardGate.failing) {
+    gaps.push(`HARD gate not passed: ${f.label} (${f.status})`);
+  }
+  if (scored.tooMuch.flagged) {
+    for (const c of scored.tooMuch.checks) gaps.push(`TOO-MUCH flag (scale-infra pre-GO): ${c.label}`);
+  }
+  // Weighted shortfall only meaningful once the HARD gate passes (score is null before then).
+  if (scored.gate1Ready && scored.score !== null && scored.band !== 'GO') {
+    gaps.push(`Weighted score ${scored.score}/10 — need GO band (≥6.5)`);
   }
 
   return gaps;
 }
 
-function scoreTestPart(status: string | undefined | null): number {
-  if (status === 'passed') return 5;
-  if (status === 'warning') return 4;
-  return 0;
-}
-
 /**
- * Calculate readiness score (0-100) for outreach.
- * Breakdown:
- * - Hard gates: 30 points
- * - Weighted score: 30 points
- * - Validation fields: 20 points (5 each)
- * - Validation tests: 20 points (5 each for Parts A-D)
- * - Methodology commitment: bonus 10 points (capped at 100)
+ * Generate action items — spec/commitment prerequisites, then the scorer's own toReachGo plan
+ * (failing HARD checks first, then highest-weight unmet weighted checks).
  */
-function calculateReadinessScore(validation: ProductValidationStatus | null, gaps: string[]): number {
-  if (!validation) return 0;
-
-  let score = 0;
-
-  // Hard gates: 30 points
-  score += (validation.hard_gates_passed / validation.hard_gates_total) * 30;
-
-  // Weighted score: 30 points
-  score += ((validation.weighted_score_percent || 0) / 100) * 30;
-
-  // Validation fields: 20 points (5 each)
-  const fieldsPresent =
-    (validation.has_promise ? 5 : 0) +
-    (validation.has_distributor ? 5 : 0) +
-    (validation.has_end_user ? 5 : 0) +
-    (validation.has_friction ? 5 : 0);
-  score += fieldsPresent;
-
-  // Validation tests: 20 points (5 each for Parts A-D)
-  score += scoreTestPart(validation.test_part_a_admin_portal);
-  score += scoreTestPart(validation.test_part_b_user_portal);
-  score += scoreTestPart(validation.test_part_c_auth_flows);
-  score += scoreTestPart(validation.test_part_d_scaffold_verify);
-
-  // Methodology commitment: bonus 10 points (capped at 100)
-  if (validation.has_methodology_commitment) score = Math.min(100, score + 10);
-
-  return Math.round(score);
-}
-
-/**
- * Generate action items (what needs to happen next)
- */
-function generateActionItems(validation: ProductValidationStatus | null, gaps: string[]): string[] {
+function generateActionItems(validation: ProductValidationStatus | null, scored: ScoreResult): string[] {
   if (!validation) {
     return ['Initialize product in validation pipeline'];
   }
 
   const actions: string[] = [];
 
-  // Priority 1: Fill critical gaps
-  if (!validation.has_promise) {
-    actions.push('Define product promise (1-2 sentences)');
-  }
-  if (!validation.has_distributor) {
-    actions.push('Identify distributor / distribution model');
-  }
-  if (!validation.has_end_user) {
-    actions.push('Define end-user persona');
-  }
-  if (!validation.has_friction) {
-    actions.push('Articulate friction / pain point addressed');
-  }
+  // Priority 1: Fill critical spec gaps
+  if (!validation.has_promise) actions.push('Define product promise (1-2 sentences)');
+  if (!validation.has_distributor) actions.push('Identify distributor / distribution model');
+  if (!validation.has_end_user) actions.push('Define end-user persona');
+  if (!validation.has_friction) actions.push('Articulate friction / pain point addressed');
 
   // Priority 2: Get commitment
   if (!validation.has_methodology_commitment) {
     actions.push('Get founder to commit to 4-week validation pipeline');
   }
 
-  // Priority 3: Pass gates
-  if (validation.hard_gates_passed < validation.hard_gates_total) {
-    const remaining = validation.hard_gates_total - validation.hard_gates_passed;
-    actions.push(`Pass ${remaining} remaining hard gate${remaining === 1 ? '' : 's'}`);
+  // Priority 3+: the scorer's path to GO (HARD checks to pass, then weighted lifts).
+  for (const t of scored.toReachGo) {
+    actions.push(`${t.label} — ${t.need}`);
   }
 
-  // Priority 4: Run validation tests
-  const testStatus = validation.validation_test_status;
-  if (!testStatus || testStatus === 'not_run') {
-    actions.push('Run validation tests (naive-tester, voice-auditor, gtm-auditor, QA)');
-  } else if (testStatus === 'failed') {
-    actions.push('Address validation test failures and re-run');
-  } else if (testStatus === 'warning') {
-    actions.push('Address validation test warnings');
-  }
-
-  // Priority 5: Improve score
-  if ((validation.weighted_score_percent || 0) < 80) {
-    actions.push('Improve validation score to ≥80%');
-  }
-
-  // Priority 5: Run outreach
-  if (validation.gate1_ready && !validation.outreach_blocker) {
+  // Ready signal — only when the canonical gate is genuinely GO and the spec is complete.
+  if (isMvpReady(scored) && specComplete(validation)) {
     actions.push('✅ Ready to run outreach');
   }
 
@@ -524,24 +544,7 @@ async function fetchSensors(supabase: any): Promise<Map<string, any>> {
 }
 
 /**
- * Fetch idea cards from methodology_hypothesis_cards table
- */
-async function fetchIdeaCards(supabase: any): Promise<Map<string, Record<string, string>>> {
-  const { data } = await supabase
-    .from('methodology_hypothesis_cards')
-    .select('product_slug, idea_card');
-
-  const map = new Map<string, Record<string, string>>();
-  (data || []).forEach((row: any) => {
-    if (row.idea_card) {
-      map.set(row.product_slug, row.idea_card);
-    }
-  });
-  return map;
-}
-
-/**
- * Scan entire portfolio: Read manifest + enrich with DB state
+ * Scan entire portfolio: Read manifest + enrich with DB state + CANONICAL Gate-1 score.
  */
 export async function scanPortfolio(): Promise<EnrichedProduct[]> {
   const supabase = createClient(
@@ -550,32 +553,65 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
   );
 
   const manifest = readManifest();
-  const validationStatuses = await fetchValidationStatuses(supabase);
-  const lifecycleStages = await fetchLifecycleStages(supabase);
-  const certificates = await fetchCertificates(supabase);
-  const sensors = await fetchSensors(supabase);
-  const ideaCards = await fetchIdeaCards(supabase);
+
+  // Bulk fetches — each runs ONCE for the whole portfolio (flat query cost).
+  const [
+    validationStatuses,
+    lifecycleStages,
+    certificates,
+    sensors,
+    criteria,
+    allResults,
+    { ideaCards, features: featuresMap },
+  ] = await Promise.all([
+    fetchValidationStatuses(supabase),
+    fetchLifecycleStages(supabase),
+    fetchCertificates(supabase),
+    fetchSensors(supabase),
+    fetchCriteria(supabase),
+    fetchAllReadinessResults(supabase),
+    fetchCards(supabase),
+  ]);
+
+  if (criteria.length === 0) {
+    console.warn('[portfolio-scanner] readiness_criteria empty — scores will be 0 / gates locked.');
+  }
 
   const enriched: EnrichedProduct[] = manifest.projects.map((product) => {
-    console.log('Looking for:', product.name, 'keys in map:', Array.from(validationStatuses.keys()));
-    const validation = validationStatuses.get(product.name.toLowerCase()) || validationStatuses.get(product.name) || null;
-    console.log('Found validation:', validation?.promise);
-    const ideaCard = ideaCards.get(product.name) || null;
-    const gaps = identifyGaps(validation);
-    const readiness_score = calculateReadinessScore(validation, gaps);
-    const can_run_outreach_now = readiness_score >= 80 && gaps.length === 0;
-    const action_items = generateActionItems(validation, gaps);
+    const slug = product.name;
+    const validation = bySlug(validationStatuses, slug) ?? null;
+    const ideaCard = bySlug(ideaCards, slug) ?? null;
 
-    // Check new tables first, fall back to calculated values
-    const dbStage = lifecycleStages.get(product.name);
+    // CANONICAL score — pure function, no I/O. Same scorer as the /score route + card page.
+    const scored: ScoreResult = scoreCard({
+      features: bySlug(featuresMap, slug) ?? [],
+      criteria,
+      verdicts: bySlug(allResults, slug) ?? [],
+    });
+
+    // Header % = weighted progress (available even pre-gate, from the scorer's own numbers).
+    const readiness_score = scored.weighted.possible > 0
+      ? Math.round((scored.weighted.earned / scored.weighted.possible) * 100)
+      : 0;
+
+    const gaps = identifyGaps(validation, scored);
+    const action_items = generateActionItems(validation, scored);
+
+    // THE GATE — outreach unlocks only when the canonical HARD gate passes AND the band is GO
+    // (isMvpReady) AND the spec fields + founder commitment are in place. No mirror columns.
+    const can_run_outreach_now =
+      isMvpReady(scored) && specComplete(validation) && !!validation?.has_methodology_commitment;
+
+    // Lifecycle / cert / sensors — cosmetic chrome, still mirror-based (separate future cleanup).
+    const dbStage = bySlug(lifecycleStages, slug);
     const { stage, name } = dbStage
       ? { stage: dbStage.stage, name: dbStage.name }
       : determineStage(validation, readiness_score);
 
-    const dbCert = certificates.get(product.name);
+    const dbCert = bySlug(certificates, slug);
     const certificate_of_occupancy = dbCert || getCertificateStatus(validation);
 
-    const dbSensors = sensors.get(product.name);
+    const dbSensors = bySlug(sensors, slug);
     const smart_sensors = dbSensors || getSmartSensorsStatus(validation);
 
     return {
@@ -586,6 +622,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
       readiness_score,
       can_run_outreach_now,
       action_items,
+      score: scored,
       // NEW: 7-Stage House-Building Lifecycle
       current_stage: stage,
       stage_name: name,
