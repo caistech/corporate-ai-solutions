@@ -35,7 +35,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { loadCardSurvey, type SurveyEvidence } from '@/lib/methodology/load-card-survey'
 import { recordGate } from '@/lib/methodology/pipeline-gates'
-import { deriveSurveyFromDom } from '@/lib/methodology/survey-markers'
+import { deriveFieldsFromLiveUrl } from '@/lib/methodology/live-derive'
 import { upsertReadinessResult } from '@/lib/methodology/readiness-results'
 
 // Live-state route: never serve a cached DOM/verdict (the recurring "card never updates" class).
@@ -47,24 +47,6 @@ const BodySchema = z.object({
   url: z.string().url().optional(),
   deployment_id: z.string().nullable().optional(),
 })
-
-/** Bounded fetch — a hung build must not stall the survey. */
-async function fetchText(url: string, ms = 8000): Promise<{ ok: boolean; text: string }> {
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), ms)
-  try {
-    const res = await fetch(url, {
-      cache: 'no-store',
-      signal: ctrl.signal,
-      headers: { 'User-Agent': 'cais-survey/1' },
-    })
-    return { ok: res.ok, text: res.ok ? await res.text() : '' }
-  } catch {
-    return { ok: false, text: '' }
-  } finally {
-    clearTimeout(timer)
-  }
-}
 
 export async function POST(
   request: NextRequest,
@@ -91,38 +73,10 @@ export async function POST(
 
     const base = (parsed.data.url ?? `https://${productSlug}.vercel.app`).replace(/\/+$/, '')
 
-    // 1. Route manifest (build-emitted) — SURVEY_MARKER_CONTRACT §4. Closes the page-coverage hole
-    //    (the old harness hardcoded ["", "/reports", "/pricing"] — missed /partners, fetched a dead
-    //    /pricing anchor). No manifest ⇒ fall back to ["/"] and warn (an under-covered build).
-    let routes: string[] = ['/']
-    let manifestOk = false
-    const manifest = await fetchText(`${base}/survey-manifest.json`)
-    if (manifest.ok) {
-      try {
-        const mj = JSON.parse(manifest.text)
-        if (Array.isArray(mj?.routes) && mj.routes.length) {
-          routes = mj.routes.map(String)
-          manifestOk = true
-        }
-      } catch {
-        /* malformed manifest ⇒ fall back to ['/'] */
-      }
-    }
-    if (!routes.includes('/')) routes.unshift('/')
-    routes = Array.from(new Set(routes))
-
-    // 2. Fetch every route's DOM. P1 = the homepage answered 200.
-    const doms: string[] = []
-    let rootOk = false
-    for (const r of routes) {
-      const path = r.startsWith('/') ? r : `/${r}`
-      const { ok, text } = await fetchText(`${base}${path}`)
-      if (path === '/') rootOk = ok
-      if (ok) doms.push(text)
-    }
-
-    // 3. Grep markers → derive per-field evidence + P1–P4 (no model, no judgement).
-    const derived = deriveSurveyFromDom({ doms, rootOk })
+    // Fetch manifest + DOMs and grep the markers via the ONE shared helper (Rider 3) — the same
+    // path the gate's server-side re-derive and the coach's pre-gate intake use, so they can't
+    // drift on what the build emits. No model, no judgement: same DOM ⇒ same evidence/preHard.
+    const derived = await deriveFieldsFromLiveUrl(base)
 
     // Map into the loader's evidence half (same shape the LLM path produced).
     const evidence: SurveyEvidence['evidence'] = {}
@@ -132,8 +86,8 @@ export async function POST(
 
     console.log(
       '[SURVEY] slug:', productSlug,
-      '· base:', base,
-      '· manifest:', manifestOk ? routes.join(',') : 'NONE (fallback /)',
+      '· base:', derived.base,
+      '· manifest:', derived.manifestOk ? derived.routesFetched.join(',') : 'NONE (fallback /)',
       '· evidenced:', derived.report.filter((r) => r.evidenced).length + '/14',
     )
 
@@ -208,9 +162,9 @@ export async function POST(
         gate_status: status,
         result: r,
         survey: {
-          base,
-          manifest_ok: manifestOk,
-          routes_fetched: routes,
+          base: derived.base,
+          manifest_ok: derived.manifestOk,
+          routes_fetched: derived.routesFetched,
           markers: derived.report, // per-field grep trace — legible, no model
           why_now_present: derived.whyNowPresent,
         },
