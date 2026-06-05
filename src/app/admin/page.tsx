@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutGrid, Workflow, CreditCard, Star, Settings, Plus, ArrowRight, Package } from 'lucide-react'
+import { SURVEY_FIELDS } from '@/lib/methodology/survey'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -12,62 +12,48 @@ interface ProductSummary {
   completed: number
 }
 
+// The 14 graded spec columns — the CANONICAL list (survey.ts), not a stale copy. The old hard-coded
+// list used phantom column names (promise_statement, distributor_model, pain_point, …) that don't
+// exist on the table, so every product scored 0/14 and counted as "Ideas". One source of truth now.
+const SPEC_FIELDS = SURVEY_FIELDS.map((f) => f.field)
+
 async function getProductSummary(): Promise<ProductSummary> {
   const { createClient } = await import('@supabase/supabase-js')
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
   const { data: products } = await supabase
     .from('product_validation_status')
-    .select('*')
+    .select(`product_slug, ${SPEC_FIELDS.join(', ')}`)
+    .returns<Record<string, unknown>[]>()
 
   if (!products || products.length === 0) {
     return { ideas: 0, inProgress: 0, completed: 0 }
   }
 
-  const specFields = [
-    'promise_statement',
-    'distributor_model',
-    'end_user',
-    'pain_point',
-    'competitors',
-    'differentiation',
-    'pricing_model',
-    'go_to_market',
-    'mvp_url',
-    'why_now',
-    'revenue_model',
-    'target_market',
-    'competitive_advantage',
-    'success_metrics'
-  ]
+  // ONE query for every GO-pass gate (was an N+1: a pipeline_gates query per product in a loop).
+  const { data: goGates } = await supabase
+    .from('pipeline_gates')
+    .select('product_slug')
+    .eq('gate', 'GO')
+    .eq('status', 'pass')
+  const goSet = new Set((goGates ?? []).map((g) => g.product_slug as string))
 
   let ideas = 0
   let inProgress = 0
   let completed = 0
 
   for (const product of products) {
-    const populatedFields = specFields.filter(field => 
-      product[field] !== null && product[field] !== ''
-    ).length
+    const populated = SPEC_FIELDS.filter((f) => {
+      const v = product[f]
+      return v !== null && v !== undefined && String(v).trim() !== ''
+    }).length
 
-    const hasGo = await supabase
-      .from('pipeline_gates')
-      .select('id')
-      .eq('product_slug', product.product_slug)
-      .eq('gate', 'GO')
-      .eq('status', 'pass')
-      .maybeSingle()
-
-    if (populatedFields < 14) {
-      ideas++
-    } else if (hasGo) {
-      completed++
-    } else {
-      inProgress++
-    }
+    if (populated < SPEC_FIELDS.length) ideas++
+    else if (goSet.has(product.product_slug as string)) completed++
+    else inProgress++
   }
 
   return { ideas, inProgress, completed }
