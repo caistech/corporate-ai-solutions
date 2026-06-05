@@ -115,6 +115,33 @@ describe('THE GATE — admit (deterministic, atomic membership)', () => {
     expect(json.pinned).toBe(false)
   })
 
+  // Unpinned + identifier-validation together: vercel_project IS present (so all five identifiers
+  // are present → the shared validator runs) but the Vercel resolve fails → unpinned (no marker
+  // gate). The validator is then the only gate on this path.
+  it('unpinned (vercel resolve fails) + full identifiers, validator BLOCKS → 422, ZERO membership', async () => {
+    h.row = fullIdentifierRow() // all five present, incl vercel_project
+    h.resolve = null // resolve fails despite vercel_project → unpinned, marker gate skipped
+    h.identifierBlockers = ['github repo not found (or private without GITHUB_TOKEN): owner/demo']
+    const res = await admitPOST(req({ productSlug: 'demo', fields: fullFields(), feasibility: feas }))
+    const json = await res.json()
+    expect(res.status).toBe(422)
+    expect(json.pinned).toBe(false) // not pinned — the marker gate was skipped
+    expect(json.blockers.join(' ')).toMatch(/github repo not found/)
+    expect(h.calls.rpc).toHaveLength(0) // invariant #1: fail ⇒ no card, no manifest
+    expect(h.calls.update).toHaveLength(0) // not even the spec write
+  })
+
+  it('unpinned (vercel resolve fails) + full identifiers, validator PASSES → admits unpinned', async () => {
+    h.row = fullIdentifierRow()
+    h.resolve = null
+    h.identifierBlockers = [] // validator clean
+    const res = await admitPOST(req({ productSlug: 'demo', fields: fullFields(), feasibility: feas }))
+    const json = await res.json()
+    expect(json.admitted).toBe(true)
+    expect(json.pinned).toBe(false)
+    expect(h.calls.rpc).toHaveLength(1) // membership granted
+  })
+
   it('404 when the idea row does not exist', async () => {
     h.row = null
     const res = await admitPOST(req({ productSlug: 'ghost', fields: fullFields(), feasibility: feas }))
