@@ -24,17 +24,15 @@ export default function ProductDetailPage() {
   const productId = params.productId as string;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-sm">
-          <Link href="/admin/pipeline" className="text-blue-600 hover:text-blue-700">
-            Pipeline
+          <Link href="/admin/pipeline" className="text-blue-400 hover:text-blue-300">
+            Products
           </Link>
-          <span className="text-gray-400">/</span>
-          <span className="text-gray-700 font-medium">Processing</span>
-          <span className="text-gray-400">/</span>
-          <span className="text-gray-700 font-medium">{productId}</span>
+          <span className="text-gray-600">/</span>
+          <span className="text-gray-300 font-medium">{productId}</span>
         </nav>
 
         {/* Detail View */}

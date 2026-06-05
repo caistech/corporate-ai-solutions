@@ -115,8 +115,8 @@ export default async function AdminDashboard() {
                 <LayoutGrid className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Pipeline</h2>
-                <p className="text-blue-200 text-sm">Portfolio validation & management</p>
+                <h2 className="text-xl font-semibold">Products</h2>
+                <p className="text-blue-200 text-sm">Every product from idea to launch</p>
               </div>
             </div>
             <Link
@@ -161,13 +161,13 @@ export default async function AdminDashboard() {
               href="/admin/pipeline"
               className="text-sm text-blue-200 hover:text-white underline"
             >
-              View Pipeline →
+              View all products →
             </Link>
             <Link
               href="/admin/pipeline/new-ideas"
               className="text-sm text-blue-200 hover:text-white underline"
             >
-              View Ideas →
+              Ideas in progress →
             </Link>
           </div>
         </div>

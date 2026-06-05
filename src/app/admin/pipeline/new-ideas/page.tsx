@@ -85,13 +85,14 @@ export default async function NewIdeasPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Link href="/admin/pipeline" className="text-blue-400 hover:text-blue-300 text-sm">
-              ← Back to Pipeline
+              ← Back to Products
             </Link>
           </div>
-          <h1 className="text-3xl font-bold mb-2">New Idea — Onboarding</h1>
+          <h1 className="text-3xl font-bold mb-2">New product</h1>
           <p className="text-gray-400">
-            Walk a new idea through the 7-node ideation chain, derive the 14-field spec, and admit it
-            to the pipeline.
+            Name a product and the coach draws out its full spec — the promise, the distributor, the
+            end user, the friction it removes. Already built? Add its live URL and the coach audits
+            the live build into spec instead of starting from scratch.
           </p>
         </div>
 
@@ -101,9 +102,9 @@ export default async function NewIdeasPage() {
         {/* Existing ideas (INCOMPLETE-SPEC rows) */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Existing Ideas</h2>
+            <h2 className="text-lg font-semibold">Ideas in progress</h2>
             <span className="text-sm text-gray-400">
-              {ideas.length} idea{ideas.length !== 1 ? 's' : ''} waiting
+              {ideas.length} idea{ideas.length !== 1 ? 's' : ''} not yet admitted
             </span>
           </div>
 

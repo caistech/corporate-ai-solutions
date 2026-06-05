@@ -105,63 +105,63 @@ export default function PipelineTable({
   const getStatusBadge = (product: EnrichedProduct) => {
     if (product.validation?.is_paused) {
       return (
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-200">
           ⏸ Paused
         </span>
       );
     }
     if (product.can_run_outreach_now) {
       return (
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-300">
           ✅ Ready
         </span>
       );
     }
     if (product.validation && !product.validation.is_draft) {
       return (
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-300">
           🟡 In Progress
         </span>
       );
     }
     return (
-      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-200">
         ⚪ Draft
       </span>
     );
   };
 
   const getReadinessColor = (score: number) => {
-    if (score >= 80) return 'bg-green-100 text-green-700';
-    if (score >= 50) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-gray-100 text-gray-600';
+    if (score >= 80) return 'bg-green-900/30 text-green-300';
+    if (score >= 50) return 'bg-yellow-900/30 text-yellow-300';
+    return 'bg-gray-700 text-gray-200';
   };
 
   const getTestBadge = (product: EnrichedProduct) => {
     const testStatus = product.validation?.validation_test_status;
     if (!testStatus || testStatus === 'not_run') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-200">
           Not Run
         </span>
       );
     }
     if (testStatus === 'passed') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" title="All validation tests passed">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-300" title="All validation tests passed">
           ✓ Passed
         </span>
       );
     }
     if (testStatus === 'warning') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700" title="Validation tests passed with warnings">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-300" title="Validation tests passed with warnings">
           ⚠ Warnings
         </span>
       );
     }
     return (
-      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Validation tests failed">
+      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-300" title="Validation tests failed">
         ✗ Failed
       </span>
     );
@@ -170,34 +170,34 @@ export default function PipelineTable({
   const getCertificateBadge = (cert: EnrichedProduct['certificate_of_occupancy']) => {
     if (cert.status === 'valid') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" title={`Valid until ${cert.valid_until}`}>
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-300" title={`Valid until ${cert.valid_until}`}>
           🏠 Valid
         </span>
       );
     }
     if (cert.status === 'expired') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Certificate expired">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-300" title="Certificate expired">
           ⏰ Expired
         </span>
       );
     }
     if (cert.status === 'issues_reported') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700" title="Issues reported - human review required">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-300" title="Issues reported - human review required">
           ❌ Issues
         </span>
       );
     }
     if (cert.status === 'pending_review') {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700" title="Pending review">
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-300" title="Pending review">
           ⏳ Pending
         </span>
       );
     }
     return (
-      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500" title="No certificate">
+      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-200" title="No certificate">
         ❌ None
       </span>
     );
@@ -224,40 +224,40 @@ export default function PipelineTable({
 
   if (sorted.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
+      <div className="bg-gray-800 rounded-lg p-12 text-center">
         <p className="text-gray-500">No products found in this filter</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-gray-800 rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-900 border-b border-gray-700">
             <tr>
-              <th className="px-6 py-4 text-left font-semibold text-gray-900">Product</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Stage</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Status</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Tests</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Cert</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Sensors</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Score</th>
-              <th className="px-6 py-4 text-left font-semibold text-gray-900">Gaps</th>
-              <th className="px-6 py-4 text-left font-semibold text-gray-900">Next Step</th>
-              <th className="px-6 py-4 text-center font-semibold text-gray-900">Actions</th>
+              <th className="px-6 py-4 text-left font-semibold text-white">Product</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Stage</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Status</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Tests</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Cert</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Sensors</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Score</th>
+              <th className="px-6 py-4 text-left font-semibold text-white">Gaps</th>
+              <th className="px-6 py-4 text-left font-semibold text-white">Next Step</th>
+              <th className="px-6 py-4 text-center font-semibold text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
             {sorted.map((product) => (
               <tr
                 key={product.manifest.name}
-                className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-700 hover:bg-gray-750 transition-colors"
               >
                 {/* Product Name */}
                 <td className="px-6 py-4">
                   <div>
-                    <p className="font-medium text-gray-900">{product.manifest.name}</p>
+                    <p className="font-medium text-white">{product.manifest.name}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       {product.validation?.display_name || 'Not in pipeline'}
                     </p>
@@ -280,10 +280,10 @@ export default function PipelineTable({
                 {/* Gaps */}
                 <td className="px-6 py-4">
                   {product.gaps.length === 0 ? (
-                    <p className="text-xs text-green-600">✓ No gaps</p>
+                    <p className="text-xs text-green-400">✓ No gaps</p>
                   ) : (
                     <div>
-                      <p className="text-xs font-medium text-gray-600">{product.gaps.length} gap{product.gaps.length !== 1 ? 's' : ''}</p>
+                      <p className="text-xs font-medium text-gray-400">{product.gaps.length} gap{product.gaps.length !== 1 ? 's' : ''}</p>
                       <ul className="text-xs text-gray-500 mt-1 space-y-0.5">
                         {product.gaps.slice(0, 2).map((gap, i) => (
                           <li key={i}>• {gap}</li>
@@ -299,7 +299,7 @@ export default function PipelineTable({
                 {/* Next Step / Action Item */}
                 <td className="px-6 py-4">
                   {product.action_items.length > 0 ? (
-                    <p className="text-xs text-gray-600 line-clamp-2">
+                    <p className="text-xs text-gray-400 line-clamp-2">
                       {product.action_items[0]}
                     </p>
                   ) : (
@@ -311,7 +311,7 @@ export default function PipelineTable({
                 <td className="px-6 py-4 text-center">
                   <Link
                     href={`/admin/pipeline/${product.manifest.name}`}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded text-xs font-medium transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 rounded text-xs font-medium transition-colors"
                   >
                     Details
                     <ChevronRight size={14} />
