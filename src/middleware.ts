@@ -64,30 +64,39 @@ export async function middleware(request: NextRequest) {
   }
 
   const isLogin = pathname === '/pipeline/login'
+  const isAdminLogin = pathname === '/admin/login'
   const isCallback = pathname.startsWith('/pipeline/auth/')
   const isAdminCallback = pathname.startsWith('/admin/pipeline/auth/')
   const isAdmin = pathname.startsWith('/admin')
 
-  // Unauthenticated → login. Covers /admin/* + /pipeline/* (the methodology cockpit
-  // fires real outreach + API cost, so an open surface is a live exposure).
-  // Callbacks (/pipeline/auth/*, /admin/pipeline/auth/*) are exempt — they handle
-  // the magic-link code exchange before the user session exists.
-  if (!isLogin && !isCallback && !isAdminCallback && !user) {
+  // Unauthenticated → the CORRECT login (PRODUCT_STANDARDS §8.5 dual-auth): admin paths go to the
+  // admin login, user paths to the user login. Covers /admin/* + /pipeline/* (the methodology
+  // cockpit fires real outreach + API cost, so an open surface is a live exposure). The login
+  // pages + the magic-link callbacks are exempt — they must be reachable to authenticate.
+  if (!isLogin && !isAdminLogin && !isCallback && !isAdminCallback && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/pipeline/login'
+    url.pathname = isAdmin ? '/admin/login' : '/pipeline/login'
     return NextResponse.redirect(url)
   }
 
-  // /admin/* is operator-only: a logged-in user must also be on the admin allowlist.
-  if (isAdmin && user && !isOperator(user.email)) {
+  // /admin/* is operator-only: a logged-in user must also be on the admin allowlist. The admin
+  // login itself is exempt (the isAdminLogin clause below routes an already-authed user onward).
+  if (isAdmin && !isAdminLogin && user && !isOperator(user.email)) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
+  // Already authenticated on a login page → onward. Admin login → the /admin control panel for an
+  // operator (else home); user login → the user welcome surface.
   if (isLogin && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/pipeline/welcome'
+    return NextResponse.redirect(url)
+  }
+  if (isAdminLogin && user) {
+    const url = request.nextUrl.clone()
+    url.pathname = isOperator(user.email) ? '/admin' : '/'
     return NextResponse.redirect(url)
   }
 
