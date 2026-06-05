@@ -50,12 +50,36 @@ const filledRow = (over: Partial<Record<string, any>> = {}) => ({
   ...Object.fromEntries(ALL_FIELDS.map((f) => [f, 'value'])),
   ...over,
 })
-const evidenceFields = (n = ALL_FIELDS.length) =>
-  ALL_FIELDS.map((f, i) => ({ field: f, evidenced: i < n, evidence: i < n ? `dom:${i}` : null }))
-const allPreHardPass = { P1: { status: 'pass' }, P2: { status: 'pass' }, P3: { status: 'pass' }, P4: { status: 'pass' } }
+// A DOM carrying all 14 markers (NAMED values ∉ banlist) + data-why-now → 14/14 evidenced,
+// P1 (root 200) / P2 (named distributor) / P3 (distributor + outcomes + why-now) all pass.
+const MARKER_DOM = `<!doctype html><html><body
+  data-promise="p" data-friction="f" data-core-mechanism="cm"
+  data-icp-geography="au" data-icp-partner-type="accountants"
+  data-icp-buyer-title="principal" data-icp-verticals="dental"
+  data-icp-company-size="2-50" data-icp-stage="growth" data-exclusions="none"
+  data-distributor="academies" data-distributor-outcomes="more-students"
+  data-end-user="students" data-end-user-outcomes="confidence"
+  data-why-now="ai-now"></body></html>`
 
-const mockFetchStatus = (status: number) => {
-  global.fetch = vi.fn().mockResolvedValue({ status }) as any
+// Same DOM but the distributor archetype is the banlist value 'reseller' → P2 fails.
+// The deal-findrs determinism case: same DOM in ⇒ same P2 fail out, no model in the loop.
+const RESELLER_DOM = MARKER_DOM.replace('data-distributor="academies"', 'data-distributor="reseller"')
+
+// Route-aware fetch mock for the deterministic DOM-fetch survey contract. Differentiates:
+//   …/survey-manifest.json   → the build route manifest
+//   the build base (demo.vercel.app/*) → the page DOM (ok drives P1/rootOk)
+//   anything else (the mvp_url live HEAD/GET check) → bare { status }
+function mockFetch({ dom = MARKER_DOM, rootOk = true, mvpStatus = 200 }: { dom?: string; rootOk?: boolean; mvpStatus?: number } = {}) {
+  global.fetch = vi.fn(async (input: any) => {
+    const u = String(input)
+    if (u.endsWith('/survey-manifest.json')) {
+      return { ok: true, status: 200, text: async () => JSON.stringify({ routes: ['/'] }) } as any
+    }
+    if (u.startsWith('https://demo.vercel.app')) {
+      return { ok: rootOk, status: rootOk ? 200 : 404, text: async () => (rootOk ? dom : '') } as any
+    }
+    return { status: mvpStatus } as any // mvp_url live check
+  }) as any
 }
 const req = (body: any) => ({ json: async () => body }) as any
 const ctx = (slug = 'demo') => ({ params: { productId: slug } })
@@ -69,15 +93,12 @@ afterEach(() => {
 })
 
 // ── Survey route ─────────────────────────────────────────────────────────────
-describe('POST /survey — handler', () => {
-  it('RENOVATION: full spec + 14/14 evidenced + live + P1-3 → 201 pass, gate bound', async () => {
+describe('POST /survey — handler (deterministic DOM-fetch contract)', () => {
+  it('RENOVATION: full DB spec + 14/14 markers + live mvp → 201 pass, gate bound', async () => {
     h.client = makeClient({ product_validation_status: { data: filledRow() }, pipeline_gates: { error: null } })
-    mockFetchStatus(200)
+    mockFetch({ dom: MARKER_DOM, rootOk: true, mvpStatus: 200 })
 
-    const res = await surveyPOST(
-      req({ fields: evidenceFields(), pre_hard: allPreHardPass, deployment_id: 'dep_123' }),
-      ctx(),
-    )
+    const res = await surveyPOST(req({ deployment_id: 'dep_123' }), ctx())
     const json = await res.json()
 
     expect(res.status).toBe(201)
@@ -89,16 +110,15 @@ describe('POST /survey — handler', () => {
       product_slug: 'demo',
       gate: 'survey',
       status: 'pass',
-      deployment_id: 'dep_123', // bound — the §3 edit-#2 Option-1 path
-      artifact_ref: 'https://build.example',
+      deployment_id: 'dep_123', // bound when supplied
     })
   })
 
-  it('TEARDOWN: site not 200 → 201 fail, even with full spec + full evidence', async () => {
+  it('TEARDOWN: markers present but mvp_url not 200 → 201 fail', async () => {
     h.client = makeClient({ product_validation_status: { data: filledRow() }, pipeline_gates: { error: null } })
-    mockFetchStatus(404)
+    mockFetch({ dom: MARKER_DOM, rootOk: true, mvpStatus: 404 })
 
-    const res = await surveyPOST(req({ fields: evidenceFields(), pre_hard: allPreHardPass }), ctx())
+    const res = await surveyPOST(req({}), ctx())
     const json = await res.json()
 
     expect(res.status).toBe(201)
@@ -108,11 +128,25 @@ describe('POST /survey — handler', () => {
     expect(h.captured.find((c) => c.table === 'pipeline_gates')!.payload.deployment_id).toBeNull()
   })
 
-  it('INCOMPLETE-SPEC: a null column → 201 fail (spec short-circuits)', async () => {
-    h.client = makeClient({ product_validation_status: { data: filledRow({ promise: null }) }, pipeline_gates: { error: null } })
-    mockFetchStatus(200)
+  it('TEARDOWN: distributor marker = "reseller" (banlist) → P2 fail (the deal-findrs case)', async () => {
+    h.client = makeClient({ product_validation_status: { data: filledRow() }, pipeline_gates: { error: null } })
+    mockFetch({ dom: RESELLER_DOM, rootOk: true, mvpStatus: 200 })
 
-    const res = await surveyPOST(req({ fields: evidenceFields(), pre_hard: allPreHardPass }), ctx())
+    const res = await surveyPOST(req({}), ctx())
+    const json = await res.json()
+
+    expect(json.verdict).toBe('TEARDOWN')
+    expect(json.gate_status).toBe('fail')
+    // P2 (named-distributor) is the failing pre-hard, DERIVED from the marker — not re-judged.
+    const p2 = json.result.preHard.failing.find((p: any) => p.code === 'P2')
+    expect(p2).toBeTruthy()
+  })
+
+  it('INCOMPLETE-SPEC: a null DB column short-circuits → 201 fail', async () => {
+    h.client = makeClient({ product_validation_status: { data: filledRow({ promise: null }) }, pipeline_gates: { error: null } })
+    mockFetch({ dom: MARKER_DOM, rootOk: true, mvpStatus: 200 })
+
+    const res = await surveyPOST(req({}), ctx())
     const json = await res.json()
 
     expect(json.verdict).toBe('INCOMPLETE-SPEC')
@@ -122,21 +156,15 @@ describe('POST /survey — handler', () => {
 
   it('404 when there is no product_validation_status row', async () => {
     h.client = makeClient({ product_validation_status: { data: null }, pipeline_gates: { error: null } })
-    mockFetchStatus(200)
-    const res = await surveyPOST(req({ fields: evidenceFields(), pre_hard: allPreHardPass }), ctx('ghost'))
+    mockFetch({})
+    const res = await surveyPOST(req({}), ctx('ghost'))
     expect(res.status).toBe(404)
     expect(h.captured.find((c) => c.table === 'pipeline_gates')).toBeUndefined() // nothing recorded
   })
 
-  it('400 on an invalid payload (missing fields[])', async () => {
+  it('400 on an invalid payload (url is not a URL)', async () => {
     h.client = makeClient({})
-    const res = await surveyPOST(req({ pre_hard: allPreHardPass }), ctx())
-    expect(res.status).toBe(400)
-  })
-
-  it('400 on an unknown field code', async () => {
-    h.client = makeClient({})
-    const res = await surveyPOST(req({ fields: [{ field: 'not_a_field', evidenced: true }], pre_hard: {} }), ctx())
+    const res = await surveyPOST(req({ url: 'not-a-url' }), ctx())
     expect(res.status).toBe(400)
   })
 })

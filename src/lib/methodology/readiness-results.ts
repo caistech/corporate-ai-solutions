@@ -6,13 +6,13 @@
  * Guard 3: Upsert = latest-wins (delete prior, then insert fresh scored_at)
  */
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
-})
+// Route through the shared lazy-init admin client (@/lib/supabase) rather than a
+// module-level createClient(). The module-level client threw "supabaseUrl is required"
+// at IMPORT time when env was absent (e.g. vitest), which collected 0 tests for any
+// suite that transitively imported this file (routes.test.ts). supabaseAdmin() defers
+// instantiation to first call, so import is side-effect-free and the existing
+// vi.mock('@/lib/supabase') covers this module too.
+import { supabaseAdmin } from '@/lib/supabase'
 
 export type ReadinessStatus = 'pass' | 'fail' | 'na'
 export type ReadinessSource = 'auto' | 'naive-tester' | 'voice-auditor' | 'judge'
@@ -44,6 +44,7 @@ export async function upsertReadinessResult(params: UpsertReadinessParams): Prom
   }
 
   try {
+    const supabase = supabaseAdmin()
     // Delete prior result for this check (latest-wins)
     await supabase
       .from('readiness_results')
