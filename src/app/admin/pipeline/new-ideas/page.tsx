@@ -91,7 +91,8 @@ export default async function NewIdeasPage() {
           <h1 className="text-3xl font-bold mb-2">New product</h1>
           <p className="text-gray-400">
             Name a product and the coach draws out its full spec — the promise, the distributor, the
-            end user, and the friction it removes — then admits it to the pipeline.
+            end user, the friction it removes. Already built? Add its live URL and the coach audits
+            the live build into spec instead of starting from scratch.
           </p>
         </div>
 

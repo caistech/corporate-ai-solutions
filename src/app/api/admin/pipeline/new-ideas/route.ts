@@ -1,19 +1,29 @@
 /**
  * POST /api/admin/pipeline/new-ideas
  *
- * The conversational onboarding coach. Runs the 7-node ideation walk using the
- * shared coach SKILL as the system prompt. Conversation ONLY — it does not write to
- * the DB. When the walk is complete it emits an admit-ready payload (resolved 14
- * graded fields + feasibility) which the client hands to POST …/new-ideas/admit.
+ * The conversational onboarding coach — TWO-MODE (one door). Runs the ideation walk using the
+ * shared coach SKILL as the system prompt. Conversation ONLY — it does not write to the DB.
+ * When the walk is complete it emits an admit-ready payload (resolved 14 graded fields +
+ * feasibility) which the client hands to POST …/new-ideas/admit.
  *
- * Persona/structure live in the coach SKILL (cais-shared-services), NOT inline here,
- * so this route and the skill can't drift. Field names + enums match the verified
- * product_validation_status schema (2026-06-04).
+ *   - No live URL → clean-sheet conversational elicitation (the original behaviour).
+ *   - Live URL present → AUTO-PREFILL: on the OPENING turn the route derives the 14 fields +
+ *     P1/P2/P3 from the live build (the ONE shared helper, Rider 3) and injects them so the coach
+ *     opens by presenting the prefilled spec and asks the operator to CONFIRM/CORRECT — it does
+ *     NOT re-elicit from blank what the build already answers (finding #8). Derives only on the
+ *     opening turn (messages.length <= 1); later turns carry the prefilled values in history.
+ *
+ * The derive here is GUIDANCE (it seeds the conversation); it is NOT the gate verdict — the gate
+ * (admit) re-derives server-side from the pinned deployment for its own decision.
+ *
+ * Persona/structure live in the coach SKILL (cais-shared-services), NOT inline here, so this route
+ * and the skill can't drift. Field names + enums match the product_validation_status schema.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { deriveFieldsFromLiveUrl } from '@/lib/methodology/live-derive'
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const MODEL = 'claude-sonnet-4-20250514'
@@ -103,12 +113,42 @@ function summariseReadiness(p: AdmitPayload | null) {
   return { complete: fieldsBelowBar.length === 0 && feasibilityOk, fieldsBelowBar }
 }
 
+// Build the prefill context appended to the system prompt when a live URL is present.
+// Turns the build's derived markers into a "confirm/correct, don't re-elicit" instruction.
+function buildPrefillContext(derived: {
+  report: { field: string; raw: string | null; evidenced: boolean }[]
+  preHard: { code: string; status: string }[]
+}): string {
+  const lines = derived.report.map((r) =>
+    `- ${r.field}: ${
+      r.raw
+        ? `"${r.raw}"${r.evidenced ? '' : ' (present but generic/invalid — needs a real answer)'}`
+        : '(not found on the build — elicit this one)'
+    }`,
+  )
+  const ph = derived.preHard
+    .filter((p) => ['P1', 'P2', 'P3'].includes(p.code))
+    .map((p) => `${p.code}=${p.status}`)
+    .join(' ')
+  return (
+    `\n\n---\nDEPLOYED PRODUCT — AUTO-PREFILL MODE. The operator supplied a live build URL, so the ` +
+    `build already evidences the markers below. OPEN by presenting these as the prefilled 14-field ` +
+    `spec and ask the operator to CONFIRM or CORRECT each — do NOT re-elicit from blank what the ` +
+    `build already answers (only elicit the fields shown missing/generic).\n\n` +
+    `Build markers (field: value):\n${lines.join('\n')}\n\n` +
+    `Deterministic pre-hard (build-marker signal): ${ph}\n` +
+    `(The admission gate RE-DERIVES these from the pinned deployment for its own verdict; treat ` +
+    `them here as guidance to sharpen the spec, not as the final decision.)\n---\n`
+  )
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { messages, state: clientState } = body as {
+    const { messages, state: clientState, liveUrl } = body as {
       messages: Message[]
       state: ConversationState
+      liveUrl?: string
     }
 
     if (!messages || !Array.isArray(messages) || !clientState) {
@@ -125,6 +165,18 @@ export async function POST(request: NextRequest) {
       systemPrompt = loadCoachSkill()
     } catch {
       return NextResponse.json({ error: 'coach skill unavailable' }, { status: 500 })
+    }
+
+    // Two-mode: a live URL on the OPENING turn → derive markers + prefill (finding #8). Derive
+    // once (opening turn only); later turns carry the prefilled values in the conversation history.
+    // A derive failure degrades to clean-sheet elicitation rather than blocking the coach.
+    if (liveUrl && liveUrl.trim() && messages.length <= 1) {
+      try {
+        const derived = await deriveFieldsFromLiveUrl(liveUrl.trim())
+        systemPrompt += buildPrefillContext(derived)
+      } catch (e) {
+        console.error('[onboarding] prefill derive failed (continuing clean-sheet):', e)
+      }
     }
 
     const response = await fetch(ANTHROPIC_API_URL, {

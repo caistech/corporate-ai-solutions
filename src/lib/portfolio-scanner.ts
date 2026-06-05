@@ -22,9 +22,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import YAML from 'yaml';
-import * as fs from 'fs';
-import * as path from 'path';
+import { loadPortfolioManifest } from './portfolio-manifest';
 import {
   scoreCard,
   isMvpReady,
@@ -134,6 +132,9 @@ export interface EnrichedProduct {
     evidence?: string | null;
     scored_at?: string;
   }[];
+  // Derived per-check verdict freshness (current | stale | missing | unknown), attached by
+  // the GET route. Type-only inline import keeps the scanner free of a runtime dependency.
+  readiness_freshness?: import('@/lib/methodology/freshness').CardFreshness | null;
 }
 
 // 7-Stage Lifecycle mapping based on validation state
@@ -238,87 +239,10 @@ function getSmartSensorsStatus(validation: ProductValidationStatus | null): Enri
   return defaultStatus;
 }
 
-/**
- * Read portfolio-manifest.yaml from the shared services repo or use hardcoded fallback
- */
-function readManifest(): { projects: ManifestProduct[] } {
-  // Try to read from filesystem (works in local dev)
-  const possiblePaths = [
-    path.resolve(__dirname, '../../../cais-shared-services/portfolio-manifest.yaml'),
-    path.resolve(__dirname, '../../cais-shared-services/portfolio-manifest.yaml'),
-    path.resolve(process.cwd(), 'cais-shared-services/portfolio-manifest.yaml'),
-  ];
-
-  for (const p of possiblePaths) {
-    try {
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, 'utf-8');
-        const yaml = YAML.parse(content);
-        return yaml;
-      }
-    } catch (e) {
-      // Continue to next path
-    }
-  }
-
-  // Fallback: hardcoded portfolio list (for Vercel where filesystem access is limited)
-  console.log('Manifest file not found, using hardcoded portfolio list');
-  return {
-    projects: [
-      // ============ INFRASTRUCTURE (shared @caistech services & platform) ============
-      { name: 'platform-trust', vercel_project_id: 'prj_NTvBNN6cBAoAOoIgp84dYvxZCNtf', category: 'infrastructure' },
-      { name: 'property-services', vercel_project_id: 'prj_bzS0HfyExXQXMsQAK9bH6SkrwQb0', category: 'infrastructure' },
-      { name: 'storefront-mcp', vercel_project_id: 'prj_7fXPw71NH0cwx5xHHov1OM5dhAr3', category: 'infrastructure' },
-
-      // ============ OWN-TOOLS (internal factory use) ============
-       { name: 'preflight', vercel_project_id: 'prj_09p4jLZy9LouVOWIOmyKYNNKmg63', category: 'own-tools' },
-
-       // ============ CLIENT PRODUCTS (paid custom builds for specific clients) ============
-       { name: 'mmcbuild', vercel_project_id: 'prj_qKKLAkGGGVH5KocDfoGZQOqIZGvj', category: 'client-product' },
-
-       // ============ PRODUCTS (Lane 1: Paid Distributor SaaS) ============
-       // Pipeline: validation engine for distributors (sales agencies, marketing agencies, dev shops, accountants, consultants)
-       // Currently hosted in corporate-ai-solutions repo, will be separated later
-       { name: 'pipeline', vercel_project_id: 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl', category: 'product' },
-
-       // ============ PRODUCTS (distributor production) ============
-       // Lane 1: Paid Distributor SaaS (primary revenue)
-      { name: 'deal-findrs', vercel_project_id: 'prj_B0pKJM1fTAD5FtbZudh4kUEhaqQM', category: 'product' },
-      { name: 'f2k-checkpoint-new', vercel_project_id: 'prj_XPELCzoIwOY5NoHGJxd4Ah6w59G9', category: 'product' },
-      { name: 'investorpilot', vercel_project_id: 'prj_investorpilot', category: 'product' },
-      { name: 'ndissda-automate', vercel_project_id: 'prj_ndissda_automate', category: 'product' },
-      { name: 'r-and-d-tax', vercel_project_id: 'prj_r_and_d_tax', category: 'product' },
-      { name: 'tenderwatch', vercel_project_id: 'prj_tenderwatch', category: 'product' },
-      { name: 'f2k-fund-tokenisation', vercel_project_id: 'prj_f2k_fund_tokenisation', category: 'product' },
-
-      // Lane 4: Free BYOK Products (awareness/marketing)
-      { name: 'easy-claude-code', vercel_project_id: 'prj_sedjiKhnHUBginSeK2jP555u4wAp', category: 'product' },
-      { name: 'sayfix', vercel_project_id: 'prj_7N65GURc3slhs5QL013Bo95AxD7i', category: 'product' },
-
-      // Lane 2/3: Studio-in-Residence & Contract Builds (some revenue, validation in progress)
-      { name: 'connexions', vercel_project_id: 'prj_pG5gak2uSAQQCKLvf39G72wcaqnG', category: 'product' },
-      { name: 'kira', vercel_project_id: 'prj_itVurDE9CD77K9rGWEQZNDmn33yz', category: 'product' },
-      { name: 'launchready', vercel_project_id: 'prj_DQS8A4CW2yVam1eJycDTiIZbGYUl', category: 'product' },
-      { name: 'universal-interviews', vercel_project_id: 'prj_j9Xv0a6A0eU7naa8Ciw3jprYKlnL', category: 'product' },
-      { name: 'raiseready-template', vercel_project_id: 'prj_fKuIr7tWjKyWTgXDMCJYuhKQIylD', category: 'product' },
-      { name: 'partner-pilot', vercel_project_id: 'prj_partner_pilot', category: 'product' },
-      { name: 'outreach-ready', vercel_project_id: 'prj_outreach_ready', category: 'product' },
-
-      // Unaudited/In-Progress (will be categorized after manifest audit)
-      { name: 'smart-board', vercel_project_id: 'prj_BUzAZzsnUyARewFEpO6OpXV7zqac', category: 'product' },
-      { name: 'hair-stylist-ai', vercel_project_id: 'prj_sJ6UwGIaO05WnortzlLP5cIx9Azi', category: 'product' },
-      { name: 'lessonslearned', vercel_project_id: 'prj_f6efDw4g7FfXG0hnKVGR5Mv2202n', category: 'product' },
-      { name: 'community-question-responder', vercel_project_id: 'prj_2VGX4tqLk3WtwSfl3Lawp2TQ6jyL', category: 'product' },
-      { name: 'disaster-support', vercel_project_id: 'prj_disaster_support', category: 'product' },
-      { name: 'lingo-pure-ai', vercel_project_id: 'prj_lingo_pure_ai', category: 'product' },
-      { name: 'mova', vercel_project_id: 'prj_mova', category: 'product' },
-      { name: 'rehearsals-ai', vercel_project_id: 'prj_rehearsals_ai', category: 'product' },
-      { name: 'tourlingo', vercel_project_id: 'prj_tourlingo', category: 'product' },
-      { name: 'universal-lingo', vercel_project_id: 'prj_universal_lingo', category: 'product' },
-      { name: 'singify', vercel_project_id: '', category: 'product' },
-    ],
-  };
-}
+// Portfolio membership now lives in the portfolio_manifest TABLE (loadPortfolioManifest),
+// not the YAML file or a hardcoded fallback. The YAML remains the env-sync manifest for
+// external tooling only. See migration 20260605120000_portfolio_manifest.sql + the
+// `import { loadPortfolioManifest }` use in scanPortfolio below.
 
 /**
  * Fetch validation status for all products from Supabase
@@ -552,7 +476,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role for server-side scanning
   );
 
-  const manifest = readManifest();
+  const projects = await loadPortfolioManifest(supabase);
 
   // Bulk fetches — each runs ONCE for the whole portfolio (flat query cost).
   const [
@@ -577,7 +501,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     console.warn('[portfolio-scanner] readiness_criteria empty — scores will be 0 / gates locked.');
   }
 
-  const enriched: EnrichedProduct[] = manifest.projects.map((product) => {
+  const enriched: EnrichedProduct[] = projects.map((product) => {
     const slug = product.name;
     const validation = bySlug(validationStatuses, slug) ?? null;
     const ideaCard = bySlug(ideaCards, slug) ?? null;
