@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProductPipeline } from '@/lib/portfolio-scanner';
 import { createClient } from '@supabase/supabase-js';
+import { loadCardFreshness } from '@/lib/methodology/freshness';
 
 // Force this route to run fresh on every request — never statically cached, and
 // no Next.js data-cache on the server-side Supabase reads. Without this, the
@@ -112,6 +113,19 @@ export async function GET(
       .order('scored_at', { ascending: false });
     product.readiness_results = readinessRows ?? [];
     console.log('[GET] readiness_results:', readinessRows?.length ?? 0, 'rows');
+
+    // Derived per-check freshness (no schema change): for every APPLICABLE check, is its
+    // latest verdict scored against the current deploy (current), an older one (stale —
+    // pending a re-score / an agent re-run), or never scored (missing)? Reference deploy =
+    // the newest verdict's deployment_id. Best-effort: a freshness failure must not break
+    // the card load. See lib/methodology/freshness.ts + the /rescore trigger.
+    try {
+      product.readiness_freshness = await loadCardFreshness(productId);
+      console.log('[GET] readiness_freshness:', product.readiness_freshness.summary);
+    } catch (e) {
+      console.error('[GET] freshness derive failed (non-fatal):', e);
+      product.readiness_freshness = null;
+    }
 
     console.log('[GET] Returning product with validation:', {
       has_validation: !!product.validation,

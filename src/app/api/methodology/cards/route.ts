@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { computeIntakeGate, type IntakeGateCard } from '@/lib/methodology-intake-gate'
+import { upsertMethodologyCard } from '@/lib/methodology/upsert-card'
 
 /**
  * POST /api/methodology/cards
@@ -120,47 +121,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upsert on product_slug (UNIQUE constraint). Latest dialogue wins.
-    // Cockpit fields are only written when provided, so a dialogue re-post
-    // doesn't clobber a build_status/mvp_url an operator set in the cockpit.
-    const upsertRow: Record<string, unknown> = {
-      product_slug: parsed.data.product_slug,
-      origin_summary: parsed.data.origin_summary ?? null,
-      original_end_user: parsed.data.original_end_user ?? null,
-      hypothesis_rows: parsed.data.hypothesis_rows,
-      status: parsed.data.status ?? 'dialogue-complete',
-    }
-    // Intake-gate bookkeeping — only on CREATE, so a re-post never clobbers the
-    // origin/inbox state of an existing card (the columns default on the row).
-    if (isNew) {
-      upsertRow.intake_source = fromIdeationAgent ? 'ideation-agent' : 'operator'
-      upsertRow.inbox = fromIdeationAgent // agent deposits land in the inbox
-      if (overrideReason && parsed.data.cockpit_intake && !fromIdeationAgent) {
-        upsertRow.intake_override_reason = overrideReason
-        upsertRow.intake_override_at = new Date().toISOString()
-      }
-    }
-    if (parsed.data.pipeline_stage !== undefined) upsertRow.pipeline_stage = parsed.data.pipeline_stage
-    if (parsed.data.monetisation_lane !== undefined) upsertRow.monetisation_lane = parsed.data.monetisation_lane
-    if (parsed.data.engine_cluster !== undefined) upsertRow.engine_cluster = parsed.data.engine_cluster
-    if (parsed.data.build_status !== undefined) upsertRow.build_status = parsed.data.build_status
-    if (parsed.data.mvp_url !== undefined) upsertRow.mvp_url = parsed.data.mvp_url
-    if (parsed.data.mvp_ready !== undefined) upsertRow.mvp_ready = parsed.data.mvp_ready
-    if (parsed.data.build_type !== undefined) upsertRow.build_type = parsed.data.build_type
-    if (parsed.data.idea_card !== undefined) upsertRow.idea_card = parsed.data.idea_card
-
-    const { data, error } = await supabase
-      .from('methodology_hypothesis_cards')
-      .upsert(upsertRow, { onConflict: 'product_slug' })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('methodology_hypothesis_cards upsert failed:', error)
+    // Upsert on product_slug via the ONE shared card-creation path (also used by
+    // the review-intake in new-ideas/create). Latest dialogue wins; cockpit fields
+    // are only written when provided; intake bookkeeping only on CREATE.
+    try {
+      const { card } = await upsertMethodologyCard(supabase, parsed.data)
+      return NextResponse.json({ card }, { status: 201 })
+    } catch (e) {
+      console.error('methodology_hypothesis_cards upsert failed:', e)
       return NextResponse.json({ error: 'Failed to save card' }, { status: 500 })
     }
-
-    return NextResponse.json({ card: data }, { status: 201 })
   } catch (error) {
     console.error('API error (/api/methodology/cards):', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,15 +1,14 @@
 /**
  * POST /api/admin/pipeline/initialize
- * 
- * Initialize products from portfolio-manifest.yaml into the validation pipeline.
- * Creates rows in product_validation_status table for each product.
+ *
+ * Initialize products from the portfolio_manifest TABLE into the validation pipeline.
+ * Creates rows in product_validation_status for each portfolio product that lacks one.
+ * (Membership source is the table now — not portfolio-manifest.yaml or a hardcoded list.)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import YAML from 'yaml';
-import * as fs from 'fs';
-import * as path from 'path';
+import { loadPortfolioManifest } from '@/lib/portfolio-manifest';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,66 +26,8 @@ export async function POST(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Read portfolio-manifest.yaml
-    const possiblePaths = [
-      path.resolve(process.cwd(), 'cais-shared-services/portfolio-manifest.yaml'),
-      path.resolve(process.cwd(), '../../cais-shared-services/portfolio-manifest.yaml'),
-    ];
-
-    let manifest: any = null;
-    for (const p of possiblePaths) {
-      try {
-        if (fs.existsSync(p)) {
-          const content = fs.readFileSync(p, 'utf-8');
-          manifest = YAML.parse(content);
-          break;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-
-    // Fallback: hardcoded portfolio list (for Vercel where filesystem access is limited)
-    if (!manifest?.projects) {
-      console.log('Manifest file not found, using hardcoded portfolio list');
-      manifest = {
-        projects: [
-          { name: 'platform-trust', display_name: 'Platform Trust' },
-          { name: 'property-services', display_name: 'Property Services' },
-          { name: 'storefront-mcp', display_name: 'Storefront MCP' },
-          { name: 'preflight', display_name: 'Preflight' },
-          { name: 'mmcbuild', display_name: 'MMC Build' },
-          { name: 'pipeline', display_name: 'Pipeline' },
-          { name: 'deal-findrs', display_name: 'DealFindrs' },
-          { name: 'f2k-checkpoint-new', display_name: 'F2K Checkpoint' },
-          { name: 'investorpilot', display_name: 'InvestorPilot' },
-          { name: 'ndissda-automate', display_name: 'NDIS SDAA Automate' },
-          { name: 'r-and-d-tax', display_name: 'R&D Tax' },
-          { name: 'tenderwatch', display_name: 'TenderWatch' },
-          { name: 'f2k-fund-tokenisation', display_name: 'F2K Fund Tokenisation' },
-          { name: 'easy-claude-code', display_name: 'Easy Claude Code' },
-          { name: 'sayfix', display_name: 'SayFix' },
-          { name: 'connexions', display_name: 'Connexions' },
-          { name: 'kira', display_name: 'Kira' },
-          { name: 'launchready', display_name: 'LaunchReady' },
-          { name: 'universal-interviews', display_name: 'Universal Interviews' },
-          { name: 'raiseready-template', display_name: 'RaiseReady' },
-          { name: 'partner-pilot', display_name: 'PartnerPilot' },
-          { name: 'outreach-ready', display_name: 'Outreach Ready' },
-          { name: 'smart-board', display_name: 'Smart Board' },
-          { name: 'hair-stylist-ai', display_name: 'Hair Stylist AI' },
-          { name: 'lessonslearned', display_name: 'Lessons Learned' },
-          { name: 'community-question-responder', display_name: 'Community Question Responder' },
-          { name: 'disaster-support', display_name: 'Disaster Support' },
-          { name: 'lingo-pure-ai', display_name: 'Lingo Pure AI' },
-          { name: 'mova', display_name: 'Mova' },
-          { name: 'rehearsals-ai', display_name: 'RehearsalsAI' },
-          { name: 'singify', display_name: 'Singify' },
-          { name: 'tourlingo', display_name: 'TourLingo' },
-          { name: 'universal-lingo', display_name: 'Universal Lingo' },
-        ]
-      };
-    }
+    // Portfolio membership — single source of truth (the table).
+    const projects = await loadPortfolioManifest(supabase);
 
     // Get existing products
     const { data: existing } = await supabase
@@ -95,12 +36,13 @@ export async function POST(request: NextRequest) {
 
     const existingSlugs = new Set((existing || []).map((r: any) => r.product_slug));
 
-    // Insert missing products
-    const toInsert = manifest.projects
-      .filter((p: any) => !existingSlugs.has(p.name))
-      .map((p: any) => ({
+    // Insert missing products. display_name is derived from the slug (the membership
+    // table holds an optional display_name; when absent we title-case the slug).
+    const toInsert = projects
+      .filter((p) => !existingSlugs.has(p.name))
+      .map((p) => ({
         product_slug: p.name,
-        display_name: p.display_name || p.name.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        display_name: p.name.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
         has_promise: false,
         has_distributor: false,
         has_end_user: false,
@@ -133,7 +75,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Initialized ${toInsert.length} products`,
-      total: manifest.projects.length,
+      total: projects.length,
       initialized: toInsert.length,
       existing: existingSlugs.size,
     });
