@@ -56,12 +56,33 @@ export async function POST(request: NextRequest) {
     // Deployed-vs-new is DERIVED from live-URL presence, never chosen.
     const entryMode: 'new' | 'review' = id.liveUrl ? 'review' : 'new'
 
-    const slug = productName.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    const derivedSlug = productName.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     )
+
+    // Slug-split guard (one-door RESUME). The slug is derived from the typed NAME, so "DealFindrs"
+    // → "dealfindrs" while the product's existing row may be "deal-findrs". Resolve to an existing
+    // row whose NORMALISED slug (alphanumerics only — hyphens/spaces/underscores collapsed) matches,
+    // so re-onboarding an already-known product RESUMES its row instead of forking a duplicate.
+    // Exact slug wins; else a UNIQUE normalised match; else the derived slug (a genuinely new idea).
+    // (Multiple loose matches → ambiguous → keep the derived slug rather than guess.)
+    const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+    let slug = derivedSlug
+    const { data: exactRow } = await supabase
+      .from('product_validation_status')
+      .select('product_slug')
+      .eq('product_slug', derivedSlug)
+      .maybeSingle()
+    if (!exactRow) {
+      const { data: allSlugs } = await supabase.from('product_validation_status').select('product_slug')
+      const target = normalise(derivedSlug)
+      const loose = (allSlugs ?? []).filter((r) => normalise(r.product_slug as string) === target)
+      if (loose.length === 1) slug = loose[0].product_slug as string
+    }
+    const isExisting = !!exactRow || slug !== derivedSlug
 
     // Captured columns (only those provided are written; absent stay NULL).
     const base: Record<string, unknown> = {
@@ -75,17 +96,15 @@ export async function POST(request: NextRequest) {
     if (id.supabaseRef) base.supabase_ref = id.supabaseRef
     if (id.eccProjectId) base.ecc_project_id = id.eccProjectId
 
-    const { data: existing } = await supabase
-      .from('product_validation_status')
-      .select('product_slug')
-      .eq('product_slug', slug)
-      .maybeSingle()
-
-    if (existing) {
-      // Re-stamp the captured fields on an in-progress row (don't clobber spec/admission state).
+    if (isExisting) {
+      // Re-stamp the captured fields on the resolved row (don't clobber spec/admission state).
+      // Preserve the stored display_name on resume unless an explicit displayName was supplied —
+      // otherwise typing "deal findrs" would downgrade a curated "DealFindrs".
+      const updatePayload: Record<string, unknown> = { ...base }
+      if (!displayName) delete updatePayload.display_name
       const { error: updErr } = await supabase
         .from('product_validation_status')
-        .update(base)
+        .update(updatePayload)
         .eq('product_slug', slug)
       if (updErr) {
         console.error('[create-idea] update error:', updErr)
