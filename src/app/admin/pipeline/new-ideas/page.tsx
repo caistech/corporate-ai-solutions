@@ -75,8 +75,13 @@ async function getIdeas(): Promise<IdeaProduct[]> {
     .filter((p) => p.populated_fields < SPEC_FIELDS.length)
 }
 
-export default async function NewIdeasPage() {
+export default async function NewIdeasPage({
+  searchParams,
+}: {
+  searchParams?: { pending?: string }
+}) {
   const ideas = await getIdeas()
+  const pendingSlug = searchParams?.pending?.trim() || null
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -90,11 +95,25 @@ export default async function NewIdeasPage() {
           </div>
           <h1 className="text-3xl font-bold mb-2">New product</h1>
           <p className="text-gray-400">
-            Name a product and the coach draws out its full spec — the promise, the distributor, the
-            end user, the friction it removes. Already built? Add its live URL and the coach audits
-            the live build into spec instead of starting from scratch.
+            This is the one door into the pipeline. Name a product and the coach draws out its full
+            spec — the promise, the distributor, the end user, the friction it removes. Already built?
+            Add its live URL and the coach audits the live build into spec instead of starting from
+            scratch. A product gets a card <em>only</em> after it passes the coach&rsquo;s admit gate.
           </p>
         </div>
+
+        {/* Redirected here by the one-door guard — a Pending product tried to open its card. */}
+        {pendingSlug && (
+          <div className="mb-8 rounded-lg border border-amber-700/50 bg-amber-900/20 p-4">
+            <p className="text-amber-200 text-sm font-medium mb-1">
+              ⏳ <span className="font-mono">{pendingSlug}</span> is Pending — no card yet.
+            </p>
+            <p className="text-amber-300/80 text-sm">
+              It hasn&rsquo;t passed onboarding. Start (or resume) it with the coach below — enter the
+              same name to pick up where it left off. The card opens the moment it passes the admit gate.
+            </p>
+          </div>
+        )}
 
         {/* The conversational coach (create → converse → admit) */}
         <OnboardingCoach />
@@ -115,25 +134,27 @@ export default async function NewIdeasPage() {
             </div>
           ) : (
             <div className="space-y-3">
+              {/* One-door: a Pending idea has NO card. It resumes in the coach above (enter the
+                  same name) — never a link to /admin/pipeline/[slug] (the guard would bounce it
+                  straight back here). These rows are a backlog readout, not a way to a card. */}
               {ideas.map((idea) => (
-                <Link
+                <div
                   key={idea.product_slug}
-                  href={`/admin/pipeline/${idea.product_slug}`}
-                  className="block bg-gray-800 hover:bg-gray-750 rounded-lg p-4 border border-gray-700 transition-colors group"
+                  className="block bg-gray-800 rounded-lg p-4 border border-gray-700"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-medium group-hover:text-blue-400 transition-colors">
+                      <h3 className="font-medium">
                         {idea.display_name || idea.product_slug}
                       </h3>
                       <p className="text-sm text-gray-500">
                         {idea.populated_fields}/{SPEC_FIELDS.length} fields populated
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400 group-hover:text-blue-400 transition-colors">
-                      <span className="text-sm">Continue</span>
+                    <span className="inline-flex items-center gap-2 text-xs text-amber-300 whitespace-nowrap">
                       <ArrowRight className="w-4 h-4" />
-                    </div>
+                      Resume in the coach above
+                    </span>
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-gray-700 rounded-full h-1.5">
@@ -143,7 +164,7 @@ export default async function NewIdeasPage() {
                       />
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

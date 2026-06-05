@@ -124,9 +124,11 @@ export default function PipelineTable({
         </span>
       );
     }
+    // One-door: anything not yet admitted (is_draft / not in pipeline) is Pending — it has
+    // not passed the onboarding/coach admit gate, so it has no card.
     return (
-      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-200">
-        ⚪ Draft
+      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-amber-900/30 text-amber-300">
+        ⏳ Pending
       </span>
     );
   };
@@ -307,15 +309,27 @@ export default function PipelineTable({
                   )}
                 </td>
 
-                {/* Quick Actions */}
+                {/* Quick Actions — ONE DOOR. A card opens only after the coach/admit PASS
+                    (is_draft = false). Pending products link to the coach, never the card. */}
                 <td className="px-6 py-4 text-center">
-                  <Link
-                    href={`/admin/pipeline/${product.manifest.name}`}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 rounded text-xs font-medium transition-colors"
-                  >
-                    Details
-                    <ChevronRight size={14} />
-                  </Link>
+                  {product.validation && !product.validation.is_draft ? (
+                    <Link
+                      href={`/admin/pipeline/${product.manifest.name}`}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 rounded text-xs font-medium transition-colors"
+                    >
+                      Details
+                      <ChevronRight size={14} />
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/admin/pipeline/new-ideas"
+                      title="Pending — run this through onboarding/coach to admit it to the pipeline"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-amber-900/30 text-amber-300 hover:bg-amber-900/50 rounded text-xs font-medium transition-colors"
+                    >
+                      Onboarding
+                      <ChevronRight size={14} />
+                    </Link>
+                  )}
                 </td>
               </tr>
             ))}

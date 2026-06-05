@@ -1,7 +1,7 @@
 // @explanatory-header-exempt — admin-internal page (operator-only surface; Session 2 detail view)
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import { DecisionControls, type ProposeResponse, type ProposalMeta } from '@/components/methodology/DecisionControls'
@@ -149,6 +149,19 @@ const BUILD_TYPE_COLOR: Record<string, string> = {
 export default async function HypothesisCardDetailPage({ params }: PageProps) {
   noStore()
   const supabase = supabaseAdmin()
+
+  // ONE-DOOR GUARD (memory project_one_door_card_access). A card opens only after the product
+  // PASSES the onboarding/coach admit gate (product_validation_status.is_draft = false). A Pending
+  // product — including the whole grandfathered portfolio demoted by 20260605150000 — is sent back
+  // to the one door. Server-side teeth: this fires for links AND typed URLs.
+  const { data: admission } = await supabase
+    .from('product_validation_status')
+    .select('is_draft')
+    .eq('product_slug', params.slug)
+    .maybeSingle()
+  if (!admission || admission.is_draft) {
+    redirect(`/admin/pipeline/new-ideas?pending=${encodeURIComponent(params.slug)}`)
+  }
 
   const { data: cardData, error: cardErr } = await supabase
     .from('methodology_hypothesis_cards')
