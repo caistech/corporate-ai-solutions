@@ -97,12 +97,12 @@ export default function PipelineDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">Scanning portfolio...</p>
+              <p className="text-gray-400">Scanning portfolio...</p>
             </div>
           </div>
         </div>
@@ -112,10 +112,10 @@ export default function PipelineDashboard() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">Error loading portfolio: {error}</p>
+          <div className="bg-red-900/30 border border-red-700 rounded-lg p-4">
+            <p className="text-red-200">Error loading portfolio: {error}</p>
           </div>
         </div>
       </div>
@@ -123,14 +123,14 @@ export default function PipelineDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8 flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Portfolio Validation Pipeline</h1>
-              <p className="text-slate-600 mb-2">Which products can run outreach RIGHT NOW? What work is needed for each?</p>
-              <p className="text-slate-600">The validation pipeline decides what to build next and ensures each product has market demand before investing in scale.</p>
+              <h1 className="text-3xl font-bold mb-2 text-white">Products</h1>
+              <p className="text-gray-400 mb-2">Every product in the portfolio and where it stands: readiness score, what&apos;s blocking it, and what to do next.</p>
+              <p className="text-gray-400">Which products can run outreach right now, and what each one needs before it can.</p>
             </div>
             <Link
               href="/admin/pipeline/new-ideas"
@@ -169,15 +169,15 @@ export default function PipelineDashboard() {
         )}
 
          {/* Controls */}
-         <div className="mb-6 bg-white rounded-lg shadow p-4">
+         <div className="mb-6 bg-gray-800 border border-gray-700 rounded-lg p-4">
            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-gray-700 rounded-lg text-sm text-white bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                  <option value="all">All ({data.summary.total})</option>
                  <option value="ready">Ready for Outreach ({data.summary.ready_for_outreach})</option>
@@ -189,11 +189,11 @@ export default function PipelineDashboard() {
 
               {/* Category Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-gray-700 rounded-lg text-sm text-white bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                    <option value="all">All</option>
                    <option value="infrastructure">Infrastructure</option>
@@ -205,12 +205,12 @@ export default function PipelineDashboard() {
 
             {/* Sort */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Sort by</label>
               <div className="flex gap-2">
                 <select
                    value={sortBy}
                    onChange={(e) => setSortBy(e.target.value as any)}
-                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   className="px-3 py-2 border border-gray-700 rounded-lg text-sm text-white bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                  >
                   <option value="readiness">Readiness Score</option>
                   <option value="name">Product Name</option>
@@ -219,7 +219,7 @@ export default function PipelineDashboard() {
 
                 <button
                   onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 font-medium"
+                  className="px-3 py-2 border border-gray-700 rounded-lg text-sm text-gray-300 hover:bg-gray-700 font-medium"
                 >
                   {sortOrder === 'desc' ? '↓ Highest' : '↑ Lowest'}
                 </button>

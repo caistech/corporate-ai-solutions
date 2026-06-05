@@ -47,27 +47,27 @@ type FrontDoorState = Verdict | 'NOT-SURVEYED' | 'NO-URL';
 
 const VERDICT_BANNER: Record<FrontDoorState, { box: string; text: string; label: string; blurb: string }> = {
   RENOVATION: {
-    box: 'bg-green-50 border-green-200', text: 'text-green-700', label: 'RENOVATION',
+    box: 'bg-green-900/30 border-green-700', text: 'text-green-300', label: 'RENOVATION',
     blurb: 'The live build evidences the spec. Downstream steps are unlocked → Stage 5.',
   },
   TEARDOWN: {
-    box: 'bg-yellow-50 border-yellow-200', text: 'text-yellow-700', label: 'TEARDOWN',
+    box: 'bg-yellow-900/30 border-yellow-700', text: 'text-yellow-300', label: 'TEARDOWN',
     blurb: "The live build doesn't evidence the spec (or a PRE-HARD failed). Re-enter Stage 2 design & build.",
   },
   'INCOMPLETE-SPEC': {
-    box: 'bg-red-50 border-red-200', text: 'text-red-700', label: 'INCOMPLETE-SPEC',
+    box: 'bg-red-900/30 border-red-700', text: 'text-red-300', label: 'INCOMPLETE-SPEC',
     blurb: 'The spec itself is incomplete — fill it in Step 1, then re-run survey mode.',
   },
   'NOT-SURVEYED': {
-    box: 'bg-gray-50 border-gray-200', text: 'text-gray-600', label: 'NOT SURVEYED',
+    box: 'bg-gray-800 border-gray-700', text: 'text-gray-400', label: 'NOT SURVEYED',
     blurb: 'A URL is set but no survey verdict is recorded yet. Run survey mode against the live build.',
   },
   'NO-URL': {
-    box: 'bg-gray-50 border-gray-200', text: 'text-gray-600', label: 'NO URL — PRE-SURVEY',
+    box: 'bg-gray-800 border-gray-700', text: 'text-gray-400', label: 'NO URL — PRE-SURVEY',
     blurb: "No product URL yet, so the survey can't run. Define the spec, then design & build (Stage 2).",
   },
   UNKNOWN: {
-    box: 'bg-gray-50 border-gray-200', text: 'text-gray-600', label: 'UNKNOWN',
+    box: 'bg-gray-800 border-gray-700', text: 'text-gray-400', label: 'UNKNOWN',
     blurb: 'A survey row exists but its verdict could not be read.',
   },
 };
@@ -138,43 +138,43 @@ function SurveyKickoff({ productSlug, productUrl, onStarted }: { productSlug: st
   const toReachItems = Array.isArray(toReach) ? toReach : [];
 
   return (
-    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <h3 className="text-sm font-semibold text-gray-800">Run the survey</h3>
-      <p className="mt-1 text-xs text-gray-600 max-w-2xl">
+    <div className="mt-4 rounded-lg border border-gray-700 bg-gray-800 p-4">
+      <h3 className="text-sm font-semibold text-white">Run the survey</h3>
+      <p className="mt-1 text-xs text-gray-400 max-w-2xl">
         Deterministic, in-process gate: fetches the live site against the survey manifest, greps the
         14 spec markers the build plants, and derives the verdict in plain code — no CI, no model.
         Same input ⇒ same verdict. Runs in ~2s and records the result here.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button onClick={runSurvey} disabled={running} className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm rounded hover:bg-slate-800 disabled:opacity-50">
+        <button onClick={runSurvey} disabled={running} className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded disabled:opacity-50">
           {running
             ? <><Loader2 className="animate-spin" size={16} /> Running…</>
             : <><Search size={16} /> {hasRun ? 'Re-run survey' : 'Run survey'}</>}
         </button>
-        {kickError && <span className="text-sm text-red-600">Couldn&apos;t run: {kickError}</span>}
+        {kickError && <span className="text-sm text-red-400">Couldn&apos;t run: {kickError}</span>}
       </div>
 
       {hasRun && (
-        <div className={`mt-3 rounded-lg border p-3 ${isRenovation ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+        <div className={`mt-3 rounded-lg border p-3 ${isRenovation ? 'border-green-700 bg-green-900/30' : 'border-red-700 bg-red-900/30'}`}>
           <div className="flex items-center gap-2 flex-wrap">
             {isRenovation
-              ? <CheckCircle className="text-green-600 shrink-0" size={18} />
-              : <XCircle className="text-red-500 shrink-0" size={18} />}
-            <span className={`text-sm font-semibold uppercase tracking-wider ${isRenovation ? 'text-green-700' : 'text-red-700'}`}>
+              ? <CheckCircle className="text-green-400 shrink-0" size={18} />
+              : <XCircle className="text-red-400 shrink-0" size={18} />}
+            <span className={`text-sm font-semibold uppercase tracking-wider ${isRenovation ? 'text-green-300' : 'text-red-300'}`}>
               {verdict ?? 'UNKNOWN'}
             </span>
-            {evidenced !== null && <span className="text-xs text-gray-600">· evidenced {evidenced}/{total}</span>}
-            {typeof preHardPass === 'boolean' && <span className="text-xs text-gray-600">· PRE-HARD {preHardPass ? 'pass' : 'fail'}</span>}
+            {evidenced !== null && <span className="text-xs text-gray-400">· evidenced {evidenced}/{total}</span>}
+            {typeof preHardPass === 'boolean' && <span className="text-xs text-gray-400">· PRE-HARD {preHardPass ? 'pass' : 'fail'}</span>}
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
             <span>manifest {survey?.manifest_ok ? 'ok ✓' : 'missing ✗'}</span>
             {typeof survey?.routes_fetched === 'number' && <span>routes fetched: {survey.routes_fetched}</span>}
             <span>why-now {survey?.why_now_present ? 'present ✓' : 'absent ✗'}</span>
           </div>
           {!isRenovation && toReachItems.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs font-medium text-gray-700">To reach RENOVATION:</p>
-              <ul className="mt-1 list-disc list-inside text-xs text-gray-600 space-y-0.5">
+              <p className="text-xs font-medium text-gray-400">To reach RENOVATION:</p>
+              <ul className="mt-1 list-disc list-inside text-xs text-gray-400 space-y-0.5">
                 {toReachItems.map((item, i) => (
                   <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
                 ))}
@@ -242,21 +242,21 @@ function DesignBuildPanel({ productSlug, verdict, productUrl, db, onStarted }: {
       </button>
 
       {started && !prUrl && (
-        <p className="mt-2 text-sm text-purple-700">
+        <p className="mt-2 text-sm text-purple-300">
           Building in CI (~5–10 min) — the agent rebuilds to spec on a branch and opens a PR. The card watches for it.
         </p>
       )}
-      {err && <p className="mt-2 text-sm text-red-600">Couldn&apos;t start: {err}</p>}
+      {err && <p className="mt-2 text-sm text-red-400">Couldn&apos;t start: {err}</p>}
 
       {db && (
-        <div className={`mt-3 rounded-lg border p-3 ${db.status === 'pass' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+        <div className={`mt-3 rounded-lg border p-3 ${db.status === 'pass' ? 'border-green-700 bg-green-900/30' : 'border-red-700 bg-red-900/30'}`}>
           {prUrl ? (
-            <a href={prUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:underline">
+            <a href={prUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-green-300 hover:underline">
               <GitPullRequest size={16} /> PR ready — review &amp; merge it here
               <ExternalLink size={13} />
             </a>
           ) : (
-            <span className="text-sm text-red-700">Last Design &amp; Build run failed — {db.reason || 'see the Actions log'}.</span>
+            <span className="text-sm text-red-300">Last Design &amp; Build run failed — {db.reason || 'see the Actions log'}.</span>
           )}
           <p className="mt-1 text-xs text-gray-500">
             Recorded {new Date(db.created_at).toLocaleString()}
@@ -265,10 +265,10 @@ function DesignBuildPanel({ productSlug, verdict, productUrl, db, onStarted }: {
 
           {decisions.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs font-semibold text-gray-700">Decisions the agent made (override at the PR):</p>
+              <p className="text-xs font-semibold text-gray-400">Decisions the agent made (override at the PR):</p>
               <ul className="mt-1 space-y-1">
                 {decisions.map((d, i) => (
-                  <li key={i} className="text-xs text-gray-600">
+                  <li key={i} className="text-xs text-gray-400">
                     <span className="font-medium">{d.question}</span> → chose <em>{d.chose}</em>{d.why ? <> — {d.why}</> : null}
                   </li>
                 ))}
@@ -454,7 +454,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading product details...</p>
+          <p className="text-gray-400">Loading product details...</p>
         </div>
       </div>
     );
@@ -462,8 +462,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
   if (error || !product) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Error loading product: {error}</p>
+      <div className="bg-red-900/30 border border-red-700 rounded-lg p-4">
+        <p className="text-red-300">Error loading product: {error}</p>
       </div>
     );
   }
@@ -515,13 +515,13 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Processing — {product.manifest.name}</h1>
+                <h1 className="text-3xl font-bold text-white">Processing — {product.manifest.name}</h1>
                 <p className="text-gray-500 mt-1">{product.validation?.display_name || 'Not in pipeline'}</p>
               </div>
           <div className="flex gap-2">
-            {product.can_run_outreach_now && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-700">✅ Ready for Outreach</span>}
-            {product.validation?.is_paused && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700">⏸ Paused</span>}
-            {product.validation?.is_draft && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-700">📝 Draft</span>}
+            {product.can_run_outreach_now && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-green-900/30 text-green-300">✅ Ready for Outreach</span>}
+            {product.validation?.is_paused && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-200">⏸ Paused</span>}
+            {product.validation?.is_draft && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-blue-900/30 text-blue-300">📝 Draft</span>}
           </div>
         </div>
       </div>
@@ -530,27 +530,27 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">Survey verdict</span>
           <span className={`text-2xl font-bold uppercase tracking-wider ${banner.text}`}>{banner.label}</span>
-          {surveyGate && <span className={`text-xs px-2 py-0.5 rounded uppercase tracking-wider ${surveyGate.status === 'pass' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>gate {surveyGate.status}</span>}
+          {surveyGate && <span className={`text-xs px-2 py-0.5 rounded uppercase tracking-wider ${surveyGate.status === 'pass' ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300'}`}>gate {surveyGate.status}</span>}
           {polling && <span className="text-xs text-gray-400 inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> watching for updates…</span>}
         </div>
-        <p className="mt-2 text-sm text-gray-600">{banner.blurb}</p>
+        <p className="mt-2 text-sm text-gray-400">{banner.blurb}</p>
         {surveyDetail && <p className="mt-1 text-sm text-gray-500">{surveyDetail}</p>}
         {surveyGate && (
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
             <span>Recorded {new Date(surveyGate.created_at).toLocaleString()} by <span className="font-mono">{surveyGate.recorded_by}</span></span>
-            {surveyGate.deployment_id ? <span>Bound to deployment <span className="font-mono">{surveyGate.deployment_id.slice(0, 12)}…</span></span> : <span className="text-yellow-700">Unbound — provisional (not tied to a deployment)</span>}
+            {surveyGate.deployment_id ? <span>Bound to deployment <span className="font-mono">{surveyGate.deployment_id.slice(0, 12)}…</span></span> : <span className="text-yellow-400">Unbound — provisional (not tied to a deployment)</span>}
             {surveyGate.artifact_ref && <span className="font-mono break-all">{surveyGate.artifact_ref}</span>}
           </div>
         )}
       </div>
 
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-100">
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
         <div className="flex items-center gap-2 mb-2">
           <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 1</span>
-          <h2 className="text-lg font-semibold text-gray-900">Define the spec</h2>
-          {validationFieldsComplete && <CheckCircle className="text-green-600" size={18} />}
+          <h2 className="text-lg font-semibold text-white">Define the spec</h2>
+          {validationFieldsComplete && <CheckCircle className="text-green-400" size={18} />}
         </div>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-400 mb-4">
           These fields define what the product is and who it is for. You can&apos;t build a site — or survey one —
           without knowing the distributor and end-user, so this is the prerequisite for everything below.
           <br /><strong>This item is for:</strong> the product promise, distributor model, end user, and pain point.
@@ -564,18 +564,18 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         }} />
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-2">
           <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 2</span>
-          <h2 className="text-lg font-semibold text-gray-900">Website / Product URL</h2>
-          {product.validation?.mvp_url && <CheckCircle className="text-green-600" size={18} />}
+          <h2 className="text-lg font-semibold text-white">Website / Product URL</h2>
+          {product.validation?.mvp_url && <CheckCircle className="text-green-400" size={18} />}
         </div>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-400 mb-4">
           {product.validation?.mvp_url ? "Product URL is set — survey mode can run against it (Step 3)." : "Enter the deployed product URL. If none exists yet, there's nothing to survey — you go straight to design & build (Step 3 → Stage 2)."}
         </p>
         {product.validation?.mvp_url ? (
           <div className="flex items-center gap-4">
-            <a href={product.validation.mvp_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
+            <a href={product.validation.mvp_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-2">
               {product.validation.mvp_url}<ExternalLink size={14} />
             </a>
             <button onClick={async () => {
@@ -584,17 +584,17 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 const res = await fetch(`/api/admin/pipeline/${productId}/validation`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mvp_url: newUrl.trim() }) });
                 if (res.ok) { const data = await res.json(); setProduct((prev: any) => ({ ...prev, validation: data.data })); }
               }
-            }} className="text-sm text-gray-600 hover:text-gray-800">Edit URL</button>
+            }} className="text-sm text-gray-400 hover:text-white">Edit URL</button>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded">⚠️ No product URL found. Either:</p>
-            <ol className="text-sm text-gray-600 list-decimal list-inside space-y-1">
+            <p className="text-sm text-yellow-300 bg-yellow-900/30 p-3 rounded">⚠️ No product URL found. Either:</p>
+            <ol className="text-sm text-gray-400 list-decimal list-inside space-y-1">
               <li>Enter an existing deployed URL below if the product already exists</li>
               <li>Or design & build it first (Step 3 → Stage 2), then come back and enter the URL</li>
             </ol>
             <div className="flex gap-2 mt-4">
-              <input type="url" placeholder="https://your-product.vercel.app" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 bg-white" id="mvp-url-input" />
+              <input type="url" placeholder="https://your-product.vercel.app" className="flex-1 px-3 py-2 border border-gray-700 rounded text-sm text-white bg-gray-900" id="mvp-url-input" />
               <button onClick={async () => {
                 const input = document.getElementById('mvp-url-input') as HTMLInputElement;
                 const url = input?.value?.trim();
@@ -608,34 +608,34 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-2">
           <span className="bg-slate-700 text-white text-xs font-bold px-2 py-1 rounded">STEP 3</span>
-          <h2 className="text-lg font-semibold text-gray-900">Survey gate</h2>
-          {isRenovation && <CheckCircle className="text-green-600" size={18} />}
+          <h2 className="text-lg font-semibold text-white">Survey gate</h2>
+          {isRenovation && <CheckCircle className="text-green-400" size={18} />}
         </div>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-400 mb-4">
           The post-build verdict on the live MVP, scored by survey mode against what the site/repo actually
           evidences (the 14 spec fields + PRE-HARD checks).
-          <span className="text-green-700"> RENOVATION</span> advances to Stage 5;
-          <span className="text-yellow-700"> TEARDOWN</span> re-enters Stage 2 design→build;
-          <span className="text-red-700"> INCOMPLETE-SPEC</span> goes back to the spec.
+          <span className="text-green-400"> RENOVATION</span> advances to Stage 5;
+          <span className="text-yellow-400"> TEARDOWN</span> re-enters Stage 2 design→build;
+          <span className="text-red-400"> INCOMPLETE-SPEC</span> goes back to the spec.
         </p>
 
         {isIncompleteSpec && (
-          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <AlertTriangle className="text-red-600 shrink-0 mt-0.5" size={18} />
-            <p className="text-sm text-red-700"><strong>INCOMPLETE-SPEC.</strong> The spec couldn&apos;t be evidenced. Complete Step 1 above, then re-run survey mode against the live build.</p>
+          <div className="flex items-start gap-2 p-3 bg-red-900/30 border border-red-700 rounded-lg">
+            <AlertTriangle className="text-red-400 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-red-300"><strong>INCOMPLETE-SPEC.</strong> The spec couldn&apos;t be evidenced. Complete Step 1 above, then re-run survey mode against the live build.</p>
           </div>
         )}
 
         {isTeardown && (
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <div className="rounded-lg border border-yellow-700 bg-yellow-900/30 p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">STAGE 2</span>
-              <h3 className="font-semibold text-gray-900">Design &amp; Build</h3>
+              <h3 className="font-semibold text-white">Design &amp; Build</h3>
             </div>
-            <p className="text-sm text-gray-700 mb-1">
+            <p className="text-sm text-gray-400 mb-1">
               {frontDoor === 'NO-URL'
                 ? "No URL yet — this is a fresh design/build. The agent designs to the spec + standards, builds the site, and opens a PR for you to review."
                 : "TEARDOWN — the build doesn't evidence the spec. The agent rebuilds to the spec + standards on a branch and opens a PR; review, merge, redeploy, then re-survey."}
@@ -645,16 +645,16 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         )}
 
         {frontDoor === 'NOT-SURVEYED' && (
-          <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-start gap-2 p-3 bg-gray-800 border border-gray-700 rounded-lg">
             <Search className="text-gray-500 shrink-0 mt-0.5" size={18} />
-            <p className="text-sm text-gray-600">A URL is set but no survey verdict is recorded. Run the <code className="text-blue-600">naive-tester</code> <strong>survey mode</strong> against the live build — it scores the 14 evidenced fields + PRE-HARD checks and POSTs the verdict here.</p>
+            <p className="text-sm text-gray-400">A URL is set but no survey verdict is recorded. Run the <code className="text-blue-400">naive-tester</code> <strong>survey mode</strong> against the live build — it scores the 14 evidenced fields + PRE-HARD checks and POSTs the verdict here.</p>
           </div>
         )}
 
         {isRenovation && (
-          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <CheckCircle className="text-green-600" size={20} />
-            <span className="text-green-700 font-medium">RENOVATION — downstream steps unlocked below.</span>
+          <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg">
+            <CheckCircle className="text-green-400" size={20} />
+            <span className="text-green-300 font-medium">RENOVATION — downstream steps unlocked below.</span>
           </div>
         )}
 
@@ -666,37 +666,37 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               {surveyGate.result.mvp ? <>{' · '}live URL {surveyGate.result.mvp.ok ? 'up' : 'down'}</> : null}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-2">Field evidence</h3>
+              <h3 className="text-sm font-semibold text-white mb-2">Field evidence</h3>
               <ul className="space-y-1.5">
                 {surveyGate.result.fields?.map((f) => (
                   <li key={f.field} className="flex items-start gap-2 text-sm">
-                    {f.evidenced ? <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={16} /> : <XCircle className="text-gray-400 shrink-0 mt-0.5" size={16} />}
-                    <span className="text-gray-700"><span className="font-medium">{f.label}</span>{f.evidence ? <span className="text-gray-500"> — {f.evidence}</span> : <span className="text-gray-400 italic"> — not evidenced</span>}</span>
+                    {f.evidenced ? <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={16} /> : <XCircle className="text-gray-400 shrink-0 mt-0.5" size={16} />}
+                    <span className="text-gray-400"><span className="font-medium">{f.label}</span>{f.evidence ? <span className="text-gray-500"> — {f.evidence}</span> : <span className="text-gray-400 italic"> — not evidenced</span>}</span>
                   </li>
                 ))}
               </ul>
             </div>
             {surveyGate.result.preHard?.results?.length ? (
               <div>
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">PRE-HARD checks</h3>
+                <h3 className="text-sm font-semibold text-white mb-2">PRE-HARD checks</h3>
                 <ul className="space-y-1.5">
                   {surveyGate.result.preHard.results.map((p) => (
                     <li key={p.code} className="flex items-start gap-2 text-sm">
-                      {p.status === 'pass' ? <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={16} /> : <XCircle className="text-red-500 shrink-0 mt-0.5" size={16} />}
-                      <span className="text-gray-700"><span className="font-medium">{p.code}</span><span className="text-gray-500"> — {p.status}{p.evidence ? `: ${p.evidence}` : ''}</span></span>
+                      {p.status === 'pass' ? <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={16} /> : <XCircle className="text-red-400 shrink-0 mt-0.5" size={16} />}
+                      <span className="text-gray-400"><span className="font-medium">{p.code}</span><span className="text-gray-500"> — {p.status}{p.evidence ? `: ${p.evidence}` : ''}</span></span>
                     </li>
                   ))}
                 </ul>
               </div>
             ) : null}
             {surveyGate.result.toReach?.length ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <h3 className="text-sm font-semibold text-amber-800 mb-2">What needs to happen to reach RENOVATION</h3>
+              <div className="rounded-lg border border-amber-700 bg-amber-900/30 p-3">
+                <h3 className="text-sm font-semibold text-amber-300 mb-2">What needs to happen to reach RENOVATION</h3>
                 <ul className="space-y-1.5">
                   {surveyGate.result.toReach.map((t, i) => (
                     <li key={`${t.code}-${i}`} className="flex items-start gap-2 text-sm">
-                      <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={16} />
-                      <span className="text-amber-900"><span className="font-medium">{t.label}</span><span className="text-amber-700"> — {t.need}</span></span>
+                      <AlertCircle className="text-amber-400 shrink-0 mt-0.5" size={16} />
+                      <span className="text-amber-200"><span className="font-medium">{t.label}</span><span className="text-amber-300"> — {t.need}</span></span>
                     </li>
                   ))}
                 </ul>
@@ -709,29 +709,29 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
       </div>
 
       {downstreamLocked && (
-        <div className="flex items-start gap-2 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-          <Lock className="text-slate-500 shrink-0 mt-0.5" size={18} />
-          <p className="text-sm text-slate-600"><strong>Downstream steps are locked.</strong> Founder commitment, compliance, validation, scoring and outreach only matter once the survey records a <span className="text-green-700 font-medium">RENOVATION</span> verdict. Resolve the branch above first.</p>
+        <div className="flex items-start gap-2 p-4 bg-gray-800 border border-gray-700 rounded-lg">
+          <Lock className="text-gray-500 shrink-0 mt-0.5" size={18} />
+          <p className="text-sm text-gray-400"><strong>Downstream steps are locked.</strong> Founder commitment, compliance, validation, scoring and outreach only matter once the survey records a <span className="text-green-400 font-medium">RENOVATION</span> verdict. Resolve the branch above first.</p>
         </div>
       )}
 
       <div className={downstreamLocked ? 'opacity-50 pointer-events-none select-none space-y-6' : 'space-y-6'} aria-disabled={downstreamLocked}>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h2 className="font-semibold text-blue-900 mb-2">Readiness: {product.readiness_score}%</h2>
-          <p className="text-blue-800 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
-          <p className="text-blue-700 text-sm">{product.action_items.length} action{product.action_items.length !== 1 ? 's' : ''} needed to reach outreach readiness</p>
-          <div className="mt-3 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+          <h2 className="font-semibold text-blue-300 mb-2">Readiness: {product.readiness_score}%</h2>
+          <p className="text-blue-300 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
+          <p className="text-blue-300 text-sm">{product.action_items.length} action{product.action_items.length !== 1 ? 's' : ''} needed to reach outreach readiness</p>
+          <div className="mt-3 w-full bg-gray-700 rounded-full h-3 overflow-hidden">
             <div className={`h-full rounded-full transition-all ${product.readiness_score >= 80 ? 'bg-green-500' : product.readiness_score >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${product.readiness_score}%` }} />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 4</span>
-            <h2 className="text-lg font-semibold text-gray-900">Founder Commitment</h2>
-            {product.validation?.has_methodology_commitment && <CheckCircle className="text-green-600" size={18} />}
+            <h2 className="text-lg font-semibold text-white">Founder Commitment</h2>
+            {product.validation?.has_methodology_commitment && <CheckCircle className="text-green-400" size={18} />}
           </div>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-400 mb-4">
             Tick to confirm you are committed to running the 4-week validation pipeline.
             <br /><strong>This item is for:</strong> confirming you will actually validate this product.
             <br /><strong>When done:</strong> run compliance tests (Step 5) ↓
@@ -751,37 +751,37 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 }
               } catch (err) { console.error('[CHECKBOX] Error:', err); }
             }} className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" />
-            <span className="text-gray-700">I commit to running the 4-week validation pipeline for this product</span>
+            <span className="text-gray-400">I commit to running the 4-week validation pipeline for this product</span>
           </label>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 5</span>
-            <h2 className="text-lg font-semibold text-gray-900">Compliance Tests</h2>
-            {allCompliancePassed && <CheckCircle className="text-green-600" size={18} />}
+            <h2 className="text-lg font-semibold text-white">Compliance Tests</h2>
+            {allCompliancePassed && <CheckCircle className="text-green-400" size={18} />}
           </div>
-          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center gap-2 mb-2"><CheckCircle className="text-blue-600" size={16} /><span className="font-medium text-blue-900">InvestorPilot Data Completeness</span></div>
+          <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-700">
+            <div className="flex items-center gap-2 mb-2"><CheckCircle className="text-blue-400" size={16} /><span className="font-medium text-blue-300">InvestorPilot Data Completeness</span></div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {getInvestorPilotFieldsStatus(product.validation).map((field) => (
-                <div key={field.label} className={`flex items-center gap-1 ${field.complete ? 'text-green-700' : 'text-orange-600'}`}>{field.complete ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}{field.label}</div>
+                <div key={field.label} className={`flex items-center gap-1 ${field.complete ? 'text-green-300' : 'text-orange-400'}`}>{field.complete ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}{field.label}</div>
               ))}
             </div>
-            {product.gaps?.some((g: string) => g.includes('Missing')) && <p className="text-xs text-orange-700 mt-2">⚠️ Complete missing fields above before executing to InvestorPilot</p>}
+            {product.gaps?.some((g: string) => g.includes('Missing')) && <p className="text-xs text-orange-400 mt-2">⚠️ Complete missing fields above before executing to InvestorPilot</p>}
           </div>
-          <p className="text-sm text-gray-600 mb-4">Run compliance checks to ensure the product meets technical and legal requirements.<br /><strong>When done:</strong> run validation tests (Step 6) ↓</p>
+          <p className="text-sm text-gray-400 mb-4">Run compliance checks to ensure the product meets technical and legal requirements.<br /><strong>When done:</strong> run validation tests (Step 6) ↓</p>
           <div className="space-y-3">
             {complianceTests.map((test) => (
-              <div key={test.id} className="border rounded-lg p-4 bg-gray-50">
+              <div key={test.id} className="border border-gray-700 rounded-lg p-4 bg-gray-900">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {test.status === 'passed' && <CheckCircle className="text-green-600" size={20} />}
-                    {test.status === 'failed' && <XCircle className="text-red-600" size={20} />}
-                    {test.status === 'warning' && <AlertTriangle className="text-yellow-600" size={20} />}
-                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
-                    {test.status === 'running' && <Loader2 className="text-blue-600 animate-spin" size={20} />}
-                    <div><h4 className="font-medium text-gray-900">{test.name}</h4><p className="text-sm text-gray-500">{test.description}</p></div>
+                    {test.status === 'passed' && <CheckCircle className="text-green-400" size={20} />}
+                    {test.status === 'failed' && <XCircle className="text-red-400" size={20} />}
+                    {test.status === 'warning' && <AlertTriangle className="text-yellow-400" size={20} />}
+                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-700" />}
+                    {test.status === 'running' && <Loader2 className="text-blue-400 animate-spin" size={20} />}
+                    <div><h4 className="font-medium text-white">{test.name}</h4><p className="text-sm text-gray-500">{test.description}</p></div>
                   </div>
                   <div className="flex items-center gap-2">
                     {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
@@ -817,34 +817,34 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                   </div>
                 </div>
                 {test.findings && test.findings.length > 0 && (
-                  <div className="mt-3 pl-8"><div className="text-sm text-red-600 font-medium">Findings:</div><ul className="text-sm text-red-500 list-disc list-inside">{test.findings.map((finding, i) => (<li key={i}>{finding}</li>))}</ul></div>
+                  <div className="mt-3 pl-8"><div className="text-sm text-red-400 font-medium">Findings:</div><ul className="text-sm text-red-400 list-disc list-inside">{test.findings.map((finding, i) => (<li key={i}>{finding}</li>))}</ul></div>
                 )}
               </div>
             ))}
-            {allCompliancePassed && <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg"><CheckCircle className="text-green-600" size={20} /><span className="text-green-700 font-medium">All compliance tests passed!</span></div>}
-            {complianceTests.some(t => t.status === 'warning') && !allCompliancePassed && <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"><AlertCircle className="text-yellow-600" size={20} /><span className="text-yellow-700 font-medium">{complianceTests.filter(t => t.status === 'warning').length} compliance tests with warnings</span></div>}
-            {complianceTests.some(t => t.status === 'failed') && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg"><XCircle className="text-red-600" size={20} /><span className="text-red-700 font-medium">{complianceTests.filter(t => t.status === 'failed').length} compliance tests failed</span></div>}
+            {allCompliancePassed && <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg"><CheckCircle className="text-green-400" size={20} /><span className="text-green-300 font-medium">All compliance tests passed!</span></div>}
+            {complianceTests.some(t => t.status === 'warning') && !allCompliancePassed && <div className="flex items-center gap-2 p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg"><AlertCircle className="text-yellow-400" size={20} /><span className="text-yellow-300 font-medium">{complianceTests.filter(t => t.status === 'warning').length} compliance tests with warnings</span></div>}
+            {complianceTests.some(t => t.status === 'failed') && <div className="flex items-center gap-2 p-3 bg-red-900/30 border border-red-700 rounded-lg"><XCircle className="text-red-400" size={20} /><span className="text-red-300 font-medium">{complianceTests.filter(t => t.status === 'failed').length} compliance tests failed</span></div>}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
-            <h2 className="text-lg font-semibold text-gray-900">Validation Tests</h2>
-            {allValidationPassed && <CheckCircle className="text-green-600" size={18} />}
+            <h2 className="text-lg font-semibold text-white">Validation Tests</h2>
+            {allValidationPassed && <CheckCircle className="text-green-400" size={18} />}
           </div>
-          <p className="text-sm text-gray-600 mb-4">Run validation tests using gstack skills (naive-tester, voice-auditor, gtm-auditor, qa).<br /><strong>When done:</strong> check the final score (Step 7) ↓</p>
+          <p className="text-sm text-gray-400 mb-4">Run validation tests using gstack skills (naive-tester, voice-auditor, gtm-auditor, qa).<br /><strong>When done:</strong> check the final score (Step 7) ↓</p>
           <div className="space-y-3">
             {validationTests.map((test) => (
-              <div key={test.id} className="border rounded-lg p-4 bg-gray-50">
+              <div key={test.id} className="border border-gray-700 rounded-lg p-4 bg-gray-900">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {test.status === 'passed' && <CheckCircle className="text-green-600" size={20} />}
-                    {test.status === 'failed' && <XCircle className="text-red-600" size={20} />}
-                    {test.status === 'warning' && <AlertTriangle className="text-yellow-600" size={20} />}
-                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
-                    {test.status === 'running' && <Loader2 className="text-blue-600 animate-spin" size={20} />}
-                    <div><h4 className="font-medium text-gray-900">{test.name}</h4><p className="text-sm text-gray-500">{test.description}</p></div>
+                    {test.status === 'passed' && <CheckCircle className="text-green-400" size={20} />}
+                    {test.status === 'failed' && <XCircle className="text-red-400" size={20} />}
+                    {test.status === 'warning' && <AlertTriangle className="text-yellow-400" size={20} />}
+                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-700" />}
+                    {test.status === 'running' && <Loader2 className="text-blue-400 animate-spin" size={20} />}
+                    <div><h4 className="font-medium text-white">{test.name}</h4><p className="text-sm text-gray-500">{test.description}</p></div>
                   </div>
                   <div className="flex items-center gap-2">
                     {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
@@ -880,21 +880,21 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                   </div>
                 </div>
                 {test.findings && test.findings.length > 0 && (
-                  <div className="mt-3 pl-8"><div className="text-sm text-red-600 font-medium">Findings:</div><ul className="text-sm text-red-500 list-disc list-inside">{test.findings.map((finding, i) => (<li key={i}>{finding}</li>))}</ul></div>
+                  <div className="mt-3 pl-8"><div className="text-sm text-red-400 font-medium">Findings:</div><ul className="text-sm text-red-400 list-disc list-inside">{test.findings.map((finding, i) => (<li key={i}>{finding}</li>))}</ul></div>
                 )}
               </div>
             ))}
-            {allValidationPassed && <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg"><CheckCircle className="text-green-600" size={20} /><span className="text-green-700 font-medium">All validation tests passed!</span></div>}
+            {allValidationPassed && <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg"><CheckCircle className="text-green-400" size={20} /><span className="text-green-300 font-medium">All validation tests passed!</span></div>}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
-            <h2 className="text-lg font-semibold text-gray-900">Final Score Check</h2>
-            {product.readiness_score >= 80 && <CheckCircle className="text-green-600" size={18} />}
+            <h2 className="text-lg font-semibold text-white">Final Score Check</h2>
+            {product.readiness_score >= 80 && <CheckCircle className="text-green-400" size={18} />}
           </div>
-          <p className="text-sm text-gray-600 mb-4">Your validation score must be ≥80% to run outreach.<br /><strong>This item is for:</strong> reviewing remaining gaps and confirming readiness.<br /><strong>When score ≥80%:</strong> submit for automated outreach to InvestorPilot ↓</p>
+          <p className="text-sm text-gray-400 mb-4">Your validation score must be ≥80% to run outreach.<br /><strong>This item is for:</strong> reviewing remaining gaps and confirming readiness.<br /><strong>When score ≥80%:</strong> submit for automated outreach to InvestorPilot ↓</p>
           <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
           <div className="mt-4">
             <button onClick={async () => {
@@ -903,20 +903,20 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 const data = await res.json();
                 if (data.success) setProduct((prev: any) => ({ ...prev, validation: data.data, readiness_score: data.readiness_score }));
               } catch (err) { console.error('[RECALCULATE] Error:', err); }
-            }} className="text-sm text-blue-600 hover:text-blue-800 underline">Recalculate Score (debug)</button>
+            }} className="text-sm text-blue-400 hover:text-blue-300 underline">Recalculate Score (debug)</button>
           </div>
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-gray-700">
             <button onClick={handleSubmitForOutreach} disabled={!isReadyForOutreach || submitting} className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all ${isReadyForOutreach ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}>
               {submitting ? <><Loader2 className="animate-spin" size={20} /> Submitting...</> : <><Send size={20} />{isReadyForOutreach ? 'Submit for Automated Outreach →' : `Submit for Outreach (${product.readiness_score}%/80%)`}</>}
             </button>
-            {isReadyForOutreach && <p className="text-center text-sm text-green-600 mt-2">✅ Product will be sent to InvestorPilot for distributor outreach</p>}
+            {isReadyForOutreach && <p className="text-center text-sm text-green-400 mt-2">✅ Product will be sent to InvestorPilot for distributor outreach</p>}
           </div>
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800 mb-3">Already have an InvestorPilot account? Click below to open InvestorPilot, then click Sign in to log in.</p>
+          <div className="mt-4 p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
+            <p className="text-sm text-blue-300 mb-3">Already have an InvestorPilot account? Click below to open InvestorPilot, then click Sign in to log in.</p>
             <button onClick={handleLoginToInvestorPilot} disabled={investorPilotLogin} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-all">
               {investorPilotLogin ? <><Loader2 className="animate-spin" size={18} /> Sending login link...</> : <><ExternalLink size={18} /> Login to InvestorPilot →</>}
             </button>
-            <p className="text-xs text-blue-600 mt-2">Sends a magic link to your email for instant access</p>
+            <p className="text-xs text-blue-300 mt-2">Sends a magic link to your email for instant access</p>
           </div>
         </div>
       </div>
