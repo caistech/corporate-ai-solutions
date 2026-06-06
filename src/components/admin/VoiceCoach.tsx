@@ -59,6 +59,11 @@ export default function VoiceCoach({
   const scrollRef = useRef<HTMLDivElement>(null)
   // Mirror of the transcript in the extractor's shape — read in onDisconnect (avoids stale closure).
   const turnsRef = useRef<{ role: 'user' | 'assistant'; text: string }[]>([])
+  // Hub memory-loop persistence. convId is the ElevenLabs conversation id (from onConnect); until
+  // /coach/start commits the conversation row, per-turn saves are buffered here, then flushed.
+  const convIdRef = useRef<string | null>(null)
+  const startedRef = useRef(false)
+  const pendingRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
 
   const refreshCard = useCallback(async (): Promise<CardState | null> => {
     try {
@@ -75,6 +80,22 @@ export default function VoiceCoach({
   useEffect(() => {
     refreshCard()
   }, [refreshCard])
+
+  // Persist a single conversation turn into the hub memory loop (convai_messages). Best-effort:
+  // the on-disconnect snapshot still captures the full transcript if a turn POST is dropped.
+  const persistTurn = useCallback(async (role: 'user' | 'assistant', content: string) => {
+    const convId = convIdRef.current
+    if (!convId) return
+    try {
+      await fetch('/api/admin/pipeline/new-ideas/coach/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ elevenlabsConversationId: convId, role, content }),
+      })
+    } catch {
+      /* best-effort */
+    }
+  }, [])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -196,21 +217,59 @@ export default function VoiceCoach({
           title="Talk through your idea with the coach. One question at a time; answers save as you go."
           textFallback
           clientTools={clientTools}
+          onConnect={async (conversationId) => {
+            setConnected(true)
+            convIdRef.current = conversationId
+            startedRef.current = false
+            // Open + bind the conversation in the hub memory loop, and pull welcome-back recall.
+            try {
+              const res = await fetch('/api/admin/pipeline/new-ideas/coach/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productSlug, elevenlabsConversationId: conversationId, elevenlabsAgentId: COACH_AGENT_ID }),
+              })
+              const data = await res.json().catch(() => ({}))
+              startedRef.current = res.ok
+              if (res.ok && data.isReturningUser) {
+                setTranscript((t) => [{ source: 'ai', text: 'Welcome back — I have our earlier intake on file and can pick up where we left off.' }, ...t])
+              }
+              if (res.ok) {
+                const buffered = pendingRef.current
+                pendingRef.current = []
+                for (const m of buffered) await persistTurn(m.role, m.content)
+              }
+            } catch {
+              /* start failed — the transcript is still captured by onDisconnect */
+            }
+          }}
           onMessage={(source, message) => {
-            turnsRef.current.push({ role: source === 'user' ? 'user' : 'assistant', text: message })
+            const role: 'user' | 'assistant' = source === 'user' ? 'user' : 'assistant'
+            turnsRef.current.push({ role, text: message })
             setTranscript((t) => [...t, { source: source === 'user' ? 'user' : 'ai', text: message }])
+            // Persist per-turn; buffer until /coach/start commits the conversation row.
+            if (startedRef.current && convIdRef.current) void persistTurn(role, message)
+            else pendingRef.current.push({ role, content: message })
           }}
           onStatusChange={(status) => setConnected(status === 'connected')}
           onDisconnect={async () => {
             setConnected(false)
             // Completion backstop — fill any field captured conversationally but not saved.
             if (turnsRef.current.length === 0) return
+            const convId = convIdRef.current
             try {
               await fetch('/api/admin/pipeline/new-ideas/backstop', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ productSlug, transcript: turnsRef.current }),
               })
+              // Finalise the persisted conversation (status + transcript snapshot for the card panel).
+              if (convId) {
+                await fetch('/api/admin/pipeline/new-ideas/coach/complete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ elevenlabsConversationId: convId, transcript: turnsRef.current }),
+                })
+              }
               await refreshCard()
             } catch {
               /* best-effort — primary save_field path already wrote what it captured */

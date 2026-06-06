@@ -38,7 +38,7 @@ import {
   canonicalToTestStatus,
   allTestsPassedCanonical,
 } from '@/lib/methodology/validation-test-state';
-import { CheckCircle, Send, Loader2, ExternalLink, Play, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer } from 'lucide-react';
+import { CheckCircle, Send, Loader2, ExternalLink, Play, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer, MessageSquare } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -283,6 +283,60 @@ function DesignBuildPanel({ productSlug, verdict, productUrl, db, onStarted }: {
           )}
 
           <p className="mt-2 text-xs text-gray-500">Merge the PR → Vercel redeploys → then hit <strong>Run survey</strong> to re-verdict.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type CoachConversation = {
+  id: string;
+  status: string;
+  started_at: string;
+  ended_at: string | null;
+  message_count: number | null;
+  last_topic: string | null;
+  title: string | null;
+  transcript_text: string | null;
+  messages: { role: 'user' | 'assistant'; content: string; message_index: number; timestamp: string }[];
+};
+
+// The Morgan onboarding conversation bound to this card (persisted via the hub memory loop). The
+// fields in STEP 1 came from this walk — surfacing it makes the coach→card link visible + auditable.
+function CoachConversationPanel({ conv }: { conv: CoachConversation | null }) {
+  const [open, setOpen] = useState(false);
+  if (!conv) return null;
+  const msgs = conv.messages ?? [];
+  const count = typeof conv.message_count === 'number' && conv.message_count > 0 ? conv.message_count : msgs.length;
+  return (
+    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-2 px-6 py-4 text-left hover:bg-gray-700/40">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="text-blue-400 shrink-0" size={18} />
+          <div>
+            <h2 className="text-sm font-semibold text-white">Coach conversation</h2>
+            <p className="text-xs text-gray-500">
+              The Morgan intake walk that filled the spec fields below · {count} message{count === 1 ? '' : 's'}
+              {' · '}{new Date(conv.started_at).toLocaleString()}
+              {conv.status === 'completed' ? ' · completed' : ` · ${conv.status}`}
+            </p>
+          </div>
+        </div>
+        <span className="text-xs text-blue-400 shrink-0">{open ? 'Hide' : 'Show'}</span>
+      </button>
+      {open && (
+        <div className="px-6 pb-4 max-h-96 overflow-y-auto space-y-3 border-t border-gray-700 pt-4">
+          {msgs.length === 0 ? (
+            <p className="text-sm text-gray-500">No turns were recorded for this conversation.</p>
+          ) : (
+            msgs.map((m, i) => (
+              <div key={i} className={m.role === 'user' ? 'text-right' : 'text-left'}>
+                <div className={`inline-block max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-900 text-gray-200 border border-gray-700'}`}>
+                  {m.content}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -556,6 +610,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           </div>
         )}
       </div>
+
+      <CoachConversationPanel conv={product.coach_conversation ?? null} />
 
       <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
         <div className="flex items-center gap-2 mb-2">
