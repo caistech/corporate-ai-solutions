@@ -10,8 +10,8 @@
  * Auth: operator-gated (requireOperator) — this mints/revokes a security credential, so it must
  * never be reachable by a non-operator.
  *
- * Needs a Vercel API token in VERCEL_API_TOKEN (sensitive, prod+preview only per the Vercel env
- * rule). Project/team IDs are NOT secret — sourced from env with the known cockpit IDs as fallback.
+ * Needs a Vercel API token in VERCEL_TOKEN (or VERCEL_API_TOKEN) — sensitive, prod+preview only per
+ * the Vercel env rule. Project/team IDs are NOT secret — from env with the known cockpit IDs as fallback.
  *
  * Vercel API: PATCH /v1/projects/{id}/protection-bypass (generate / revoke);
  *             GET   /v9/projects/{id} (read current protectionBypass map).
@@ -61,7 +61,7 @@ export async function GET() {
   const operator = await requireOperator()
   if (!operator) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  const token = process.env.VERCEL_API_TOKEN
+  const token = process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN
   if (!token) {
     return NextResponse.json({ configured: false, enabled: false, tokenMissing: true })
   }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   const operator = await requireOperator()
   if (!operator) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  const token = process.env.VERCEL_API_TOKEN
+  const token = process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN
   if (!token) {
     return NextResponse.json(
       { error: 'VERCEL_API_TOKEN not configured on the server — add it (sensitive) then retry.' },
