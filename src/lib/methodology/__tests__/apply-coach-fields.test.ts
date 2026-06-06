@@ -3,6 +3,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   buildCoachUpdate,
   applyCoachFields,
+  routeCoachField,
+  summariseCardState,
   CoachFieldError,
   GRADED_FIELDS,
   HAS_FLAG_FIELDS,
@@ -156,5 +158,48 @@ describe('applyCoachFields — DB write', () => {
   it('requires a product slug', async () => {
     const { client } = fakeSupabase({ feasibility: null })
     await expect(applyCoachFields(client, '', { fields: { promise: 'x' } })).rejects.toThrow(/productSlug/)
+  })
+})
+
+describe('routeCoachField — single field → applyCoachFields shape', () => {
+  it('routes a graded field into fields{}', () => {
+    expect(routeCoachField('promise', 'sing-along karaoke')).toEqual({ fields: { promise: 'sing-along karaoke' } })
+  })
+  it('routes a feasibility field into feasibility{}', () => {
+    expect(routeCoachField('demand_tier', 'data')).toEqual({ feasibility: { demand_tier: 'data' } })
+  })
+  it('rejects an unknown field name (security — maps to 400 in the route)', () => {
+    expect(() => routeCoachField('is_draft', 'false')).toThrow(CoachFieldError)
+  })
+})
+
+describe('summariseCardState — progress view', () => {
+  it('an empty row is 0/14 captured, all required feasibility outstanding, not ready', () => {
+    const s = summariseCardState({ feasibility: null })
+    expect(s.total).toBe(14)
+    expect(s.gradedCaptured).toEqual([])
+    expect(s.gradedOutstanding).toHaveLength(14)
+    expect(s.feasibilityOutstanding).toEqual(['proof_of_demand', 'demand_tier', 'distributor_benefit_mode'])
+    expect(s.readyToAdmit).toBe(false)
+  })
+
+  it('a fully-populated row is 14/14 + feasibility complete → ready', () => {
+    const row: Record<string, unknown> = { feasibility: { proof_of_demand: 'waitlist', demand_tier: 'data', distributor_benefit_mode: 'paid' } }
+    for (const f of GRADED_FIELDS) row[f] = `value for ${f}`
+    const s = summariseCardState(row)
+    expect(s.gradedCaptured).toHaveLength(14)
+    expect(s.gradedOutstanding).toEqual([])
+    expect(s.feasibilityOutstanding).toEqual([])
+    expect(s.readyToAdmit).toBe(true)
+  })
+
+  it('counts only non-empty values; optional feasibility keys do not block readiness', () => {
+    const row: Record<string, unknown> = { feasibility: { proof_of_demand: 'x', demand_tier: 'data', distributor_benefit_mode: 'paid', why_now: '' } }
+    for (const f of GRADED_FIELDS) row[f] = 'set'
+    row.promise = '   ' // blank → outstanding
+    const s = summariseCardState(row)
+    expect(s.gradedOutstanding).toEqual(['promise'])
+    expect(s.readyToAdmit).toBe(false) // one graded field blank
+    expect(s.feasibilityOutstanding).toEqual([]) // why_now is optional, not required
   })
 })

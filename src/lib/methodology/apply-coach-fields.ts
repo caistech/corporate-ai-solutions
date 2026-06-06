@@ -184,3 +184,46 @@ export async function applyCoachFields(
 
   return { touched }
 }
+
+// The feasibility keys the admit gate HARD-requires (admit/route.ts:108-128). The other three
+// (why_now, status_quo, product_type) are optional context, so they don't count as outstanding.
+export const REQUIRED_FEASIBILITY = ['proof_of_demand', 'demand_tier', 'distributor_benefit_mode'] as const
+
+/**
+ * Route a single (field, value) from the save_field tool into the shape applyCoachFields expects —
+ * a graded column or a feasibility key. Throws CoachFieldError on an unknown name (the route maps
+ * it to 400). This is what the cookie-authed save-field route calls per agent tool-call.
+ */
+export function routeCoachField(field: string, value: string): CoachFieldInput {
+  if (GRADED.has(field)) return { fields: { [field]: value } }
+  if (FEASIBILITY.has(field)) return { feasibility: { [field]: value } }
+  throw new CoachFieldError(`unknown field "${field}"`)
+}
+
+export interface CardState {
+  total: number // always 14 (the graded fields)
+  gradedCaptured: string[]
+  gradedOutstanding: string[]
+  feasibilityCaptured: string[]
+  feasibilityOutstanding: string[] // required-but-missing feasibility keys
+  readyToAdmit: boolean // presence-complete (admit re-validates enums + build markers)
+}
+
+/**
+ * Summarise a product_validation_status row into the coach's progress view — what get_intake_progress
+ * returns and what the X/14 strip reads. Presence-only (mirrors the admit gate's presence checks);
+ * the admit gate re-validates enums + build markers deterministically.
+ */
+export function summariseCardState(row: Record<string, unknown> | null): CardState {
+  const feas = (row?.feasibility as Record<string, unknown> | null) ?? {}
+  const gradedOutstanding = GRADED_FIELDS.filter((f) => !nonEmpty(row?.[f]))
+  const feasibilityOutstanding = REQUIRED_FEASIBILITY.filter((k) => !nonEmpty(feas[k]))
+  return {
+    total: GRADED_FIELDS.length,
+    gradedCaptured: GRADED_FIELDS.filter((f) => nonEmpty(row?.[f])),
+    gradedOutstanding,
+    feasibilityCaptured: FEASIBILITY_FIELDS.filter((k) => nonEmpty(feas[k])),
+    feasibilityOutstanding,
+    readyToAdmit: gradedOutstanding.length === 0 && feasibilityOutstanding.length === 0,
+  }
+}
