@@ -57,6 +57,8 @@ export default function VoiceCoach({
   const [admitError, setAdmitError] = useState<string | null>(null)
   const [blockers, setBlockers] = useState<string[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
+  // Mirror of the transcript in the extractor's shape — read in onDisconnect (avoids stale closure).
+  const turnsRef = useRef<{ role: 'user' | 'assistant'; text: string }[]>([])
 
   const refreshCard = useCallback(async (): Promise<CardState | null> => {
     try {
@@ -194,10 +196,26 @@ export default function VoiceCoach({
           title="Talk through your idea with the coach. One question at a time; answers save as you go."
           textFallback
           clientTools={clientTools}
-          onMessage={(source, message) =>
+          onMessage={(source, message) => {
+            turnsRef.current.push({ role: source === 'user' ? 'user' : 'assistant', text: message })
             setTranscript((t) => [...t, { source: source === 'user' ? 'user' : 'ai', text: message }])
-          }
+          }}
           onStatusChange={(status) => setConnected(status === 'connected')}
+          onDisconnect={async () => {
+            setConnected(false)
+            // Completion backstop — fill any field captured conversationally but not saved.
+            if (turnsRef.current.length === 0) return
+            try {
+              await fetch('/api/admin/pipeline/new-ideas/backstop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productSlug, transcript: turnsRef.current }),
+              })
+              await refreshCard()
+            } catch {
+              /* best-effort — primary save_field path already wrote what it captured */
+            }
+          }}
         />
       </div>
 
