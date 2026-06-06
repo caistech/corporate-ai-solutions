@@ -49,7 +49,7 @@ const config: ConvAIAgentConfig = {
 // re-attached below with their parameter schemas.
 const tools: ConvAITool[] = [
   { type: 'client', name: 'save_field', description: 'Persist one captured intake field.', parameters: { type: 'object', properties: {}, required: [] } },
-  { type: 'client', name: 'get_card_state', description: 'Return outstanding intake fields.', parameters: { type: 'object', properties: {}, required: [] } },
+  { type: 'client', name: 'get_intake_progress', description: 'Return outstanding intake fields.', parameters: { type: 'object', properties: {}, required: [] } },
 ]
 
 // Coach client tools WITH parameter schemas (the clarifier's are param-less; save_field needs args).
@@ -73,7 +73,7 @@ const COACH_CLIENT_TOOLS = [
     },
   },
   {
-    name: 'get_card_state',
+    name: 'get_intake_progress',
     description:
       'Return the current intake progress for this product: how many of the 14 fields are at bar, ' +
       'and which fields (and feasibility fields) are still outstanding. Call this to decide what to ' +
@@ -123,16 +123,30 @@ async function attachCoachClientTools(key: string, agentId: string): Promise<str
 
   const agent = await (await fetch(`${API}/agents/${agentId}`, { headers: authHeader })).json()
   const currentPrompt = agent?.conversation_config?.agent?.prompt ?? {}
+  // Strip any deprecated inline `tools` — ElevenLabs 400s if both `tools` and `tool_ids` are set.
+  const { tools: _deprecatedInlineTools, ...promptNoTools } = currentPrompt
+  void _deprecatedInlineTools
   const patchRes = await fetch(`${API}/agents/${agentId}`, {
     method: 'PATCH',
     headers: jsonHeader,
-    body: JSON.stringify({ conversation_config: { agent: { prompt: { ...currentPrompt, tool_ids: toolIds } } } }),
+    body: JSON.stringify({ conversation_config: { agent: { prompt: { ...promptNoTools, tool_ids: toolIds } } } }),
   })
   if (!patchRes.ok) throw new Error(`attach failed: ${patchRes.status}\n${await patchRes.text()}`)
   return toolIds
 }
 
 async function main(): Promise<void> {
+  // --attach-only: the agent already exists (full provision done) — just (re)create + rebind the
+  // client tools. Bypasses provisionVoiceAgent's verify, which on the adopt path miscounts client
+  // tool_ids (the hub verify expects webhook tools only). Used to swap a renamed tool.
+  if (process.argv.includes('--attach-only')) {
+    const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_COACH || 'agent_7501ktddb89pegn961axee9rrpsy'
+    const toolIds = await attachCoachClientTools(apiKey as string, agentId)
+    console.log('\n✅ Client tools rebound on', agentId)
+    console.log('   tools:', toolIds.join(', '), '(save_field, get_intake_progress)')
+    return
+  }
+
   const result = await provisionVoiceAgent(apiKey as string, {
     config,
     systemPrompt: buildCoachSystemPrompt(),

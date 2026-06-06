@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import VoiceCoach from './VoiceCoach'
 
 // Mirrors the route's ConversationState / readiness shapes.
 interface Message {
@@ -246,8 +247,22 @@ export default function OnboardingCoach() {
   }
 
   // --- Conversation ---
+  // Voice-first (VoiceCoach + Morgan, DB-backed via save_field), with the proven text walk kept as
+  // the fallback behind a disclosure. Both paths end at the same unchanged admit gate.
   return (
-    <div className="bg-gray-800 rounded-xl mb-8 border border-gray-700 flex flex-col" style={{ height: '32rem' }}>
+    <>
+      {productSlug && (
+        <VoiceCoach
+          productSlug={productSlug}
+          productName={state.productName || productName}
+          onAdmitted={() => setAdmitted(true)}
+        />
+      )}
+      <details className="mb-8">
+        <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-200 select-none mb-3">
+          Prefer to type instead?
+        </summary>
+        <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col" style={{ height: '32rem' }}>
       <div className="px-6 py-3 border-b border-gray-700 flex items-center justify-between">
         <h2 className="text-lg font-semibold">{state.productName}</h2>
         <span className="text-xs text-gray-400">
@@ -322,6 +337,8 @@ export default function OnboardingCoach() {
           </div>
         )}
       </div>
-    </div>
+        </div>
+      </details>
+    </>
   )
 }
