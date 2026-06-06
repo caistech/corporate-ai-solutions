@@ -38,7 +38,7 @@ import {
   canonicalToTestStatus,
   allTestsPassedCanonical,
 } from '@/lib/methodology/validation-test-state';
-import { CheckCircle, Send, Loader2, ExternalLink, Play, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer, MessageSquare } from 'lucide-react';
+import { CheckCircle, Send, Loader2, ExternalLink, Play, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer, MessageSquare, RotateCcw } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -349,6 +349,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [investorPilotLogin, setInvestorPilotLogin] = useState(false);
   const [polling, setPolling] = useState(false);
 
@@ -464,6 +465,37 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const handleRefresh = async () => {
     await new Promise(r => setTimeout(r, 500));
     setRefreshTrigger((n) => n + 1);
+  };
+
+  const handleResetToCoach = async () => {
+    const name = product?.validation?.display_name || product?.manifest?.name || productId;
+    const ok = confirm(
+      `Send "${name}" back to the onboarding coach?\n\n` +
+      `The card closes and re-enters the coach phase (Morgan). Your spec, feasibility, ` +
+      `conversation and score are all KEPT — re-passing the coach's admit gate reopens the ` +
+      `card with everything intact. Nothing is deleted.`
+    );
+    if (!ok) return;
+    setResetting(true);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productId}/reset-to-coach`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // is_draft is now true → the one-door guard would bounce the card; land them in the coach.
+        window.location.href = `/admin/pipeline/new-ideas?pending=${encodeURIComponent(productId)}`;
+      } else {
+        alert(data.error || 'Failed to reset to coach');
+        setResetting(false);
+      }
+    } catch (err) {
+      console.error('[RESET-TO-COACH] Error:', err);
+      alert('Failed to reset to coach');
+      setResetting(false);
+    }
   };
 
   const handleSubmitForOutreach = async () => {
@@ -585,10 +617,19 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
                 <h1 className="text-3xl font-bold text-white">Processing — {product.manifest.name}</h1>
                 <p className="text-gray-500 mt-1">{product.validation?.display_name || 'Not in pipeline'}</p>
               </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             {product.can_run_outreach_now && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-green-900/30 text-green-300">✅ Ready for Outreach</span>}
             {product.validation?.is_paused && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-gray-200">⏸ Paused</span>}
             {product.validation?.is_draft && <span className="inline-block px-4 py-2 rounded-full text-sm font-medium bg-blue-900/30 text-blue-300">📝 Draft</span>}
+            <button
+              onClick={handleResetToCoach}
+              disabled={resetting}
+              title="Send this product back to the onboarding coach (Morgan). Spec and conversation are kept."
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-amber-300 border border-amber-700/50 hover:bg-amber-900/20 disabled:opacity-50"
+            >
+              {resetting ? <Loader2 className="animate-spin" size={15} /> : <RotateCcw size={15} />}
+              Reset to coach
+            </button>
           </div>
         </div>
       </div>
