@@ -1,0 +1,144 @@
+/**
+ * GET  /api/admin/vercel-bypass   — status: is a Protection-Bypass-for-Automation secret active?
+ * POST /api/admin/vercel-bypass   — { action: 'enable' | 'disable' }
+ *
+ * The dashboard toggle behind the "Deployment Protection Bypass" setting. Enabling generates a
+ * Vercel automation-bypass secret on THIS project so headless testers (/naive-tester, /browse)
+ * can send `x-vercel-protection-bypass: <secret>` and get past the preview SSO wall. Disabling
+ * revokes every automation-bypass secret on the project.
+ *
+ * Auth: operator-gated (requireOperator) — this mints/revokes a security credential, so it must
+ * never be reachable by a non-operator.
+ *
+ * Needs a Vercel API token in VERCEL_API_TOKEN (sensitive, prod+preview only per the Vercel env
+ * rule). Project/team IDs are NOT secret — sourced from env with the known cockpit IDs as fallback.
+ *
+ * Vercel API: PATCH /v1/projects/{id}/protection-bypass (generate / revoke);
+ *             GET   /v9/projects/{id} (read current protectionBypass map).
+ * The generate response returns the secret as the KEY of the new protectionBypass entry.
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { requireOperator } from '@/lib/pipeline/require-operator'
+
+const VERCEL_API = 'https://api.vercel.com'
+const PROJECT_ID = process.env.VERCEL_PROJECT_ID || 'prj_NaY4ybDsjSmJ7RgBbdD2BILm8nLl'
+const TEAM_ID = process.env.VERCEL_TEAM_ID || 'team_hwN7IFtd2Fo3DCj9C67ZwI1t'
+
+interface BypassEntry {
+  createdAt?: number
+  createdBy?: string
+  scope?: string
+  integrationId?: string
+}
+
+function vercelHeaders(token: string) {
+  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+}
+
+/** Automation-bypass entries the operator created (not integration-owned). secret = the map key. */
+function automationSecrets(map: Record<string, BypassEntry> | undefined): string[] {
+  if (!map) return []
+  return Object.entries(map)
+    .filter(([, v]) => !v.integrationId) // operator-created automation bypass, not an integration's
+    .map(([secret]) => secret)
+}
+
+async function readBypassMap(token: string): Promise<Record<string, BypassEntry> | undefined> {
+  const res = await fetch(`${VERCEL_API}/v9/projects/${PROJECT_ID}?teamId=${TEAM_ID}`, {
+    headers: vercelHeaders(token),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new Error(`project read failed (${res.status}): ${detail}`)
+  }
+  const project = (await res.json()) as { protectionBypass?: Record<string, BypassEntry> }
+  return project.protectionBypass
+}
+
+export async function GET() {
+  const operator = await requireOperator()
+  if (!operator) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+  const token = process.env.VERCEL_API_TOKEN
+  if (!token) {
+    return NextResponse.json({ configured: false, enabled: false, tokenMissing: true })
+  }
+
+  try {
+    const secrets = automationSecrets(await readBypassMap(token))
+    return NextResponse.json({ configured: true, enabled: secrets.length > 0, count: secrets.length })
+  } catch (err) {
+    console.error('[vercel-bypass][GET]', err)
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'read failed' }, { status: 502 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const operator = await requireOperator()
+  if (!operator) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+  const token = process.env.VERCEL_API_TOKEN
+  if (!token) {
+    return NextResponse.json(
+      { error: 'VERCEL_API_TOKEN not configured on the server — add it (sensitive) then retry.' },
+      { status: 500 },
+    )
+  }
+
+  let action: string
+  try {
+    const body = (await request.json()) as { action?: string }
+    action = (body.action || '').trim()
+  } catch {
+    return NextResponse.json({ error: 'body { action } required' }, { status: 400 })
+  }
+
+  try {
+    if (action === 'enable') {
+      // Generate a new automation-bypass secret. The new secret is the KEY of the new entry.
+      const before = new Set(automationSecrets(await readBypassMap(token)))
+      const res = await fetch(`${VERCEL_API}/v1/projects/${PROJECT_ID}/protection-bypass?teamId=${TEAM_ID}`, {
+        method: 'PATCH',
+        headers: vercelHeaders(token),
+        body: JSON.stringify({ generate: { note: 'cockpit toggle — headless tester access' } }),
+      })
+      if (!res.ok) {
+        const detail = await res.text()
+        console.error('[vercel-bypass][enable] dispatch failed', res.status, detail)
+        return NextResponse.json({ error: `enable failed (${res.status})`, detail }, { status: 502 })
+      }
+      const data = (await res.json()) as { protectionBypass?: Record<string, BypassEntry> }
+      const after = automationSecrets(data.protectionBypass)
+      const fresh = after.find((s) => !before.has(s)) ?? after[after.length - 1]
+      console.log('[vercel-bypass] enabled — automation bypass secret generated by', operator.email)
+      // Returned ONCE so the operator can copy it into the tester's .env.local. Not persisted server-side.
+      return NextResponse.json({ enabled: true, secret: fresh ?? null })
+    }
+
+    if (action === 'disable') {
+      const secrets = automationSecrets(await readBypassMap(token))
+      if (secrets.length === 0) {
+        return NextResponse.json({ enabled: false, revoked: 0 })
+      }
+      let revoked = 0
+      for (const secret of secrets) {
+        const res = await fetch(`${VERCEL_API}/v1/projects/${PROJECT_ID}/protection-bypass?teamId=${TEAM_ID}`, {
+          method: 'PATCH',
+          headers: vercelHeaders(token),
+          body: JSON.stringify({ revoke: { secret, regenerate: false } }),
+        })
+        if (res.ok) revoked++
+        else console.error('[vercel-bypass][disable] revoke failed', res.status, await res.text())
+      }
+      console.log('[vercel-bypass] disabled — revoked', revoked, 'secret(s) by', operator.email)
+      return NextResponse.json({ enabled: false, revoked })
+    }
+
+    return NextResponse.json({ error: "action must be 'enable' or 'disable'" }, { status: 400 })
+  } catch (err) {
+    console.error('[vercel-bypass][POST]', err)
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'failed' }, { status: 502 })
+  }
+}

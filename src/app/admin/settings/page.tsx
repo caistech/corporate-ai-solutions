@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/pipeline/supabase-server'
 import { ChangePasswordForm } from '@/components/admin/ChangePasswordForm'
 import { AdminSignOut } from '@/components/admin/AdminSignOut'
+import { DeploymentBypassToggle } from '@/components/admin/DeploymentBypassToggle'
 
 export const metadata: Metadata = {
   title: 'Settings',
@@ -57,6 +58,22 @@ export default async function AdminSettingsPage() {
             you suspect a session is open somewhere it should not be.
           </p>
           <AdminSignOut scope="global" variant="button" label="Sign out everywhere" />
+        </section>
+
+        {/* Deployment protection bypass (for headless testers) */}
+        <section className="rounded-lg border border-gray-border bg-gray-dark/40 p-5">
+          <h2 className="mb-1 text-sm font-medium uppercase tracking-wider text-accent">
+            Deployment Protection Bypass
+          </h2>
+          <p className="mb-4 text-sm text-gray-light/70">
+            Generates a Vercel automation-bypass secret so headless testers (naive-tester, the
+            browse daemon) can reach SSO-protected preview deployments via the{' '}
+            <code>x-vercel-protection-bypass</code> header. Enable it to unblock automated QA, copy
+            the secret into the tester machine&rsquo;s <code>.env.local</code>, then revoke it when
+            the run is done. The secret only bypasses preview viewing — it is not a deploy or admin
+            credential.
+          </p>
+          <DeploymentBypassToggle />
         </section>
 
         {/* Deferred note */}
