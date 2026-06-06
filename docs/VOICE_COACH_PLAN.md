@@ -12,6 +12,24 @@ coach produces today.
 
 **Scope (eng-review):** all-in — the persistent-memory loop ships in v1.
 
+> ### ✅ AS-BUILT (2026-06-06) — supersedes the §3/§4 design where they differ
+> Grounding in the code surfaced that this repo does voice via **CLIENT tools + the authed
+> operator browser** (the `provision-cockpit-clarifier.ts` pattern), not server webhooks. So the
+> shipped design is simpler than §4's HMAC-token plan:
+> - **`save_field` / `get_intake_progress` are client tools.** Their browser implementations call
+>   **cookie-authed** routes (`/api/admin/pipeline/new-ideas/save-field` · `/card-state`) — no
+>   server-to-server token. The step-2 `coach-session-token` HMAC module was therefore **removed as
+>   dead code.**
+> - **`applyCoachFields` is the single writer** (kept). Readiness reads `card-state` (DB).
+> - **Completion backstop is client-side** (`/new-ideas/backstop`, cookie-authed, gap-fill only) —
+>   `extractFromTranscript` fired from `VoiceCoach` `onDisconnect`. The bound ElevenLabs post-call
+>   webhook is HMAC-verified + acked (`/api/convai/webhooks/coach-post-call`).
+> - **The convai memory loop is deliberately NOT wired** — client tools + `card-state` already give
+>   field-resume; conversational "welcome-back" memory is the only thing it would add and isn't
+>   load-bearing. The migrated `convai_*` tables remain available if that's wanted later.
+> - **Agent:** `agent_7501ktddb89pegn961axee9rrpsy` (Morgan), provisioned via
+>   `scripts/provision-coach-agent.ts`.
+
 > ### ⚠️ Reality correction (adversarial review, 2026-06-06) — read before building
 > The first draft assumed seams that do **not** exist in the code. Corrected here:
 > 1. **There is no existing field-writer to "refactor."** The turn API (`new-ideas/route.ts`) is
