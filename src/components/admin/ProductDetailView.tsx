@@ -31,6 +31,7 @@ import CategoryEditor from './CategoryEditor';
 import ValidationTestResults from './ValidationTestResults';
 import type { SurveyGateRecord } from '@/components/methodology/SurveyGatePanel';
 import { parseVerdict, type Verdict } from '@/lib/methodology/survey-verdict';
+import type { ScoreResult } from '@/lib/methodology/score';
 import {
   latestByCode,
   testStateFromCanonical,
@@ -104,7 +105,12 @@ function SurveyKickoff({ productSlug, productUrl, onStarted }: { productSlug: st
     setResult(null);
     setKickError(null);
     try {
-      const res = await fetch(`/api/admin/pipeline/${productSlug}/survey/kickoff`, {
+      // Call the deterministic survey route DIRECTLY (not via /survey/kickoff). The kickoff proxy
+      // does a same-origin server→server fetch to /survey, which Vercel's deployment-protection
+      // (SSO) wall intercepts on protected previews — the server hop carries no SSO cookie, so it
+      // gets the HTML login page and the proxy reports "survey route returned non-JSON". This
+      // client call carries the operator's cookie, so it passes the wall and runs in-process (~2s).
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/survey`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -497,6 +503,13 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const surveyGate: SurveyGateRecord | null = product.survey_gate ?? null;
   const designBuild: DesignBuildRecord | null = product.design_build ?? null;
   const hasUrl = !!product.validation?.mvp_url;
+
+  // Canonical Gate-1 score (attached by scanPortfolio/scoreCard). The score is null until the
+  // HARD gate passes (score.ts §6) — so render the HONEST gate state, never a bare "undefined%".
+  const score: ScoreResult | undefined = product.score;
+  const scoreBlocked = !!score && !score.gate1Ready;
+  const hardPassed = score ? score.hardGate.total - score.hardGate.failing.length : null;
+  const readinessPct = typeof product.readiness_score === 'number' ? product.readiness_score : 0;
   const frontDoor: FrontDoorState = surveyGate ? parseVerdict(surveyGate) : (hasUrl ? 'NOT-SURVEYED' : 'NO-URL');
   const isRenovation = frontDoor === 'RENOVATION';
   const isTeardown = frontDoor === 'TEARDOWN' || frontDoor === 'NO-URL';
@@ -652,9 +665,12 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         )}
 
         {isRenovation && (
-          <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg">
-            <CheckCircle className="text-green-400" size={20} />
-            <span className="text-green-300 font-medium">RENOVATION — downstream steps unlocked below.</span>
+          <div className="flex items-start gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg">
+            <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={20} />
+            <div>
+              <span className="text-green-300 font-medium">RENOVATION — the build evidences the spec.</span>
+              <p className="text-green-300/70 text-xs mt-0.5">This only confirms the live MVP carries the 14 spec fields — it unlocks the readiness checks below; it is <strong>not</strong> the outreach gate. See Readiness for the Gate-1 HARD checks (responsive, auth, env) that decide go-live.</p>
+            </div>
           </div>
         )}
 
@@ -717,12 +733,32 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
 
       <div className={downstreamLocked ? 'opacity-50 pointer-events-none select-none space-y-6' : 'space-y-6'} aria-disabled={downstreamLocked}>
         <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
-          <h2 className="font-semibold text-blue-300 mb-2">Readiness: {product.readiness_score}%</h2>
-          <p className="text-blue-300 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
-          <p className="text-blue-300 text-sm">{product.action_items.length} action{product.action_items.length !== 1 ? 's' : ''} needed to reach outreach readiness</p>
-          <div className="mt-3 w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-            <div className={`h-full rounded-full transition-all ${product.readiness_score >= 80 ? 'bg-green-500' : product.readiness_score >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${product.readiness_score}%` }} />
-          </div>
+          {scoreBlocked ? (
+            <>
+              <h2 className="font-semibold text-amber-300 mb-1">Readiness score blocked — HARD gate not passed</h2>
+              <p className="text-blue-300 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
+              <p className="text-amber-200/90 text-sm mb-3">
+                {hardPassed}/{score!.hardGate.total} mandatory HARD checks passing. The weighted score isn&apos;t computed until <strong>every</strong> HARD check passes — fix these first; the {product.action_items.length}-item list below only matters once the gate is green.
+              </p>
+              <ul className="space-y-1.5">
+                {score!.hardGate.failing.map((f) => (
+                  <li key={f.code} className="flex items-start gap-2 text-sm">
+                    <XCircle className="text-red-400 shrink-0 mt-0.5" size={16} />
+                    <span className="text-blue-200"><span className="font-medium">{f.label}</span><span className="text-blue-300/70"> — {f.status === 'unknown' ? 'not yet tested' : f.status}</span></span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <>
+              <h2 className="font-semibold text-blue-300 mb-2">Readiness: {readinessPct}%{score?.band ? ` · ${score.band}` : ''}</h2>
+              <p className="text-blue-300 text-sm mb-2">{product.validation?.promise || 'No promise defined yet'}</p>
+              <p className="text-blue-300 text-sm">{product.action_items.length} action{product.action_items.length !== 1 ? 's' : ''} needed to reach outreach readiness</p>
+              <div className="mt-3 w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                <div className={`h-full rounded-full transition-all ${readinessPct >= 80 ? 'bg-green-500' : readinessPct >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${readinessPct}%` }} />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6">
@@ -892,7 +928,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
             <h2 className="text-lg font-semibold text-white">Final Score Check</h2>
-            {product.readiness_score >= 80 && <CheckCircle className="text-green-400" size={18} />}
+            {readinessPct >= 80 && <CheckCircle className="text-green-400" size={18} />}
           </div>
           <p className="text-sm text-gray-400 mb-4">Your validation score must be ≥80% to run outreach.<br /><strong>This item is for:</strong> reviewing remaining gaps and confirming readiness.<br /><strong>When score ≥80%:</strong> submit for automated outreach to InvestorPilot ↓</p>
           <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
@@ -901,13 +937,17 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               try {
                 const res = await fetch(`/api/admin/pipeline/${productId}/recalculate-score`, { method: 'POST' });
                 const data = await res.json();
-                if (data.success) setProduct((prev: any) => ({ ...prev, validation: data.data, readiness_score: data.readiness_score }));
+                // Re-pull the canonical product (score / band / gaps / readiness_score) rather than
+                // patching a single field — the route returns weighted_score_percent, not the full
+                // ScoreResult, so a partial patch was wiping readiness_score to undefined.
+                if (data.success) setRefreshTrigger((n) => n + 1);
+                else console.error('[RECALCULATE]', data.error);
               } catch (err) { console.error('[RECALCULATE] Error:', err); }
             }} className="text-sm text-blue-400 hover:text-blue-300 underline">Recalculate Score (debug)</button>
           </div>
           <div className="mt-6 pt-6 border-t border-gray-700">
             <button onClick={handleSubmitForOutreach} disabled={!isReadyForOutreach || submitting} className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all ${isReadyForOutreach ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}>
-              {submitting ? <><Loader2 className="animate-spin" size={20} /> Submitting...</> : <><Send size={20} />{isReadyForOutreach ? 'Submit for Automated Outreach →' : `Submit for Outreach (${product.readiness_score}%/80%)`}</>}
+              {submitting ? <><Loader2 className="animate-spin" size={20} /> Submitting...</> : <><Send size={20} />{isReadyForOutreach ? 'Submit for Automated Outreach →' : (scoreBlocked ? 'Submit for Outreach — HARD gate not passed' : `Submit for Outreach (${readinessPct}%/80%)`)}</>}
             </button>
             {isReadyForOutreach && <p className="text-center text-sm text-green-400 mt-2">✅ Product will be sent to InvestorPilot for distributor outreach</p>}
           </div>
