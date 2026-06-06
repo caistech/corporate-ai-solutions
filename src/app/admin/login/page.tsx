@@ -11,7 +11,6 @@ import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/pipeline/supabase-client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 type AuthTab = 'login' | 'forgot-password'
 
@@ -24,7 +23,6 @@ export default function AdminLoginPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,7 +55,11 @@ export default function AdminLoginPage() {
         setEmail('')
         setPassword('')
         // §8.5: admin login lands on the control panel (the /admin dashboard).
-        setTimeout(() => router.push('/admin'), 1000)
+        // HARD navigation (not router.push): a soft client nav can race the just-written
+        // @supabase/ssr auth cookies, so the server middleware's getUser() sees no session and
+        // bounces back to /admin/login (the redirect-loop symptom). A full request guarantees the
+        // freshly-set cookies are attached and the server reads a real session.
+        window.location.assign('/admin')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
