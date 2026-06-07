@@ -24,6 +24,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import GapsSection from './GapsSection';
+import ValidationFindings from './ValidationFindings';
 import ValidationFieldsEditor from './ValidationFieldsEditor';
 import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
@@ -857,6 +858,10 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
             </>
           )}
         </div>
+
+        {/* The real validation punch-list — actual recorded verdicts + evidence, not a bare score.
+            "Fix these" feeds the failing checks into the same repo-level Design & Build flow. */}
+        <ValidationFindings score={score} productSlug={productId} mvpUrl={product.validation?.mvp_url ?? null} />
 
         <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
