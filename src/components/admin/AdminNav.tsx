@@ -69,9 +69,18 @@ function Brand() {
   )
 }
 
+// Public admin routes (login / password reset) sit under /admin/* so the layout wraps them, but
+// they must NOT show the authed chrome (sidebar + Sign Out) — that leaked the signed-in nav onto
+// the unauthenticated login page. Render nothing on those routes.
+const PUBLIC_ADMIN_ROUTES = ['/admin/login', '/admin/password-reset', '/admin/pipeline/password-reset']
+
 export function AdminNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+
+  if (PUBLIC_ADMIN_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+    return null
+  }
 
   return (
     <>
