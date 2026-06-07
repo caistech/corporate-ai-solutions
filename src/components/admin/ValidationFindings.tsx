@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2, PlayCircle, ShieldOff, Undo2 } from 'lucide-react';
+import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2, PlayCircle, ShieldOff, Undo2, Wrench, HandHelping } from 'lucide-react';
 import type { ScoreResult, CheckResult } from '@/lib/methodology/score';
 
 // The real validation punch-list. Renders the actual recorded verdicts (from readiness_results,
@@ -107,6 +107,8 @@ export default function ValidationFindings({
   const [runningFull, setRunningFull] = useState(false);
   const [runMsg, setRunMsg] = useState<string | null>(null);
   const [waivingCode, setWaivingCode] = useState<string | null>(null);
+  const [runningConfig, setRunningConfig] = useState(false);
+  const [configMsg, setConfigMsg] = useState<string | null>(null);
 
   async function waive(c: CheckResult) {
     if (!productSlug) return;
@@ -208,12 +210,17 @@ export default function ValidationFindings({
   const waived = applicable.filter((c) => c.status === 'waived');
   const passing = applicable.filter((c) => c.status === 'pass').length;
 
-  const canFix = fails.length > 0 && !!productSlug;
+  // Route each failing finding to its fixer lane (FIXER_LANES.md): code → the builder, config →
+  // the config-fixer, operator-input (or a recorded "NEEDS-YOU:" verdict) → you, with instructions.
+  const isNeedsYou = (c: CheckResult) => c.fixer === 'operator-input' || (c.evidence || '').startsWith('NEEDS-YOU:');
+  const codeFails = fails.filter((c) => c.fixer === 'code' && !isNeedsYou(c));
+  const configFails = fails.filter((c) => c.fixer === 'config' && !isNeedsYou(c));
+  const needsYou = fails.filter(isNeedsYou);
 
   async function runFix() {
     if (!productSlug) return;
     const ok = confirm(
-      `Send these ${fails.length} failing check(s) to the builder?\n\n` +
+      `Send the ${codeFails.length} CODE-lane failing check(s) to the builder?\n\n` +
       `This fires the repo-level Design & Build agent on the ${productSlug} repo: it reads the ` +
       `punch-list as a binding work order, fixes the code, and opens a PR on that repo. It costs ` +
       `model time and does NOT auto-merge — you review the PR. After it deploys, re-run validation ` +
@@ -239,6 +246,38 @@ export default function ValidationFindings({
       setFixMsg('Failed to start the builder (network error).');
     } finally {
       setFixing(false);
+    }
+  }
+
+  async function runConfigFix() {
+    if (!productSlug) return;
+    const ok = confirm(
+      `Run the config-fixer for the ${configFails.length} CONFIG-lane check(s)?\n\n` +
+      `This dispatches idempotent infra remediations for ${productSlug} (Vercel env hygiene, email ` +
+      `infra, profiles scaffolding, QA accounts, ElevenLabs allowlist + workspace webhook) and ` +
+      `records each verdict back here. Anything it can't complete (a missing product cred) is ` +
+      `surfaced as "Needs you" — never silently skipped.`
+    );
+    if (!ok) return;
+    setRunningConfig(true);
+    setConfigMsg(null);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/config-fix`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: mvpUrl ?? '', checks: configFails.map((c) => c.code).join(',') }),
+      });
+      const data = await res.json();
+      setConfigMsg(
+        res.ok && data.started
+          ? 'Config-fixer started — idempotent infra remediations are running; verdicts record back here. Reload the card when it finishes.'
+          : data.error || 'Failed to start the config-fixer.',
+      );
+    } catch {
+      setConfigMsg('Failed to start the config-fixer (network error).');
+    } finally {
+      setRunningConfig(false);
     }
   }
 
@@ -269,20 +308,32 @@ export default function ValidationFindings({
               Run full validation
             </button>
           )}
-          {canFix && (
+          {productSlug && codeFails.length > 0 && (
             <button
               onClick={runFix}
               disabled={fixing}
-              title="Send the failing checks to the repo-level Design & Build agent to fix, then re-run validation"
+              title="Send the CODE-lane failing checks to the repo-level Design & Build agent, then re-run validation"
               className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50"
             >
               {fixing ? <Loader2 className="animate-spin" size={13} /> : <Hammer size={13} />}
-              Fix these {fails.length} with the builder
+              Fix {codeFails.length} code with the builder
+            </button>
+          )}
+          {productSlug && configFails.length > 0 && (
+            <button
+              onClick={runConfigFix}
+              disabled={runningConfig}
+              title="Run the config-fixer for the CONFIG-lane checks (Vercel env, email, profiles, QA accounts, ElevenLabs) and record results"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+            >
+              {runningConfig ? <Loader2 className="animate-spin" size={13} /> : <Wrench size={13} />}
+              Config-fix {configFails.length}
             </button>
           )}
         </div>
         {runMsg && <p className="mt-2 text-sm text-blue-300">{runMsg}</p>}
         {fixMsg && <p className="mt-2 text-sm text-purple-300">{fixMsg}</p>}
+        {configMsg && <p className="mt-2 text-sm text-teal-300">{configMsg}</p>}
       </div>
 
       {fails.length === 0 && notRun.length === 0 && waived.length === 0 ? (
@@ -291,13 +342,40 @@ export default function ValidationFindings({
         </div>
       ) : (
         <>
-          {fails.length > 0 && (
+          {codeFails.length > 0 && (
             <div className="mb-3">
               <h3 className="mb-1 flex items-center gap-1.5 text-sm font-medium text-red-300">
-                <AlertTriangle size={14} /> Failures ({fails.length})
+                <AlertTriangle size={14} /> Code fixes ({codeFails.length}) <span className="font-normal text-gray-500">— the builder</span>
               </h3>
               <ul className="divide-y divide-gray-700/60">
-                {fails.map((c) => (
+                {codeFails.map((c) => (
+                  <FindingRow key={c.code} c={c} onWaive={productSlug ? waive : undefined} busy={waivingCode === c.code} />
+                ))}
+              </ul>
+            </div>
+          )}
+          {configFails.length > 0 && (
+            <div className="mb-3">
+              <h3 className="mb-1 flex items-center gap-1.5 text-sm font-medium text-teal-300">
+                <Wrench size={14} /> Config fixes ({configFails.length}) <span className="font-normal text-gray-500">— the config-fixer (idempotent infra)</span>
+              </h3>
+              <ul className="divide-y divide-gray-700/60">
+                {configFails.map((c) => (
+                  <FindingRow key={c.code} c={c} onWaive={productSlug ? waive : undefined} busy={waivingCode === c.code} />
+                ))}
+              </ul>
+            </div>
+          )}
+          {needsYou.length > 0 && (
+            <div className="mb-3">
+              <h3 className="mb-1 flex items-center gap-1.5 text-sm font-medium text-orange-300">
+                <HandHelping size={14} /> Needs you ({needsYou.length}) <span className="font-normal text-gray-500">— a value/decision only you can supply</span>
+              </h3>
+              <p className="mb-1 text-xs text-gray-500">
+                The machine can&apos;t complete these (a BYOK key, a domain, a destructive verify). Each shows what to do — supply it, or waive with a reason. Never a silent gap.
+              </p>
+              <ul className="divide-y divide-gray-700/60">
+                {needsYou.map((c) => (
                   <FindingRow key={c.code} c={c} onWaive={productSlug ? waive : undefined} busy={waivingCode === c.code} />
                 ))}
               </ul>

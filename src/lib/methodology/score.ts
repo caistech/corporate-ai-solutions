@@ -27,6 +27,8 @@ export type Weight = 'High' | 'Med' | 'Low' | null
 export type CheckStatus = 'pass' | 'fail' | 'na'
 export type ResultSource = 'auto' | 'naive-tester' | 'voice-auditor' | 'judge'
 export type Band = 'GO' | 'REDESIGN' | 'NO-GO'
+/** Which lane resolves a finding: code (design-build) | config (config-fixer) | operator-input (you). */
+export type FixerLane = 'code' | 'config' | 'operator-input'
 
 export interface Criterion {
   code: string
@@ -36,6 +38,7 @@ export interface Criterion {
   method?: string | null
   applies_when: string | null
   notes?: string | null
+  fixer?: FixerLane | null
 }
 
 /** A readiness_results row — the latest recorded verdict for a check. */
@@ -80,6 +83,7 @@ export interface CheckResult {
   evidence: string | null
   weightPoints: number // > 0 only for an applicable, non-waived weighted check
   earned: number // weightPoints when status==='pass', else 0
+  fixer: FixerLane // which lane resolves this finding (defaults 'code')
   waived: boolean // an active operator waiver is in effect
   waiverReason?: string | null // the logged justification (only when waived)
   waivedBy?: string | null // operator who waived (only when waived)
@@ -185,6 +189,7 @@ export function scoreCard(input: ScoreInput): ScoreResult {
       label: c.check_label,
       tier: c.tier,
       weight: c.weight,
+      fixer: (c.fixer ?? 'code') as FixerLane,
       applicable,
       reason,
       status,

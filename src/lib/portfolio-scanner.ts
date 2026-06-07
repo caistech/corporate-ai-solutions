@@ -289,7 +289,7 @@ async function fetchValidationStatuses(
 async function fetchCriteria(supabase: any): Promise<Criterion[]> {
   const { data, error } = await supabase
     .from('readiness_criteria')
-    .select('code, check_label, tier, weight, method, applies_when, notes')
+    .select('code, check_label, tier, weight, method, applies_when, notes, fixer')
     .order('sort_order', { ascending: true });
   if (error) {
     console.error('Error fetching readiness_criteria:', error);

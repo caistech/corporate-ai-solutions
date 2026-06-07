@@ -36,7 +36,7 @@ export async function loadCardScore(slug: string): Promise<CardScore> {
   const [{ data: criteria }, { data: results }, { data: waivers }] = await Promise.all([
     supabase
       .from('readiness_criteria')
-      .select('code, check_label, tier, weight, method, applies_when, notes')
+      .select('code, check_label, tier, weight, method, applies_when, notes, fixer')
       .order('sort_order', { ascending: true }),
     supabase
       .from('readiness_results')
