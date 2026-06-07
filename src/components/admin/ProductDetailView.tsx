@@ -859,8 +859,9 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
           )}
         </div>
 
-        {/* The real validation punch-list — actual recorded verdicts + evidence, not a bare score. */}
-        <ValidationFindings score={score} />
+        {/* The real validation punch-list — actual recorded verdicts + evidence, not a bare score.
+            "Fix these" feeds the failing checks into the same repo-level Design & Build flow. */}
+        <ValidationFindings score={score} productSlug={productId} mvpUrl={product.validation?.mvp_url ?? null} />
 
         <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">

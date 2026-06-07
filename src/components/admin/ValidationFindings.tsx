@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { XCircle, AlertTriangle, CircleDashed, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2 } from 'lucide-react';
 import type { ScoreResult, CheckResult } from '@/lib/methodology/score';
 
 // The real validation punch-list. Renders the actual recorded verdicts (from readiness_results,
@@ -46,7 +46,18 @@ function FindingRow({ c }: { c: CheckResult }) {
   );
 }
 
-export default function ValidationFindings({ score }: { score: ScoreResult | undefined }) {
+export default function ValidationFindings({
+  score,
+  productSlug,
+  mvpUrl,
+}: {
+  score: ScoreResult | undefined;
+  productSlug?: string;
+  mvpUrl?: string | null;
+}) {
+  const [fixing, setFixing] = useState(false);
+  const [fixMsg, setFixMsg] = useState<string | null>(null);
+
   if (!score) {
     return (
       <div className="rounded-lg border border-gray-700 bg-gray-800 p-5">
@@ -61,6 +72,40 @@ export default function ValidationFindings({ score }: { score: ScoreResult | und
   const notRun = applicable.filter((c) => c.status === 'unknown');
   const passing = applicable.filter((c) => c.status === 'pass').length;
 
+  const canFix = fails.length > 0 && !!productSlug;
+
+  async function runFix() {
+    if (!productSlug) return;
+    const ok = confirm(
+      `Send these ${fails.length} failing check(s) to the builder?\n\n` +
+      `This fires the repo-level Design & Build agent on the ${productSlug} repo: it reads the ` +
+      `punch-list as a binding work order, fixes the code, and opens a PR on that repo. It costs ` +
+      `model time and does NOT auto-merge — you review the PR. After it deploys, re-run validation ` +
+      `to see the findings turn green.`
+    );
+    if (!ok) return;
+    setFixing(true);
+    setFixMsg(null);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/design-build/kickoff`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verdict: 'RENOVATION', url: mvpUrl ?? '' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.started) {
+        setFixMsg('Builder started — a PR will open on the product repo. Re-run validation once it deploys.');
+      } else {
+        setFixMsg(data.error || 'Failed to start the builder.');
+      }
+    } catch {
+      setFixMsg('Failed to start the builder (network error).');
+    } finally {
+      setFixing(false);
+    }
+  }
+
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800 p-5">
       <div className="mb-3">
@@ -70,11 +115,23 @@ export default function ValidationFindings({ score }: { score: ScoreResult | und
           fails hold the HARD gate shut; the rest lower the score. &ldquo;Not yet tested&rdquo; checks
           have no recorded result — run validation to fill them.
         </p>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
           <span className="inline-flex items-center gap-1 text-green-400"><CheckCircle2 size={13} /> {passing} passing</span>
           <span className="inline-flex items-center gap-1 text-red-400"><XCircle size={13} /> {fails.length} failing</span>
           <span className="inline-flex items-center gap-1 text-gray-400"><CircleDashed size={13} /> {notRun.length} not yet tested</span>
+          {canFix && (
+            <button
+              onClick={runFix}
+              disabled={fixing}
+              title="Send the failing checks to the repo-level Design & Build agent to fix, then re-run validation"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+            >
+              {fixing ? <Loader2 className="animate-spin" size={13} /> : <Hammer size={13} />}
+              Fix these {fails.length} with the builder
+            </button>
+          )}
         </div>
+        {fixMsg && <p className="mt-2 text-sm text-purple-300">{fixMsg}</p>}
       </div>
 
       {fails.length === 0 && notRun.length === 0 ? (
