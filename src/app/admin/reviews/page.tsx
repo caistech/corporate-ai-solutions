@@ -1,4 +1,3 @@
-// @explanatory-header-exempt — nested workflow page; entry-point header lives on the parent surface
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -79,11 +78,18 @@ export default function AdminReviewsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Review Moderation</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Review Moderation</h1>
+            <p className="text-gray-600 mt-1 max-w-2xl">
+              Approve, reject, or feature client reviews before they appear on the public site.
+              Approving a review syncs it live; “Feature” pins it to the homepage. Nothing is
+              published until you approve it here.
+            </p>
+          </div>
           <button
             onClick={() => fetch('/api/sync-reviews', { method: 'POST' })}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full sm:w-auto shrink-0"
           >
             Sync to Website
           </button>
