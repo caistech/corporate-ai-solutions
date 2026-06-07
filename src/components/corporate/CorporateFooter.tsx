@@ -68,7 +68,14 @@ export function CorporateFooter({ productName, extraLinks = [], theme = 'light' 
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs opacity-70">
-            <div>&copy; {new Date().getFullYear()} Corporate AI Solutions. All rights reserved.</div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span>&copy; {new Date().getFullYear()} Corporate AI Solutions. All rights reserved.</span>
+              <span className="opacity-40">·</span>
+              {/* Cockpit front door (§8.5 dual-auth): distinct User vs Operator sign-in, kept discreet
+                  in the footer rather than advertised on the public marketing hero. */}
+              <a href="/pipeline/login" className="hover:text-slate-900 transition-colors">User sign-in</a>
+              <a href="/admin/login" className="hover:text-slate-900 transition-colors">Operator sign-in</a>
+            </div>
             {extraLinks.length > 0 && (
               <div className="flex gap-4">
                 {extraLinks.map((link) => link.external ? (

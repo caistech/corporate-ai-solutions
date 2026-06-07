@@ -79,25 +79,43 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // /admin/* is operator-only: a logged-in user must also be on the admin allowlist. The admin
+  // /admin/* is operator-only: a logged-in user must also be on the admin allowlist. Send an authed
+  // non-operator to the admin login with a denied flag so they get a CLEAR "no admin access" message
+  // (not a silent bounce to the marketing homepage — a dead end for a signed-in user). The admin
   // login itself is exempt (the isAdminLogin clause below routes an already-authed user onward).
   if (isAdmin && !isAdminLogin && user && !isOperator(user.email)) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/admin/login'
+    url.search = ''
+    url.searchParams.set('denied', '1')
     return NextResponse.redirect(url)
   }
 
   // Already authenticated on a login page → onward. Admin login → the /admin control panel for an
-  // operator (else home); user login → the user welcome surface.
+  // operator; user login → the user welcome surface.
   if (isLogin && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/pipeline/welcome'
+    url.search = ''
     return NextResponse.redirect(url)
   }
   if (isAdminLogin && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = isOperator(user.email) ? '/admin' : '/'
-    return NextResponse.redirect(url)
+    if (isOperator(user.email)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+    // Authed non-operator: PARK on the admin login (to render the access-denied banner) ONLY when we
+    // deliberately routed them here with ?denied=1; otherwise send them to their real user home
+    // (never the marketing page). This avoids a redirect loop while still showing a clear message.
+    if (request.nextUrl.searchParams.get('denied') !== '1') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/pipeline/welcome'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+    // denied=1 + non-operator → fall through and render /admin/login with the banner.
   }
 
   return response
