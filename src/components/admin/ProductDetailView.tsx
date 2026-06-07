@@ -22,24 +22,15 @@
  * calculateLocalReadinessScore were removed (they could disagree with the gate — the fake-green).
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import GapsSection from './GapsSection';
+import React, { useEffect, useState } from 'react';
 import ValidationFindings from './ValidationFindings';
 import ValidationFieldsEditor from './ValidationFieldsEditor';
-import QuickActionsPanel from './QuickActionsPanel';
 import AuditTrailPanel from './AuditTrailPanel';
 import CategoryEditor from './CategoryEditor';
-import ValidationTestResults from './ValidationTestResults';
 import type { SurveyGateRecord } from '@/components/methodology/SurveyGatePanel';
 import { parseVerdict, type Verdict } from '@/lib/methodology/survey-verdict';
 import type { ScoreResult } from '@/lib/methodology/score';
-import {
-  latestByCode,
-  testStateFromCanonical,
-  canonicalToTestStatus,
-  allTestsPassedCanonical,
-} from '@/lib/methodology/validation-test-state';
-import { CheckCircle, Send, Loader2, ExternalLink, Play, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer, MessageSquare, RotateCcw } from 'lucide-react';
+import { CheckCircle, Send, Loader2, ExternalLink, XCircle, AlertTriangle, AlertCircle, Lock, Search, GitPullRequest, Hammer, MessageSquare, RotateCcw } from 'lucide-react';
 
 interface ProductDetailViewProps {
   productId: string;
@@ -354,24 +345,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   const [investorPilotLogin, setInvestorPilotLogin] = useState(false);
   const [polling, setPolling] = useState(false);
 
-  type TestStatus = 'pending' | 'running' | 'passed' | 'failed' | 'warning';
-  const [complianceTests, setComplianceTests] = useState<Array<{ id: string; name: string; description: string; status: TestStatus; findings: string[] }>>([
-    { id: 'auth', name: 'Auth Flows', description: 'Signup, login, password reset, magic link work', status: 'pending', findings: [] },
-    { id: 'branding', name: 'Branding', description: 'Logo, colors, typography consistent', status: 'pending', findings: [] },
-    { id: 'metadata', name: 'Metadata', description: 'OG tags, title, favicon, manifest', status: 'pending', findings: [] },
-    { id: 'security', name: 'Security Headers', description: 'CORS, CSP, HSTS configured', status: 'pending', findings: [] },
-    { id: 'privacy', name: 'Privacy Compliance', description: 'Terms, privacy policy, cookie consent', status: 'pending', findings: [] },
-  ]);
-  const [validationTests, setValidationTests] = useState<Array<{ id: string; name: string; description: string; status: TestStatus; findings: string[] }>>([
-    { id: 'naive', name: 'Naive Tester', description: 'Human walkthrough - friction, terminology, "I want that" reaction', status: 'pending', findings: [] },
-    { id: 'voice', name: 'Voice Auditor', description: 'Voice agent placement and behavior', status: 'pending', findings: [] },
-    { id: 'gtm', name: 'GTM Auditor', description: 'Distribution loop - does output create next user?', status: 'pending', findings: [] },
-    { id: 'qa', name: 'QA Tests', description: 'Automated browser testing', status: 'pending', findings: [] },
-  ]);
-
-  const [runningTest, setRunningTest] = useState<string | null>(null);
-  const didHydrateTests = useRef(false);
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -381,22 +354,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         if (!res.ok) throw new Error(`Failed to fetch product: ${res.statusText}`);
         const data = await res.json();
         setProduct(data);
-
-        // Hydrate test status from CANONICAL readiness_results — NOT validation_test_results (the
-        // mirror cell, which can read 'passed' with nothing behind it). A test is 'passed' only if
-        // its mapped code(s) have passing rows; missing/na → 'pending' (not run). This is the fix
-        // that stops the cockpit showing "All tests passed!" over an empty/partial canonical table.
-        const latest = latestByCode(data.readiness_results ?? []);
-        const storedFindings = (data.validation?.validation_test_results ?? {}) as Record<string, { findings?: string[] }>;
-        const applyCanonical = <T extends { id: string; status: TestStatus; findings: string[] }>(t: T): T => ({
-          ...t,
-          status: canonicalToTestStatus(testStateFromCanonical(t.id, latest)) as TestStatus,
-          findings: storedFindings[t.id]?.findings ?? t.findings, // findings are display-only, not gate-bearing
-        });
-        didHydrateTests.current = false;
-        setComplianceTests((prev) => prev.map(applyCanonical));
-        setValidationTests((prev) => prev.map(applyCanonical));
-        setTimeout(() => { didHydrateTests.current = true; }, 0);
       } catch (err) {
         console.error('[FETCH] Error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -425,43 +382,6 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
   }, [polling]);
 
   const startPolling = () => setPolling(true);
-
-  // Persist the full nine-check set to validation-test (the canonical writer). Called directly when a
-  // test result lands, with the freshly-updated arrays passed in, so it never reads stale state and is
-  // not gated by the hydration flag / 20s auto-refresh. After a successful persist we bump
-  // refreshTrigger so the canonical-derived banner + score update.
-  const persistTests = async (
-    compliance: typeof complianceTests,
-    validation: typeof validationTests,
-  ) => {
-    const all = [...compliance, ...validation];
-    // only persist once at least one check has a real (non-pending/running) status
-    if (all.every((t) => t.status === 'pending' || t.status === 'running')) return;
-    const tests = all.map((t) => ({ id: t.id, status: t.status, findings: t.findings }));
-    try {
-      const res = await fetch(`/api/admin/pipeline/${productId}/validation-test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tests }),
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setProduct((prev: any) => prev ? {
-        ...prev,
-        validation: {
-          ...prev.validation,
-          validation_test_results: data.validation_test_results,
-          validation_test_status: data.validation_test_status,
-          hard_gates_passed: data.hard_gates_passed,
-          hard_gates_total: data.hard_gates_total,
-        },
-      } : prev);
-      // re-pull canonical readiness_results so the banner + canonical score reflect the rows just written
-      setRefreshTrigger((n) => n + 1);
-    } catch (err) {
-      console.error('[validation-test persist] error:', err);
-    }
-  };
 
   const handleRefresh = async () => {
     await new Promise(r => setTimeout(r, 500));
@@ -561,27 +481,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     );
   }
 
-  const getInvestorPilotFieldsStatus = (validation: any) => {
-    const fields = [
-      { key: 'has_promise', label: 'Product Promise' },
-      { key: 'has_distributor', label: 'Distributor ICP' },
-      { key: 'has_end_user', label: 'End User ICP' },
-      { key: 'has_friction', label: 'Friction/Pain Point' },
-      { key: 'core_mechanism', label: 'Core Mechanism' },
-      { key: 'customer_outcomes', label: 'Customer Outcomes' },
-      { key: 'one_pager_url', label: 'One-Pager URL' },
-    ];
-    return fields.map(f => ({ label: f.label, complete: f.key.startsWith('has_') ? validation?.[f.key] : !!validation?.[f.key] }));
-  };
-
   const validationFieldsComplete = product.validation?.promise && product.validation?.distributor && product.validation?.end_user && product.validation?.friction;
 
-  // ── Step 5/6 pass/fail is derived from CANONICAL readiness_results, not from the test arrays'
-  // optimistic state or the validation_test_status mirror cell. The banner cannot show green unless
-  // every test's mapped code(s) have passing readiness_results rows (see validation-test-state.ts).
-  const canonicalLatest = latestByCode(product.readiness_results ?? []);
-  const allCompliancePassed = allTestsPassedCanonical(complianceTests.map(t => t.id), canonicalLatest);
-  const allValidationPassed = allTestsPassedCanonical(validationTests.map(t => t.id), canonicalLatest);
   // Outreach unlock is the SERVER (canonical) gate only — can_run_outreach_now is computed by
   // scanPortfolio via scoreCard (isMvpReady + spec complete + commitment). Client-side test state
   // must NEVER unlock outreach — that was the fake-green path.
@@ -609,6 +510,14 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
     const dot = surveyGate.reason.indexOf('·');
     return dot >= 0 ? surveyGate.reason.slice(dot + 1).trim() : null;
   })();
+
+  // The deployment the recorded validation verdicts actually bind to (readiness_results rows are
+  // scored_at-desc from the route). The survey gate row may be older/unbound, so the honest
+  // "what does the current punch-list reflect" answer is the latest verdict's deployment.
+  const latestVerdictDeployment: string | null =
+    (product.readiness_results ?? [])
+      .map((r: any) => r.deployment_id)
+      .find((d: string | null) => !!d) ?? null;
 
   return (
     <div className="space-y-6">
@@ -647,7 +556,11 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         {surveyGate && (
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
             <span>Recorded {new Date(surveyGate.created_at).toLocaleString()} by <span className="font-mono">{surveyGate.recorded_by}</span></span>
-            {surveyGate.deployment_id ? <span>Bound to deployment <span className="font-mono">{surveyGate.deployment_id.slice(0, 12)}…</span></span> : <span className="text-yellow-400">Unbound — provisional (not tied to a deployment)</span>}
+            {surveyGate.deployment_id
+              ? <span>Survey bound to deployment <span className="font-mono">{surveyGate.deployment_id.slice(0, 12)}…</span></span>
+              : latestVerdictDeployment
+                ? <span>Validation verdicts bound to <span className="font-mono">{latestVerdictDeployment.slice(0, 12)}…</span> <span className="text-gray-600">(survey row predates it)</span></span>
+                : <span className="text-yellow-400">Unbound — no validation tied to a deployment yet</span>}
             {surveyGate.artifact_ref && <span className="font-mono break-all">{surveyGate.artifact_ref}</span>}
           </div>
         )}
@@ -773,6 +686,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         )}
 
         {surveyGate?.result && (
+          <details className="mt-4">
+            <summary className="cursor-pointer text-xs text-gray-400 hover:text-white">Survey field-evidence detail (14 fields + PRE-HARD) — show/hide</summary>
           <div className="mt-4 space-y-4">
             <div className="text-xs text-gray-500">
               Evidenced {surveyGate.result.site?.evidencedCount}/{surveyGate.result.site?.total} fields
@@ -817,6 +732,7 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
               </div>
             ) : null}
           </div>
+          </details>
         )}
 
         {hasUrl && <SurveyKickoff productSlug={productId} productUrl={product.validation?.mvp_url ?? null} onStarted={startPolling} />}
@@ -894,146 +810,8 @@ export default function ProductDetailView({ productId }: ProductDetailViewProps)
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 5</span>
-            <h2 className="text-lg font-semibold text-white">Compliance Tests</h2>
-            {allCompliancePassed && <CheckCircle className="text-green-400" size={18} />}
-          </div>
-          <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-700">
-            <div className="flex items-center gap-2 mb-2"><CheckCircle className="text-blue-400" size={16} /><span className="font-medium text-blue-300">InvestorPilot Data Completeness</span></div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {getInvestorPilotFieldsStatus(product.validation).map((field) => (
-                <div key={field.label} className={`flex items-center gap-1 ${field.complete ? 'text-green-300' : 'text-orange-400'}`}>{field.complete ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}{field.label}</div>
-              ))}
-            </div>
-            {product.gaps?.some((g: string) => g.includes('Missing')) && <p className="text-xs text-orange-400 mt-2">⚠️ Complete missing fields above before executing to InvestorPilot</p>}
-          </div>
-          <p className="text-sm text-gray-400 mb-4">Run compliance checks to ensure the product meets technical and legal requirements.<br /><strong>When done:</strong> run validation tests (Step 6) ↓</p>
-          <div className="space-y-3">
-            {complianceTests.map((test) => (
-              <div key={test.id} className="border border-gray-700 rounded-lg p-4 bg-gray-900">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {test.status === 'passed' && <CheckCircle className="text-green-400" size={20} />}
-                    {test.status === 'failed' && <XCircle className="text-red-400" size={20} />}
-                    {test.status === 'warning' && <AlertTriangle className="text-yellow-400" size={20} />}
-                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-700" />}
-                    {test.status === 'running' && <Loader2 className="text-blue-400 animate-spin" size={20} />}
-                    <div><h4 className="font-medium text-white">{test.name}</h4><p className="text-sm text-gray-500">{test.description}</p></div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
-                      <button onClick={async () => {
-                        setRunningTest(test.id);
-                        setComplianceTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
-                        try {
-                          const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ testType: test.id, testId: test.id, mvpUrl: product.validation?.mvp_url }) });
-                          const data = await res.json();
-                          // Honest mapping — never default to 'passed'. An unrecognized response fails closed.
-                          let newStatus: TestStatus; let newFindings: string[] = [];
-                          if (data.status === 'manual_required') { newStatus = 'warning'; newFindings = data.instructions ? [data.instructions] : ['Manual review required']; if (data.steps) newFindings = data.steps; }
-                          else if (data.findings?.length > 0) { newStatus = data.status === 'warning' ? 'warning' : 'failed'; newFindings = data.findings; }
-                          else if (data.status === 'passed') { newStatus = 'passed'; }
-                          else { newStatus = 'failed'; newFindings = ['Unrecognized test result — failing closed']; }
-                          setComplianceTests(prev => {
-                            const next = prev.map(t => t.id === test.id ? { ...t, status: newStatus, findings: newFindings } : t);
-                            void persistTests(next, validationTests);
-                            return next;
-                          });
-                        } catch (err) {
-                          setComplianceTests(prev => {
-                            const next = prev.map(t => t.id === test.id ? { ...t, status: 'failed' as TestStatus, findings: ['Test run errored'] } : t);
-                            void persistTests(next, validationTests);
-                            return next;
-                          });
-                        }
-                        setRunningTest(null);
-                      }} disabled={runningTest === test.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50">
-                        {runningTest === test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}Run Test
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-                {test.findings && test.findings.length > 0 && (
-                  <div className="mt-3 pl-8"><div className="text-sm text-red-400 font-medium">Findings:</div><ul className="text-sm text-red-400 list-disc list-inside">{test.findings.map((finding, i) => (<li key={i}>{finding}</li>))}</ul></div>
-                )}
-              </div>
-            ))}
-            {allCompliancePassed && <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg"><CheckCircle className="text-green-400" size={20} /><span className="text-green-300 font-medium">All compliance tests passed!</span></div>}
-            {complianceTests.some(t => t.status === 'warning') && !allCompliancePassed && <div className="flex items-center gap-2 p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg"><AlertCircle className="text-yellow-400" size={20} /><span className="text-yellow-300 font-medium">{complianceTests.filter(t => t.status === 'warning').length} compliance tests with warnings</span></div>}
-            {complianceTests.some(t => t.status === 'failed') && <div className="flex items-center gap-2 p-3 bg-red-900/30 border border-red-700 rounded-lg"><XCircle className="text-red-400" size={20} /><span className="text-red-300 font-medium">{complianceTests.filter(t => t.status === 'failed').length} compliance tests failed</span></div>}
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 6</span>
-            <h2 className="text-lg font-semibold text-white">Validation Tests</h2>
-            {allValidationPassed && <CheckCircle className="text-green-400" size={18} />}
-          </div>
-          <p className="text-sm text-gray-400 mb-4">Run validation tests using gstack skills (naive-tester, voice-auditor, gtm-auditor, qa).<br /><strong>When done:</strong> check the final score (Step 7) ↓</p>
-          <div className="space-y-3">
-            {validationTests.map((test) => (
-              <div key={test.id} className="border border-gray-700 rounded-lg p-4 bg-gray-900">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {test.status === 'passed' && <CheckCircle className="text-green-400" size={20} />}
-                    {test.status === 'failed' && <XCircle className="text-red-400" size={20} />}
-                    {test.status === 'warning' && <AlertTriangle className="text-yellow-400" size={20} />}
-                    {test.status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-700" />}
-                    {test.status === 'running' && <Loader2 className="text-blue-400 animate-spin" size={20} />}
-                    <div><h4 className="font-medium text-white">{test.name}</h4><p className="text-sm text-gray-500">{test.description}</p></div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {test.status === 'pending' || test.status === 'failed' || test.status === 'warning' ? (
-                      <button onClick={async () => {
-                        setRunningTest('val-' + test.id);
-                        setValidationTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
-                        try {
-                          const res = await fetch(`/api/admin/pipeline/${productId}/run-test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ testType: test.id, testId: test.id, mvpUrl: product.validation?.mvp_url }) });
-                          const data = await res.json();
-                          // Honest mapping — never default to 'passed'. An unrecognized response fails closed.
-                          let newStatus: TestStatus; let newFindings: string[] = [];
-                          if (data.status === 'manual_required') { newStatus = 'warning'; newFindings = data.steps || [data.instructions].filter(Boolean); }
-                          else if (data.findings?.length > 0) { newStatus = data.status === 'warning' ? 'warning' : 'failed'; newFindings = data.findings; }
-                          else if (data.status === 'passed') { newStatus = 'passed'; }
-                          else { newStatus = 'failed'; newFindings = ['Unrecognized test result — failing closed']; }
-                          setValidationTests(prev => {
-                            const next = prev.map(t => t.id === test.id ? { ...t, status: newStatus, findings: newFindings } : t);
-                            void persistTests(complianceTests, next);
-                            return next;
-                          });
-                        } catch (err) {
-                          setValidationTests(prev => {
-                            const next = prev.map(t => t.id === test.id ? { ...t, status: 'failed' as TestStatus, findings: ['Test run errored'] } : t);
-                            void persistTests(complianceTests, next);
-                            return next;
-                          });
-                        }
-                        setRunningTest(null);
-                      }} disabled={runningTest === 'val-' + test.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50">
-                        {runningTest === 'val-' + test.id ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}Run Test
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-                {test.findings && test.findings.length > 0 && (
-                  <div className="mt-3 pl-8"><div className="text-sm text-red-400 font-medium">Findings:</div><ul className="text-sm text-red-400 list-disc list-inside">{test.findings.map((finding, i) => (<li key={i}>{finding}</li>))}</ul></div>
-                )}
-              </div>
-            ))}
-            {allValidationPassed && <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg"><CheckCircle className="text-green-400" size={20} /><span className="text-green-300 font-medium">All validation tests passed!</span></div>}
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">STEP 7</span>
-            <h2 className="text-lg font-semibold text-white">Final Score Check</h2>
-            {readinessPct >= 80 && <CheckCircle className="text-green-400" size={18} />}
-          </div>
-          <p className="text-sm text-gray-400 mb-4">Your validation score must be ≥80% to run outreach.<br /><strong>This item is for:</strong> reviewing remaining gaps and confirming readiness.<br /><strong>When score ≥80%:</strong> submit for automated outreach to InvestorPilot ↓</p>
-          <GapsSection gaps={product.gaps} actionItems={product.action_items} productSlug={product.manifest?.name} />
+          <h2 className="text-lg font-semibold text-white mb-1">Submit for outreach</h2>
+          <p className="text-sm text-gray-400 mb-4">Your validation score must be ≥80% and the HARD gate green to run outreach. The remaining blockers and what each is worth are in <strong>&ldquo;Validation findings&rdquo;</strong> above — fix those, then submit.</p>
           <div className="mt-4">
             <button onClick={async () => {
               try {
