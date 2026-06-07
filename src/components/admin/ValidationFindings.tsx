@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2 } from 'lucide-react';
+import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2, PlayCircle } from 'lucide-react';
 import type { ScoreResult, CheckResult } from '@/lib/methodology/score';
 
 // The real validation punch-list. Renders the actual recorded verdicts (from readiness_results,
@@ -57,6 +57,32 @@ export default function ValidationFindings({
 }) {
   const [fixing, setFixing] = useState(false);
   const [fixMsg, setFixMsg] = useState<string | null>(null);
+  const [runningFull, setRunningFull] = useState(false);
+  const [runMsg, setRunMsg] = useState<string | null>(null);
+
+  async function runFullValidation() {
+    if (!productSlug) return;
+    setRunningFull(true);
+    setRunMsg(null);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/run-full-validation`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: mvpUrl ?? '' }),
+      });
+      const data = await res.json();
+      setRunMsg(
+        res.ok && data.started
+          ? 'Full validation started in CI — runs every producer (naive-tester, voice-auditor, repo checks, dual-portal) and records results. Reload the card when it finishes.'
+          : data.error || 'Failed to start full validation.',
+      );
+    } catch {
+      setRunMsg('Failed to start full validation (network error).');
+    } finally {
+      setRunningFull(false);
+    }
+  }
 
   if (!score) {
     return (
@@ -119,6 +145,17 @@ export default function ValidationFindings({
           <span className="inline-flex items-center gap-1 text-green-400"><CheckCircle2 size={13} /> {passing} passing</span>
           <span className="inline-flex items-center gap-1 text-red-400"><XCircle size={13} /> {fails.length} failing</span>
           <span className="inline-flex items-center gap-1 text-gray-400"><CircleDashed size={13} /> {notRun.length} not yet tested</span>
+          {productSlug && (
+            <button
+              onClick={runFullValidation}
+              disabled={runningFull}
+              title="Run every producer (naive-tester, voice-auditor, repo checks, dual-portal) in CI and record results"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-medium text-blue-300 hover:bg-blue-900/30 disabled:opacity-50"
+            >
+              {runningFull ? <Loader2 className="animate-spin" size={13} /> : <PlayCircle size={13} />}
+              Run full validation
+            </button>
+          )}
           {canFix && (
             <button
               onClick={runFix}
@@ -131,6 +168,7 @@ export default function ValidationFindings({
             </button>
           )}
         </div>
+        {runMsg && <p className="mt-2 text-sm text-blue-300">{runMsg}</p>}
         {fixMsg && <p className="mt-2 text-sm text-purple-300">{fixMsg}</p>}
       </div>
 
