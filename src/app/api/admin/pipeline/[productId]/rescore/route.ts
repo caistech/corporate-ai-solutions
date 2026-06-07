@@ -39,6 +39,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { loadCardScore } from '@/lib/methodology/readiness'
 import { loadCardFreshness } from '@/lib/methodology/freshness'
+import { runHeadlessAutoProbes } from '@/lib/methodology/auto-probes'
 
 // Live-state route: never serve a cached verdict/score.
 export const dynamic = 'force-dynamic'
@@ -125,6 +126,16 @@ export async function POST(
     }
     ranProducers.push('survey')
     surveyVerdict = (surveyJson as { verdict?: string })?.verdict ?? null
+
+    // --- Fan out the headless AUTO-probe producer too (live-URL HTTP checks, e.g. #7 title). ---
+    // Same contract: it writes verdicts via upsertReadinessResult, bound to this deploy. Failures
+    // to fetch record nothing (degrade-don't-fake) rather than failing the whole re-score.
+    try {
+      const probes = await runHeadlessAutoProbes(productSlug, mvpUrl, deploymentId)
+      if (probes.length > 0) ranProducers.push('auto-probes')
+    } catch (probeErr) {
+      console.warn('[RESCORE] auto-probes failed (non-fatal):', probeErr instanceof Error ? probeErr.message : probeErr)
+    }
 
     // --- Recompute (compute-on-read) + freshness against the deploy we just scored. ---
     const [card, freshness] = await Promise.all([
