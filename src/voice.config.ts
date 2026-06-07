@@ -20,3 +20,16 @@ export const COCKPIT_CLARIFIER_AGENT_ID =
 
 /** True once an agent ID is available, so surfaces can hide the voice affordance until then. */
 export const hasCockpitClarifier = (): boolean => COCKPIT_CLARIFIER_AGENT_ID.trim().length > 0
+
+/**
+ * The voice onboarding coach (Morgan) — the /admin/pipeline/new-ideas intake walk.
+ * Provisioned via `node scripts/provision-coach-agent.ts` (set NEXT_PUBLIC_ELEVENLABS_AGENT_COACH
+ * on Vercel, or use the baked default). Public by design — the Security allowlist guards the key.
+ */
+export const COACH_AGENT_ID =
+  process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_COACH ||
+  // Provisioned 2026-06-06 (scripts/provision-coach-agent.ts).
+  'agent_7501ktddb89pegn961axee9rrpsy'
+
+/** True once the coach agent ID is available. */
+export const hasCoachAgent = (): boolean => COACH_AGENT_ID.trim().length > 0

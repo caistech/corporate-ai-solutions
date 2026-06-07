@@ -127,6 +127,33 @@ export async function GET(
       product.readiness_freshness = null;
     }
 
+    // Attach the coach (Morgan) conversation bound to this card — the onboarding walk that filled
+    // the spec fields, now persisted via the hub memory loop (convai_*). Newest conversation +
+    // its messages, so the card can surface the transcript. Best-effort: never break the load.
+    try {
+      const { data: coachConv } = await supabase
+        .from('convai_conversations')
+        .select('id, status, started_at, ended_at, message_count, last_topic, title, transcript_text')
+        .eq('product_slug', productId)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (coachConv) {
+        const { data: msgs } = await supabase
+          .from('convai_messages')
+          .select('role, content, message_index, timestamp')
+          .eq('conversation_id', coachConv.id)
+          .order('message_index', { ascending: true });
+        product.coach_conversation = { ...coachConv, messages: msgs ?? [] };
+      } else {
+        product.coach_conversation = null;
+      }
+      console.log('[GET] coach_conversation:', coachConv ? `${coachConv.status} · ${coachConv.message_count} msgs` : 'none');
+    } catch (e) {
+      console.error('[GET] coach_conversation fetch failed (non-fatal):', e);
+      product.coach_conversation = null;
+    }
+
     console.log('[GET] Returning product with validation:', {
       has_validation: !!product.validation,
       commitment: product.validation?.has_methodology_commitment,

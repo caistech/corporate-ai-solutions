@@ -135,6 +135,19 @@ export interface EnrichedProduct {
   // Derived per-check verdict freshness (current | stale | missing | unknown), attached by
   // the GET route. Type-only inline import keeps the scanner free of a runtime dependency.
   readiness_freshness?: import('@/lib/methodology/freshness').CardFreshness | null;
+  // The Morgan onboarding conversation bound to this card (hub memory loop), attached by the GET
+  // route — the walk that filled the spec fields. Newest conversation + its messages.
+  coach_conversation?: {
+    id: string;
+    status: string;
+    started_at: string;
+    ended_at: string | null;
+    message_count: number | null;
+    last_topic: string | null;
+    title: string | null;
+    transcript_text: string | null;
+    messages: { role: 'user' | 'assistant'; content: string; message_index: number; timestamp: string }[];
+  } | null;
 }
 
 // 7-Stage Lifecycle mapping based on validation state

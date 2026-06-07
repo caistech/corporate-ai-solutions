@@ -7,11 +7,10 @@
 // their existing paths — those are in the Supabase redirect allowlist, so moving them would break
 // the magic-link / reset round-trip; only the entry URL is standardised here.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/pipeline/supabase-client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 type AuthTab = 'login' | 'forgot-password'
 
@@ -24,7 +23,14 @@ export default function AdminLoginPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const router = useRouter()
+  const [denied, setDenied] = useState(false)
+
+  // Routed here by the middleware when a signed-in NON-operator tried to reach /admin (rather than
+  // a silent bounce to the marketing homepage). Show a clear access-denied message. Read from the
+  // URL in an effect (not useSearchParams) to avoid a Suspense-boundary requirement.
+  useEffect(() => {
+    setDenied(new URLSearchParams(window.location.search).get('denied') === '1')
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,7 +63,11 @@ export default function AdminLoginPage() {
         setEmail('')
         setPassword('')
         // §8.5: admin login lands on the control panel (the /admin dashboard).
-        setTimeout(() => router.push('/admin'), 1000)
+        // HARD navigation (not router.push): a soft client nav can race the just-written
+        // @supabase/ssr auth cookies, so the server middleware's getUser() sees no session and
+        // bounces back to /admin/login (the redirect-loop symptom). A full request guarantees the
+        // freshly-set cookies are attached and the server reads a real session.
+        window.location.assign('/admin')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -137,6 +147,16 @@ export default function AdminLoginPage() {
         <p className="text-sm text-[#5C6B7A] mb-6">
           Control dashboard for product managers and distributors. Manage users, validation tests, and outreach workflows.
         </p>
+
+        {denied && (
+          <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+            That account doesn&rsquo;t have admin access. Sign in with an operator account, or use the{' '}
+            <Link href="/pipeline/login" className="font-medium text-amber-900 underline">
+              user app
+            </Link>{' '}
+            instead.
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-6 border-b border-gray-200">
