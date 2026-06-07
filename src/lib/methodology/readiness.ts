@@ -9,7 +9,7 @@
 // Used by BOTH the /score route and the card detail page (direct import, no HTTP round-trip).
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { scoreCard, isMvpReady, type Criterion, type CheckVerdict, type ScoreResult } from './score'
+import { scoreCard, isMvpReady, type Criterion, type CheckVerdict, type Waiver, type ScoreResult } from './score'
 
 export interface CardScore {
   found: boolean
@@ -33,7 +33,7 @@ export async function loadCardScore(slug: string): Promise<CardScore> {
 
   const features: string[] = (card.features as string[] | null) ?? []
 
-  const [{ data: criteria }, { data: results }] = await Promise.all([
+  const [{ data: criteria }, { data: results }, { data: waivers }] = await Promise.all([
     supabase
       .from('readiness_criteria')
       .select('code, check_label, tier, weight, method, applies_when, notes')
@@ -43,12 +43,18 @@ export async function loadCardScore(slug: string): Promise<CardScore> {
       .select('check_code, status, source, evidence, scored_at')
       .eq('product_slug', slug)
       .order('scored_at', { ascending: false }),
+    supabase
+      .from('readiness_waivers')
+      .select('check_code, reason, waived_by, active')
+      .eq('product_slug', slug)
+      .eq('active', true),
   ])
 
   const score = scoreCard({
     features,
     criteria: (criteria ?? []) as Criterion[],
     verdicts: (results ?? []) as CheckVerdict[],
+    waivers: (waivers ?? []) as Waiver[],
   })
 
   return { found: true, slug, features, score, mvpReady: isMvpReady(score) }

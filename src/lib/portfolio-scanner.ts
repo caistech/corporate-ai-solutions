@@ -28,6 +28,7 @@ import {
   isMvpReady,
   type Criterion,
   type CheckVerdict,
+  type Waiver,
   type ScoreResult,
 } from './methodology/score';
 
@@ -321,6 +322,30 @@ async function fetchAllReadinessResults(supabase: any): Promise<Map<string, Chec
 }
 
 /**
+ * Fetch ALL products' ACTIVE readiness waivers in ONE query, grouped by slug. A waiver is the
+ * operator's deliberate, logged decision to lift a finding's effect on the gate/score (golden rule:
+ * never a silent na). Same scorer-input shape the /score route + card page pass.
+ */
+async function fetchAllWaivers(supabase: any): Promise<Map<string, Waiver[]>> {
+  const { data, error } = await supabase
+    .from('readiness_waivers')
+    .select('product_slug, check_code, reason, waived_by, active')
+    .eq('active', true);
+  const map = new Map<string, Waiver[]>();
+  if (error) {
+    console.error('Error fetching readiness_waivers:', error);
+    return map;
+  }
+  for (const row of data ?? []) {
+    const slug = row.product_slug as string;
+    if (!slug) continue;
+    if (!map.has(slug)) map.set(slug, []);
+    map.get(slug)!.push(row as Waiver);
+  }
+  return map;
+}
+
+/**
  * Fetch methodology cards once: both the idea card (display) and the declared `features`
  * (the conditional flags the scorer needs for applies_when applicability).
  */
@@ -499,6 +524,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     sensors,
     criteria,
     allResults,
+    allWaivers,
     { ideaCards, features: featuresMap },
   ] = await Promise.all([
     fetchValidationStatuses(supabase),
@@ -507,6 +533,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
     fetchSensors(supabase),
     fetchCriteria(supabase),
     fetchAllReadinessResults(supabase),
+    fetchAllWaivers(supabase),
     fetchCards(supabase),
   ]);
 
@@ -524,6 +551,7 @@ export async function scanPortfolio(): Promise<EnrichedProduct[]> {
       features: bySlug(featuresMap, slug) ?? [],
       criteria,
       verdicts: bySlug(allResults, slug) ?? [],
+      waivers: bySlug(allWaivers, slug) ?? [],
     });
 
     // Header % = weighted progress (available even pre-gate, from the scorer's own numbers).

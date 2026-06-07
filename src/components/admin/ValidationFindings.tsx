@@ -1,23 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2, PlayCircle } from 'lucide-react';
+import { XCircle, AlertTriangle, CircleDashed, CheckCircle2, Hammer, Loader2, PlayCircle, ShieldOff, Undo2 } from 'lucide-react';
 import type { ScoreResult, CheckResult } from '@/lib/methodology/score';
 
 // The real validation punch-list. Renders the actual recorded verdicts (from readiness_results,
 // surfaced via score.checks) so the operator sees WHERE the build really stands and WHAT failed —
 // each finding with its evidence text — instead of a bare score number. Fails that are HARD-tier
 // block the gate; weighted fails lower the score; "not yet tested" checks have no verdict recorded.
+//
+// A failing finding the operator deliberately accepts can be WAIVED (golden rule: logged, never a
+// silent na): a waiver lifts the gate block + drops the check from the weighted denominator, and
+// the check moves to the "Waived" section with its reason + a one-click Lift. HARD-gate waivers
+// require a type-to-confirm.
 
 function isBlocking(tier: string): boolean {
   return tier.includes('HARD'); // HARD + CONDITIONAL-HARD
 }
 
-function FindingRow({ c }: { c: CheckResult }) {
+function FindingRow({
+  c,
+  onWaive,
+  onLift,
+  busy,
+}: {
+  c: CheckResult;
+  onWaive?: (c: CheckResult) => void;
+  onLift?: (c: CheckResult) => void;
+  busy?: boolean;
+}) {
   const blocking = isBlocking(c.tier);
   return (
     <li className="flex items-start gap-2.5 py-2">
-      {c.status === 'fail' ? (
+      {c.status === 'waived' ? (
+        <ShieldOff className="shrink-0 mt-0.5 text-sky-400" size={16} />
+      ) : c.status === 'fail' ? (
         <XCircle className={`shrink-0 mt-0.5 ${blocking ? 'text-red-400' : 'text-amber-400'}`} size={16} />
       ) : (
         <CircleDashed className="shrink-0 mt-0.5 text-gray-500" size={16} />
@@ -35,13 +52,43 @@ function FindingRow({ c }: { c: CheckResult }) {
           {c.status === 'unknown' && (
             <span className="rounded bg-gray-700 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-300">Not yet tested</span>
           )}
+          {c.status === 'waived' && (
+            <span className="rounded bg-sky-900/40 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-300">Waived</span>
+          )}
         </div>
-        {c.evidence ? (
+        {c.status === 'waived' ? (
+          <p className="mt-0.5 text-sm text-sky-200/80">
+            {c.waiverReason || 'No reason recorded.'}
+            {c.waivedBy ? <span className="text-sky-300/50"> — {c.waivedBy}</span> : null}
+          </p>
+        ) : c.evidence ? (
           <p className="mt-0.5 text-sm text-gray-400">{c.evidence}</p>
         ) : c.status === 'unknown' ? (
           <p className="mt-0.5 text-sm text-gray-500">No test has recorded a result for this check yet.</p>
         ) : null}
       </div>
+      {c.status === 'fail' && onWaive && (
+        <button
+          onClick={() => onWaive(c)}
+          disabled={busy}
+          title="Deliberately accept this finding — logs a reason and lifts its effect on the gate/score"
+          className="shrink-0 inline-flex items-center gap-1 rounded border border-gray-600 px-2 py-1 text-[11px] font-medium text-gray-300 hover:bg-gray-700/50 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="animate-spin" size={12} /> : <ShieldOff size={12} />}
+          Waive
+        </button>
+      )}
+      {c.status === 'waived' && onLift && (
+        <button
+          onClick={() => onLift(c)}
+          disabled={busy}
+          title="Lift this waiver — the check counts against the gate/score again"
+          className="shrink-0 inline-flex items-center gap-1 rounded border border-sky-700 px-2 py-1 text-[11px] font-medium text-sky-300 hover:bg-sky-900/30 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="animate-spin" size={12} /> : <Undo2 size={12} />}
+          Lift
+        </button>
+      )}
     </li>
   );
 }
@@ -59,6 +106,68 @@ export default function ValidationFindings({
   const [fixMsg, setFixMsg] = useState<string | null>(null);
   const [runningFull, setRunningFull] = useState(false);
   const [runMsg, setRunMsg] = useState<string | null>(null);
+  const [waivingCode, setWaivingCode] = useState<string | null>(null);
+
+  async function waive(c: CheckResult) {
+    if (!productSlug) return;
+    const blocking = isBlocking(c.tier);
+    const reason = window.prompt(`Reason for waiving "${c.label}" (#${c.code}) — this is logged and shown on the card:`);
+    if (!reason || !reason.trim()) return;
+    let acknowledge = false;
+    if (blocking) {
+      const typed = window.prompt(
+        `#${c.code} is a BLOCKING (HARD) check. Waiving it lifts the gate block.\n\nType the check code "${c.code}" to confirm you accept this:`,
+      );
+      if (!typed || typed.trim() !== c.code) {
+        window.alert('Waiver cancelled — the code did not match.');
+        return;
+      }
+      acknowledge = true;
+    }
+    setWaivingCode(c.code);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/waive`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ check_code: c.code, reason: reason.trim(), acknowledge }),
+      });
+      const data = await res.json();
+      if (res.ok && data.waived) {
+        window.location.reload();
+      } else {
+        window.alert(data.error || 'Failed to waive.');
+        setWaivingCode(null);
+      }
+    } catch {
+      window.alert('Failed to waive (network error).');
+      setWaivingCode(null);
+    }
+  }
+
+  async function liftWaiver(c: CheckResult) {
+    if (!productSlug) return;
+    if (!window.confirm(`Lift the waiver on "${c.label}" (#${c.code})? It will count against the gate/score again.`)) return;
+    setWaivingCode(c.code);
+    try {
+      const res = await fetch(`/api/admin/pipeline/${productSlug}/waive`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ check_code: c.code }),
+      });
+      const data = await res.json();
+      if (res.ok && data.lifted) {
+        window.location.reload();
+      } else {
+        window.alert(data.error || 'Failed to lift the waiver.');
+        setWaivingCode(null);
+      }
+    } catch {
+      window.alert('Failed to lift the waiver (network error).');
+      setWaivingCode(null);
+    }
+  }
 
   async function runFullValidation() {
     if (!productSlug) return;
@@ -96,6 +205,7 @@ export default function ValidationFindings({
   const applicable = score.checks.filter((c) => c.applicable);
   const fails = applicable.filter((c) => c.status === 'fail').sort((a, b) => Number(isBlocking(b.tier)) - Number(isBlocking(a.tier)));
   const notRun = applicable.filter((c) => c.status === 'unknown');
+  const waived = applicable.filter((c) => c.status === 'waived');
   const passing = applicable.filter((c) => c.status === 'pass').length;
 
   const canFix = fails.length > 0 && !!productSlug;
@@ -145,6 +255,9 @@ export default function ValidationFindings({
           <span className="inline-flex items-center gap-1 text-green-400"><CheckCircle2 size={13} /> {passing} passing</span>
           <span className="inline-flex items-center gap-1 text-red-400"><XCircle size={13} /> {fails.length} failing</span>
           <span className="inline-flex items-center gap-1 text-gray-400"><CircleDashed size={13} /> {notRun.length} not yet tested</span>
+          {waived.length > 0 && (
+            <span className="inline-flex items-center gap-1 text-sky-400"><ShieldOff size={13} /> {waived.length} waived</span>
+          )}
           {productSlug && (
             <button
               onClick={runFullValidation}
@@ -172,7 +285,7 @@ export default function ValidationFindings({
         {fixMsg && <p className="mt-2 text-sm text-purple-300">{fixMsg}</p>}
       </div>
 
-      {fails.length === 0 && notRun.length === 0 ? (
+      {fails.length === 0 && notRun.length === 0 && waived.length === 0 ? (
         <div className="flex items-center gap-2 rounded border border-green-800/50 bg-green-900/20 p-3 text-sm text-green-300">
           <CheckCircle2 size={16} /> Every applicable check has a recorded pass. Nothing to fix.
         </div>
@@ -184,15 +297,32 @@ export default function ValidationFindings({
                 <AlertTriangle size={14} /> Failures ({fails.length})
               </h3>
               <ul className="divide-y divide-gray-700/60">
-                {fails.map((c) => <FindingRow key={c.code} c={c} />)}
+                {fails.map((c) => (
+                  <FindingRow key={c.code} c={c} onWaive={productSlug ? waive : undefined} busy={waivingCode === c.code} />
+                ))}
               </ul>
             </div>
           )}
           {notRun.length > 0 && (
-            <div>
+            <div className="mb-3">
               <h3 className="mb-1 text-sm font-medium text-gray-400">Not yet tested ({notRun.length})</h3>
               <ul className="divide-y divide-gray-700/60">
                 {notRun.map((c) => <FindingRow key={c.code} c={c} />)}
+              </ul>
+            </div>
+          )}
+          {waived.length > 0 && (
+            <div>
+              <h3 className="mb-1 flex items-center gap-1.5 text-sm font-medium text-sky-300">
+                <ShieldOff size={14} /> Waived ({waived.length})
+              </h3>
+              <p className="mb-1 text-xs text-gray-500">
+                Deliberately accepted — lifted from the gate/score, with a logged reason. Lift any to make it count again.
+              </p>
+              <ul className="divide-y divide-gray-700/60">
+                {waived.map((c) => (
+                  <FindingRow key={c.code} c={c} onLift={productSlug ? liftWaiver : undefined} busy={waivingCode === c.code} />
+                ))}
               </ul>
             </div>
           )}
