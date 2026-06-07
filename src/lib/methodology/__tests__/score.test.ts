@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreCard, latestVerdicts, isMvpReady, type Criterion, type CheckVerdict } from '../score'
+import { scoreCard, latestVerdicts, isMvpReady, type Criterion, type CheckVerdict, type Waiver } from '../score'
 
 // Compact fixture builders.
 const C = (code: string, tier: Criterion['tier'], weight: Criterion['weight'], applies_when: string | null = null): Criterion => ({
@@ -13,6 +13,12 @@ const V = (check_code: string, status: CheckVerdict['status'], source: CheckVerd
   check_code,
   status,
   source,
+})
+const W = (check_code: string, reason = 'intentional', active = true): Waiver => ({
+  check_code,
+  reason,
+  waived_by: 'dennis@corporateaisolutions.com',
+  active,
 })
 
 // A representative slice of the catalogue: 2 HARD, a voice + an auth CONDITIONAL-HARD,
@@ -106,6 +112,61 @@ describe('scoreCard — TOO-MUCH guard + toReachGo', () => {
     expect(r.tooMuch.flagged).toBe(true)
     expect(r.tooMuch.checks.map((c) => c.code)).toContain('P4')
     expect(r.toReachGo[0].code).toBe('9') // High-weight unmet check surfaces first
+  })
+})
+
+describe('scoreCard — waivers (operator adjudication)', () => {
+  it('a waived failing HARD check lifts the gate, and is surfaced as waived (not silent)', () => {
+    const r = scoreCard({
+      features: [],
+      criteria,
+      verdicts: [V('P1', 'pass'), V('2', 'fail'), V('9', 'pass'), V('1', 'pass')],
+      waivers: [W('2', 'mobile fork shipped separately — accepted for this slice')],
+    })
+    expect(r.gate1Ready).toBe(true)
+    expect(r.hardGate.failing.map((f) => f.code)).not.toContain('2')
+    const waivedCheck = r.checks.find((c) => c.code === '2')!
+    expect(waivedCheck.status).toBe('waived')
+    expect(waivedCheck.waived).toBe(true)
+    expect(r.waived.count).toBe(1)
+    expect(r.waived.checks[0]).toMatchObject({ code: '2', reason: 'mobile fork shipped separately — accepted for this slice' })
+  })
+
+  it('a waived weighted fail leaves the denominator (does not drag the score down)', () => {
+    // possible without waiver: 9 High=3 + 1 Med=2 = 5; 9 pass, 1 fail → 3/5 = 6.0 (REDESIGN)
+    // waiving the failing #1 drops it from possible: 9 pass / 3 possible → 10 (GO)
+    const r = scoreCard({
+      features: [],
+      criteria,
+      verdicts: [V('P1', 'pass'), V('2', 'pass'), V('9', 'pass'), V('1', 'fail')],
+      waivers: [W('1', 'address autocomplete deferred — not load-bearing for the demo')],
+    })
+    expect(r.weighted).toEqual({ earned: 3, possible: 3 })
+    expect(r.score).toBe(10)
+    expect(r.band).toBe('GO')
+    expect(r.checks.find((c) => c.code === '1')!.status).toBe('waived')
+  })
+
+  it('a waiver clears the TOO-MUCH flag (P4 — "or waive if intentional")', () => {
+    const r = scoreCard({
+      features: [],
+      criteria,
+      verdicts: [V('P1', 'pass'), V('2', 'pass'), V('P4', 'fail'), V('9', 'pass'), V('1', 'pass')],
+      waivers: [W('P4', 'team admin is intentional for this paying-client build')],
+    })
+    expect(r.tooMuch.flagged).toBe(false)
+    expect(r.checks.find((c) => c.code === 'P4')!.status).toBe('waived')
+  })
+
+  it('an inactive (lifted) waiver is ignored — the check counts again', () => {
+    const r = scoreCard({
+      features: [],
+      criteria,
+      verdicts: [V('P1', 'pass'), V('2', 'fail'), V('9', 'pass'), V('1', 'pass')],
+      waivers: [W('2', 'previously waived', false)],
+    })
+    expect(r.gate1Ready).toBe(false)
+    expect(r.hardGate.failing.map((f) => f.code)).toContain('2')
   })
 })
 

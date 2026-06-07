@@ -27,6 +27,8 @@ export type Weight = 'High' | 'Med' | 'Low' | null
 export type CheckStatus = 'pass' | 'fail' | 'na'
 export type ResultSource = 'auto' | 'naive-tester' | 'voice-auditor' | 'judge'
 export type Band = 'GO' | 'REDESIGN' | 'NO-GO'
+/** Which lane resolves a finding: code (design-build) | config (config-fixer) | operator-input (you). */
+export type FixerLane = 'code' | 'config' | 'operator-input'
 
 export interface Criterion {
   code: string
@@ -36,6 +38,7 @@ export interface Criterion {
   method?: string | null
   applies_when: string | null
   notes?: string | null
+  fixer?: FixerLane | null
 }
 
 /** A readiness_results row — the latest recorded verdict for a check. */
@@ -47,6 +50,16 @@ export interface CheckVerdict {
   scored_at?: string
 }
 
+/** A readiness_waivers row — an operator's deliberate, logged decision to lift a finding's effect. */
+export interface Waiver {
+  check_code: string
+  reason: string
+  waived_by?: string | null
+  /** A row with active===false is an old (lifted) waiver — ignored by the scorer. */
+  active?: boolean
+  created_at?: string
+}
+
 export interface ScoreInput {
   /** The conditional features this product has (voice|auth|supabase|...). */
   features: string[]
@@ -54,6 +67,8 @@ export interface ScoreInput {
   criteria: Criterion[]
   /** readiness_results verdicts (the route passes scored_at-desc; latest-per-code is taken). */
   verdicts: CheckVerdict[]
+  /** Active readiness_waivers for this card (optional — absent === none). */
+  waivers?: Waiver[]
 }
 
 export interface CheckResult {
@@ -63,11 +78,15 @@ export interface CheckResult {
   weight: Weight
   applicable: boolean
   reason?: string // why N/A (only when !applicable)
-  status: CheckStatus | 'unknown' // 'unknown' = applicable but no verdict recorded yet
+  status: CheckStatus | 'unknown' | 'waived' // 'unknown' = applicable but no verdict; 'waived' = operator lifted it
   source: ResultSource | null
   evidence: string | null
-  weightPoints: number // > 0 only for an applicable weighted check
+  weightPoints: number // > 0 only for an applicable, non-waived weighted check
   earned: number // weightPoints when status==='pass', else 0
+  fixer: FixerLane // which lane resolves this finding (defaults 'code')
+  waived: boolean // an active operator waiver is in effect
+  waiverReason?: string | null // the logged justification (only when waived)
+  waivedBy?: string | null // operator who waived (only when waived)
 }
 
 export interface ScoreResult {
@@ -80,6 +99,10 @@ export interface ScoreResult {
   tooMuch: {
     flagged: boolean
     checks: { code: string; label: string; evidence: string | null }[]
+  }
+  waived: {
+    count: number
+    checks: { code: string; label: string; reason: string; waivedBy: string | null }[]
   }
   score: number | null // 0–10; null until the HARD gate passes (not computed before)
   band: Band | null
@@ -139,18 +162,34 @@ export function scoreCard(input: ScoreInput): ScoreResult {
   const { features, criteria } = input
   const verdicts = latestVerdicts(input.verdicts)
   const byCode = new Map(verdicts.map((v) => [v.check_code, v]))
+  // Active waivers only — a lifted (active===false) row is ignored.
+  const waiverByCode = new Map(
+    (input.waivers ?? []).filter((w) => w.active !== false).map((w) => [w.check_code, w]),
+  )
 
   const checks: CheckResult[] = criteria.map((c) => {
     const { applicable, reason } = applicability(c, features)
     const v = byCode.get(c.code)
-    const status: CheckStatus | 'unknown' = !applicable ? 'na' : v ? v.status : 'unknown'
-    const weightPoints = applicable && isWeightedTier(c.tier) && c.weight ? WEIGHT_POINTS[c.weight] : 0
+    // A waiver only acts on an applicable check (an N/A check needs no lifting).
+    const waiver = applicable ? waiverByCode.get(c.code) : undefined
+    const waived = !!waiver
+    const status: CheckStatus | 'unknown' | 'waived' = !applicable
+      ? 'na'
+      : waived
+      ? 'waived'
+      : v
+      ? v.status
+      : 'unknown'
+    // Waived weighted checks leave the denominator entirely (like N/A) — they don't drag the score.
+    const weightPoints =
+      applicable && !waived && isWeightedTier(c.tier) && c.weight ? WEIGHT_POINTS[c.weight] : 0
     const earned = status === 'pass' ? weightPoints : 0
     return {
       code: c.code,
       label: c.check_label,
       tier: c.tier,
       weight: c.weight,
+      fixer: (c.fixer ?? 'code') as FixerLane,
       applicable,
       reason,
       status,
@@ -158,20 +197,30 @@ export function scoreCard(input: ScoreInput): ScoreResult {
       evidence: v?.evidence ?? null,
       weightPoints,
       earned,
+      waived,
+      waiverReason: waiver?.reason ?? null,
+      waivedBy: waiver?.waived_by ?? null,
     }
   })
 
-  // HARD gate — every applicable HARD + CONDITIONAL-HARD check must PASS (unknown blocks).
+  // HARD gate — every applicable HARD + CONDITIONAL-HARD check must PASS (unknown blocks);
+  // a waived HARD check is treated as resolved (the operator's logged, deliberate call).
   const hardChecks = checks.filter((c) => c.applicable && isHardTier(c.tier))
   const failing = hardChecks
-    .filter((c) => c.status !== 'pass')
+    .filter((c) => c.status !== 'pass' && c.status !== 'waived')
     .map((c) => ({ code: c.code, label: c.label, status: c.status }))
   const gate1Ready = failing.length === 0
 
-  // TOO-MUCH — scale-infra present pre-GO is the inverse flag (a 'fail' verdict = present).
+  // TOO-MUCH — scale-infra present pre-GO is the inverse flag (a 'fail' verdict = present);
+  // a waiver clears it (P4's own note: "or waive if intentional").
   const tooMuchChecks = checks
     .filter((c) => c.applicable && c.tier === 'TOO-MUCH' && c.status === 'fail')
     .map((c) => ({ code: c.code, label: c.label, evidence: c.evidence }))
+
+  // Waived — surfaced explicitly so a lifted finding is never silent.
+  const waivedChecks = checks
+    .filter((c) => c.waived)
+    .map((c) => ({ code: c.code, label: c.label, reason: c.waiverReason ?? '', waivedBy: c.waivedBy ?? null }))
 
   // WEIGHTED composite from the applicable weighted checks.
   const weightedChecks = checks.filter((c) => c.applicable && isWeightedTier(c.tier) && c.weightPoints > 0)
@@ -205,6 +254,7 @@ export function scoreCard(input: ScoreInput): ScoreResult {
     gate1Ready,
     hardGate: { passed: gate1Ready, total: hardChecks.length, failing },
     tooMuch: { flagged: tooMuchChecks.length > 0, checks: tooMuchChecks },
+    waived: { count: waivedChecks.length, checks: waivedChecks },
     score,
     band,
     weighted: { earned, possible },
