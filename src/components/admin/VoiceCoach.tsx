@@ -77,6 +77,9 @@ export default function VoiceCoach({
   // (from VoiceWidget.onReady) so the timer can push a spoken wrap-up; warnedRef fires it once.
   const connectedAtRef = useRef<number | null>(null)
   const controlsRef = useRef<{ sendUserMessage: (t: string) => void; sendContextualUpdate: (t: string) => void } | null>(null)
+  // Recalled memories to inject into Morgan's opening. onConnect (which fetches them) and onReady
+  // (which provides the send handle) race — whichever lands second flushes this.
+  const pendingRecallRef = useRef<string | null>(null)
   const warnedRef = useRef(false)
   const [wrapSoon, setWrapSoon] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -377,7 +380,14 @@ export default function VoiceCoach({
           textFallback
           textInput
           clientTools={clientTools}
-          onReady={(controls) => { controlsRef.current = controls }}
+          onReady={(controls) => {
+            controlsRef.current = controls
+            // Flush any recall that arrived before the controls were ready.
+            if (pendingRecallRef.current) {
+              controls.sendContextualUpdate(pendingRecallRef.current)
+              pendingRecallRef.current = null
+            }
+          }}
           onConnect={async (conversationId) => {
             setConnected(true)
             connectedAtRef.current = Date.now() // start the 20-min session clock
@@ -395,6 +405,17 @@ export default function VoiceCoach({
               startedRef.current = res.ok
               if (res.ok && data.isReturningUser) {
                 setTranscript((t) => [...t, { source: 'ai', text: 'Welcome back — I have our earlier intake on file and can pick up where we left off.' }])
+              }
+              // RECALL injection (VOICE_MEMORY_STANDARD §F leg 2): feed distilled memories into the
+              // live session so Morgan speaks FROM recall, not just a banner. Send now if the controls
+              // are ready, else stash for onReady to flush (the two callbacks race).
+              if (res.ok && Array.isArray(data.memories) && data.memories.length > 0) {
+                const note =
+                  '[MEMORY] What you already know about this operator from earlier sessions — ' +
+                  'use it, do not re-ask what it already answers:\n- ' +
+                  (data.memories as string[]).join('\n- ')
+                if (controlsRef.current) controlsRef.current.sendContextualUpdate(note)
+                else pendingRecallRef.current = note
               }
               if (res.ok) {
                 const buffered = pendingRef.current
