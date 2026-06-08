@@ -22,7 +22,7 @@
  *   - get_card_state(): returns N/14 + which fields are still outstanding.
  */
 import * as dotenv from 'dotenv'
-import { provisionVoiceAgent, standardAllowlist, type ConvAITool, type ConvAIAgentConfig } from '@caistech/elevenlabs-convai'
+import { provisionVoiceAgent, standardAllowlist, DEFAULT_AGENT_LLM, type ConvAITool, type ConvAIAgentConfig } from '@caistech/elevenlabs-convai'
 import { buildCoachSystemPrompt, COACH_FIRST_MESSAGE } from '../src/lib/methodology/coach-voice-context.ts'
 
 dotenv.config({ path: '.env.local' })
@@ -41,7 +41,8 @@ if (!apiKey || apiKey.trim() === '') {
 const config: ConvAIAgentConfig = {
   agentName: 'CAS Pipeline Coach (Morgan)',
   voiceId: 'EXAVITQu4vr4xnSDxMaL', // canonical portfolio voice (voice-config.json)
-  llmModel: 'gpt-4o-mini',
+  // No llmModel override — inherit the hub's DEFAULT_AGENT_LLM (gpt-4.1-mini). gpt-4o-mini dropped
+  // tool calls over long conversations (lost 20 min of SafeFix field capture).
   temperature: 0.6,
 }
 
@@ -158,14 +159,16 @@ async function setCoachSystemPrompt(key: string, agentId: string): Promise<void>
     body: JSON.stringify({
       conversation_config: {
         agent: {
-          prompt: { ...promptNoTools, prompt: buildCoachSystemPrompt() },
+          // Also flip the reasoning LLM to the hub standard (gpt-4.1-mini) — the verify-free path is
+          // the only one that runs for this agent, so the model swap has to ride this PATCH.
+          prompt: { ...promptNoTools, prompt: buildCoachSystemPrompt(), llm: DEFAULT_AGENT_LLM },
           first_message: COACH_FIRST_MESSAGE,
         },
       },
     }),
   })
   if (!res.ok) throw new Error(`prompt patch failed: ${res.status}\n${await res.text()}`)
-  console.log('prompt -> system prompt + first message updated (verify-free)')
+  console.log('prompt -> system prompt + first message updated (verify-free); llm ->', DEFAULT_AGENT_LLM)
 }
 
 /** Codify Morgan's 20-min conversation cap on the agent. Read-modify-write so sibling `conversation`

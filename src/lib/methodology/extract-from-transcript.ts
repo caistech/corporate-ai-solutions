@@ -104,7 +104,11 @@ export async function extractFromTranscript(
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1024,
+        // 8192, not 1024: a rich 20-min transcript yields a large extraction JSON. At 1024 the JSON
+        // was truncated mid-object → JSON.parse failed → the WHOLE extraction was lost (all-or-
+        // nothing), which is exactly how the SafeFix backstop silently filled nothing. 8192 leaves
+        // ample headroom for all 14 fields + feasibility; we only pay for tokens actually emitted.
+        max_tokens: 8192,
         system: buildExtractionPrompt(),
         messages: [{ role: 'user', content: renderTranscript(turns) }],
       }),
@@ -115,6 +119,11 @@ export async function extractFromTranscript(
     }
     const data = await res.json()
     const text: string = data.content?.[0]?.text ?? ''
+    // Surface truncation explicitly — if the model still hit the cap, the JSON may be partial and
+    // the parse will salvage what it can; log it so a future under-extraction isn't silent.
+    if (data.stop_reason === 'max_tokens') {
+      console.warn('[extract-transcript] hit max_tokens — extraction may be partial', { turns: turns.length })
+    }
     return parseExtraction(text)
   } catch (e) {
     console.error('[extract-transcript] failed', e instanceof Error ? e.message : e)
