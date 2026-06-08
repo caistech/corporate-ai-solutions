@@ -11,7 +11,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { handleStartConversation } from '@caistech/elevenlabs-convai'
+import { handleStartConversation, handleRecallMemory } from '@caistech/elevenlabs-convai'
 import { requireOperator } from '@/lib/pipeline/require-operator'
 import { ensureCoachAgent, COACH_TABLES } from '@/lib/methodology/coach-persistence'
 
@@ -76,11 +76,29 @@ export async function POST(request: NextRequest) {
     res.isReturningUser,
   )
 
+  // RECALL leg (VOICE_MEMORY_STANDARD §F leg 2): pull distilled memories for this operator+agent so
+  // the client can inject them into Morgan's opening. Identity is derived from the conversation
+  // binding just created — never supplied. query '' = all, importance-ordered (handleRecallMemory).
+  let memories: string[] = []
+  if (res.isReturningUser) {
+    const recall = await handleRecallMemory(
+      supabase,
+      { elevenlabsConversationId, query: '' },
+      COACH_TABLES,
+    )
+    if (recall.success && Array.isArray(recall.memories)) {
+      memories = recall.memories
+        .map((m: { content?: unknown }) => (typeof m.content === 'string' ? m.content : ''))
+        .filter((c): c is string => c.trim() !== '')
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     conversationId: res.conversationId,
     isReturningUser: res.isReturningUser,
     timeGapCategory: res.timeGapCategory,
     context: res.context,
+    memories,
   })
 }
