@@ -73,8 +73,11 @@ export default function VoiceCoach({
   const [autoConnectResume, setAutoConnectResume] = useState(false)
   const [resumable, setResumable] = useState(false)
   // 20-min session clock. connectedAtRef is the wall-clock connect time; wrapSoon flips on in the
-  // final 2 minutes to drive the visual wrap-up banner.
+  // final 2 minutes to drive the visual wrap-up banner. controlsRef holds the live-session handle
+  // (from VoiceWidget.onReady) so the timer can push a spoken wrap-up; warnedRef fires it once.
   const connectedAtRef = useRef<number | null>(null)
+  const controlsRef = useRef<{ sendUserMessage: (t: string) => void; sendContextualUpdate: (t: string) => void } | null>(null)
+  const warnedRef = useRef(false)
   const [wrapSoon, setWrapSoon] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   // Mirror of the transcript in the extractor's shape — read in onDisconnect (avoids stale closure).
@@ -155,16 +158,8 @@ export default function VoiceCoach({
     return Math.max(0, Math.round(SESSION_LIMIT_SECS - elapsed))
   }, [])
 
-  // A wrap-up instruction folded into tool results so Morgan SPEAKS the warning (she has no clock of
-  // her own). Empty until we're inside the final WRAP_WARNING_SECS window.
-  const timeNote = useCallback((): string => {
-    const left = secondsRemaining()
-    if (left === null || left > WRAP_WARNING_SECS) return ''
-    const mins = Math.max(1, Math.round(left / 60))
-    return ` [SESSION TIME: about ${mins} minute${mins === 1 ? '' : 's'} left of the 20-minute limit. Gently tell the operator time is almost up, capture the single most important outstanding field now, then wrap up and reassure them their progress is saved.]`
-  }, [secondsRemaining])
-
-  // Drive the visual wrap-up banner while connected; reset when the call ends.
+  // Drive the wrap-up while connected: flip the visual banner AND push a one-time spoken warning
+  // into the live session (the browser owns the clock; the agent has none). Reset when the call ends.
   useEffect(() => {
     if (!connected) {
       setWrapSoon(false)
@@ -172,7 +167,19 @@ export default function VoiceCoach({
     }
     const id = setInterval(() => {
       const left = secondsRemaining()
-      if (left !== null && left <= WRAP_WARNING_SECS) setWrapSoon(true)
+      if (left !== null && left <= WRAP_WARNING_SECS) {
+        setWrapSoon(true)
+        if (!warnedRef.current && controlsRef.current) {
+          warnedRef.current = true
+          const mins = Math.max(1, Math.round(left / 60))
+          // Non-spoken context that steers Morgan's next turn — she voices the wrap-up herself.
+          controlsRef.current.sendContextualUpdate(
+            `[SESSION TIME] About ${mins} minute${mins === 1 ? '' : 's'} left of the 20-minute limit. ` +
+              `Tell the operator now that time is almost up, capture the single most important outstanding ` +
+              `field, then wrap up and reassure them their progress is saved and they can resume anytime.`,
+          )
+        }
+      }
     }, 5000)
     return () => clearInterval(id)
   }, [connected, secondsRemaining])
@@ -192,14 +199,14 @@ export default function VoiceCoach({
         const data = await res.json()
         if (!res.ok) return `Could not save ${pretty(field)}: ${data.error ?? 'error'}.`
         const next = await refreshCard()
-        return next ? `Saved ${pretty(field)}. ${summarise(next)}${timeNote()}` : `Saved ${pretty(field)}.${timeNote()}`
+        return next ? `Saved ${pretty(field)}. ${summarise(next)}` : `Saved ${pretty(field)}.`
       } catch {
         return `Network error saving ${pretty(field)}.`
       }
     },
     get_intake_progress: async () => {
       const next = await refreshCard()
-      return next ? summarise(next) + timeNote() : 'I could not read the current progress just now.'
+      return next ? summarise(next) : 'I could not read the current progress just now.'
     },
   }
 
@@ -266,6 +273,7 @@ export default function VoiceCoach({
     setResumable(turnsRef.current.length > 0 || transcript.length > 0)
     setConnected(false)
     connectedAtRef.current = null
+    controlsRef.current = null
     setPaused(true)
     setPausing(false)
   }
@@ -367,10 +375,13 @@ export default function VoiceCoach({
           placement="inline"
           title="Talk through your idea with the coach. One question at a time; answers save as you go."
           textFallback
+          textInput
           clientTools={clientTools}
+          onReady={(controls) => { controlsRef.current = controls }}
           onConnect={async (conversationId) => {
             setConnected(true)
             connectedAtRef.current = Date.now() // start the 20-min session clock
+            warnedRef.current = false // fresh session → re-arm the wrap-up warning
             convIdRef.current = conversationId
             startedRef.current = false
             // Open + bind the conversation in the hub memory loop, and pull welcome-back recall.
@@ -409,6 +420,7 @@ export default function VoiceCoach({
           onDisconnect={async () => {
             setConnected(false)
             connectedAtRef.current = null
+            controlsRef.current = null
             await persistSession()
           }}
         />
