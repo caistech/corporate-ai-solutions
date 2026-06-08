@@ -45,6 +45,12 @@ const config: ConvAIAgentConfig = {
   temperature: 0.6,
 }
 
+// Morgan's session cap, codified. ElevenLabs defaults to 300s (5 min); a full 14-field intake runs
+// longer, so it's bumped to 20 min. Paired with Pause & save in VoiceCoach — a session that still
+// runs past this can be saved and resumed in a fresh one, so the cap can't cost a conversation.
+// (Lives here, not just on the dashboard, so it's reproducible and survives an agent rebuild.)
+const COACH_MAX_DURATION_SECS = 1200
+
 // Declared so the create path knows the names; filtered out by the hub (webhook-only), then
 // re-attached below with their parameter schemas.
 const tools: ConvAITool[] = [
@@ -135,6 +141,54 @@ async function attachCoachClientTools(key: string, agentId: string): Promise<str
   return toolIds
 }
 
+/** Push the canonical system prompt + first message onto the agent WITHOUT provisionVoiceAgent's
+ *  verify (which false-negatives on this agent: it counts the 2 client tool_ids and expects 0, so a
+ *  full re-provision aborts). Preserves prompt.tool_ids — only `tools` (deprecated inline) is
+ *  stripped. This is the verify-free way to ship a prompt edit (e.g. the 20-min wrap-up nudge). */
+async function setCoachSystemPrompt(key: string, agentId: string): Promise<void> {
+  const authHeader = { 'xi-api-key': key }
+  const jsonHeader = { 'xi-api-key': key, 'Content-Type': 'application/json' }
+  const agent = await (await fetch(`${API}/agents/${agentId}`, { headers: authHeader })).json()
+  const currentPrompt = agent?.conversation_config?.agent?.prompt ?? {}
+  const { tools: _deprecatedInlineTools, ...promptNoTools } = currentPrompt
+  void _deprecatedInlineTools
+  const res = await fetch(`${API}/agents/${agentId}`, {
+    method: 'PATCH',
+    headers: jsonHeader,
+    body: JSON.stringify({
+      conversation_config: {
+        agent: {
+          prompt: { ...promptNoTools, prompt: buildCoachSystemPrompt() },
+          first_message: COACH_FIRST_MESSAGE,
+        },
+      },
+    }),
+  })
+  if (!res.ok) throw new Error(`prompt patch failed: ${res.status}\n${await res.text()}`)
+  console.log('prompt -> system prompt + first message updated (verify-free)')
+}
+
+/** Codify Morgan's 20-min conversation cap on the agent. Read-modify-write so sibling `conversation`
+ *  settings (client_events, text-only, etc.) are preserved; partial PATCH on conversation_config
+ *  deep-merges, but we re-send the existing `conversation` block to be safe. Idempotent. */
+async function setCoachConversationDuration(key: string, agentId: string): Promise<void> {
+  const authHeader = { 'xi-api-key': key }
+  const jsonHeader = { 'xi-api-key': key, 'Content-Type': 'application/json' }
+  const agent = await (await fetch(`${API}/agents/${agentId}`, { headers: authHeader })).json()
+  const currentConversation = agent?.conversation_config?.conversation ?? {}
+  const res = await fetch(`${API}/agents/${agentId}`, {
+    method: 'PATCH',
+    headers: jsonHeader,
+    body: JSON.stringify({
+      conversation_config: {
+        conversation: { ...currentConversation, max_duration_seconds: COACH_MAX_DURATION_SECS },
+      },
+    }),
+  })
+  if (!res.ok) throw new Error(`duration patch failed: ${res.status}\n${await res.text()}`)
+  console.log(`duration -> ${COACH_MAX_DURATION_SECS}s (${COACH_MAX_DURATION_SECS / 60} min cap)`)
+}
+
 async function main(): Promise<void> {
   // --attach-only: the agent already exists (full provision done) — just (re)create + rebind the
   // client tools. Bypasses provisionVoiceAgent's verify, which on the adopt path miscounts client
@@ -142,7 +196,9 @@ async function main(): Promise<void> {
   if (process.argv.includes('--attach-only')) {
     const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_COACH || 'agent_7501ktddb89pegn961axee9rrpsy'
     const toolIds = await attachCoachClientTools(apiKey as string, agentId)
-    console.log('\n✅ Client tools rebound on', agentId)
+    await setCoachSystemPrompt(apiKey as string, agentId)
+    await setCoachConversationDuration(apiKey as string, agentId)
+    console.log('\n✅ Coach updated on', agentId, '(tools + system prompt + 20-min cap)')
     console.log('   tools:', toolIds.join(', '), '(save_field, get_intake_progress)')
     return
   }
@@ -160,6 +216,7 @@ async function main(): Promise<void> {
   })
 
   const toolIds = await attachCoachClientTools(apiKey as string, result.agentId)
+  await setCoachConversationDuration(apiKey as string, result.agentId)
 
   console.log('\n✅ Pipeline coach (Morgan) provisioned')
   console.log('   agentId  :', result.agentId)

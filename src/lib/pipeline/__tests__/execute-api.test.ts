@@ -13,7 +13,12 @@ import { describe, it, expect } from 'vitest'
 
 const BASE_URL = process.env.PIPELINE_TEST_BASE_URL ?? 'http://localhost:3000'
 
-describe('Execute API Route', () => {
+// These hit a live server over HTTP — opt-in only. Without a reachable target they fail with
+// ECONNREFUSED, and pointing at a default would silently hammer prod. Set PIPELINE_TEST_BASE_URL
+// (e.g. http://localhost:3000 with `next dev` up, or a deploy URL) to run them.
+const LIVE = !!process.env.PIPELINE_TEST_BASE_URL
+
+describe.skipIf(!LIVE)('Execute API Route (live)', () => {
   describe('dry_run behavior', () => {
     it('should skip webhook when dry_run is NOT explicitly false', async () => {
       const res = await fetch(`${BASE_URL}/api/admin/pipeline/singify/execute`, {
