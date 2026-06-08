@@ -13,7 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Loader2, CheckCircle2, AlertCircle, PauseCircle, PlayCircle } from 'lucide-react'
 import { VoiceWidget } from '@caistech/elevenlabs-convai/react'
 import { COACH_AGENT_ID, hasCoachAgent } from '@/voice.config'
 
@@ -41,6 +41,13 @@ function summarise(s: CardState): string {
   return `${s.gradedCaptured.length} of ${s.total} graded fields captured. Still outstanding: ${outstanding.join(', ')}.`
 }
 
+// Morgan's session is capped at 20 min on the ElevenLabs side (COACH_MAX_DURATION_SECS in
+// scripts/provision-coach-agent.ts). She has no clock of her own, so the BROWSER tracks elapsed
+// time and (a) folds a wrap-up instruction into tool results so she SPEAKS the warning, and
+// (b) shows a visual banner as a guaranteed backstop.
+const SESSION_LIMIT_SECS = 1200 // 20 min — keep in sync with COACH_MAX_DURATION_SECS
+const WRAP_WARNING_SECS = 120 // begin the gentle "~2 minutes to go" wrap-up at T-2:00
+
 export default function VoiceCoach({
   productSlug,
   productName,
@@ -56,6 +63,19 @@ export default function VoiceCoach({
   const [admitting, setAdmitting] = useState(false)
   const [admitError, setAdmitError] = useState<string | null>(null)
   const [blockers, setBlockers] = useState<string[]>([])
+  // Pause & save / resume. `loading` covers the initial transcript fetch so we don't flash the live
+  // widget before we know there's a saved session to resume. `paused` unmounts the widget (tearing
+  // down the voice session); `autoConnectResume` makes the re-mounted widget reconnect on Resume
+  // without a second mic tap; `resumable` marks that there IS a saved conversation to return to.
+  const [loading, setLoading] = useState(true)
+  const [paused, setPaused] = useState(false)
+  const [pausing, setPausing] = useState(false)
+  const [autoConnectResume, setAutoConnectResume] = useState(false)
+  const [resumable, setResumable] = useState(false)
+  // 20-min session clock. connectedAtRef is the wall-clock connect time; wrapSoon flips on in the
+  // final 2 minutes to drive the visual wrap-up banner.
+  const connectedAtRef = useRef<number | null>(null)
+  const [wrapSoon, setWrapSoon] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   // Mirror of the transcript in the extractor's shape — read in onDisconnect (avoids stale closure).
   const turnsRef = useRef<{ role: 'user' | 'assistant'; text: string }[]>([])
@@ -81,6 +101,33 @@ export default function VoiceCoach({
     refreshCard()
   }, [refreshCard])
 
+  // On return, reload the saved conversation so Resume restores the chat (not just the fields).
+  // A prior conversation lands the operator on the paused/resume card; a clean slate shows the
+  // live widget straight away.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(
+          `/api/admin/pipeline/new-ideas/coach/transcript?slug=${encodeURIComponent(productSlug)}`,
+        )
+        if (!res.ok) return
+        const data = (await res.json()) as { hasPrior: boolean; transcript: TranscriptLine[] }
+        if (cancelled || !data.hasPrior) return
+        setTranscript(data.transcript)
+        setResumable(true)
+        setPaused(true) // returning operator lands on the Resume card with their conversation restored
+      } catch {
+        /* best-effort — a failed reload just starts a fresh live session */
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [productSlug])
+
   // Persist a single conversation turn into the hub memory loop (convai_messages). Best-effort:
   // the on-disconnect snapshot still captures the full transcript if a turn POST is dropped.
   const persistTurn = useCallback(async (role: 'user' | 'assistant', content: string) => {
@@ -101,6 +148,35 @@ export default function VoiceCoach({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [transcript])
 
+  // Seconds left in the 20-min session, or null when not in a live call.
+  const secondsRemaining = useCallback((): number | null => {
+    if (connectedAtRef.current === null) return null
+    const elapsed = (Date.now() - connectedAtRef.current) / 1000
+    return Math.max(0, Math.round(SESSION_LIMIT_SECS - elapsed))
+  }, [])
+
+  // A wrap-up instruction folded into tool results so Morgan SPEAKS the warning (she has no clock of
+  // her own). Empty until we're inside the final WRAP_WARNING_SECS window.
+  const timeNote = useCallback((): string => {
+    const left = secondsRemaining()
+    if (left === null || left > WRAP_WARNING_SECS) return ''
+    const mins = Math.max(1, Math.round(left / 60))
+    return ` [SESSION TIME: about ${mins} minute${mins === 1 ? '' : 's'} left of the 20-minute limit. Gently tell the operator time is almost up, capture the single most important outstanding field now, then wrap up and reassure them their progress is saved.]`
+  }, [secondsRemaining])
+
+  // Drive the visual wrap-up banner while connected; reset when the call ends.
+  useEffect(() => {
+    if (!connected) {
+      setWrapSoon(false)
+      return
+    }
+    const id = setInterval(() => {
+      const left = secondsRemaining()
+      if (left !== null && left <= WRAP_WARNING_SECS) setWrapSoon(true)
+    }, 5000)
+    return () => clearInterval(id)
+  }, [connected, secondsRemaining])
+
   // The browser-side implementations of the agent's client tools.
   const clientTools: Record<string, (p: Record<string, unknown>) => Promise<string>> = {
     save_field: async (p) => {
@@ -116,14 +192,14 @@ export default function VoiceCoach({
         const data = await res.json()
         if (!res.ok) return `Could not save ${pretty(field)}: ${data.error ?? 'error'}.`
         const next = await refreshCard()
-        return next ? `Saved ${pretty(field)}. ${summarise(next)}` : `Saved ${pretty(field)}.`
+        return next ? `Saved ${pretty(field)}. ${summarise(next)}${timeNote()}` : `Saved ${pretty(field)}.${timeNote()}`
       } catch {
         return `Network error saving ${pretty(field)}.`
       }
     },
     get_intake_progress: async () => {
       const next = await refreshCard()
-      return next ? summarise(next) : 'I could not read the current progress just now.'
+      return next ? summarise(next) + timeNote() : 'I could not read the current progress just now.'
     },
   }
 
@@ -155,6 +231,52 @@ export default function VoiceCoach({
     }
   }
 
+  // Persist the live session (fields + transcript snapshot) — shared by an explicit Pause & save and
+  // by the widget's own end-of-call (onDisconnect). Idempotent, so running both is safe.
+  const persistSession = useCallback(async () => {
+    const turns = turnsRef.current
+    if (turns.length === 0) return
+    const convId = convIdRef.current
+    try {
+      await fetch('/api/admin/pipeline/new-ideas/backstop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productSlug, transcript: turns }),
+      })
+      if (convId) {
+        await fetch('/api/admin/pipeline/new-ideas/coach/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ elevenlabsConversationId: convId, transcript: turns }),
+        })
+      }
+      await refreshCard()
+    } catch {
+      /* best-effort — per-turn save_field/coach/message already wrote what they captured */
+    }
+  }, [productSlug, refreshCard])
+
+  // Pause & save: persist first (so we don't depend on the widget firing onDisconnect on unmount),
+  // then drop to the resume card — unmounting the widget tears down the voice session (no wasted
+  // BYOK minutes). Everything is already on the card; Resume brings it all back.
+  async function pauseAndSave() {
+    if (pausing) return
+    setPausing(true)
+    await persistSession()
+    setResumable(turnsRef.current.length > 0 || transcript.length > 0)
+    setConnected(false)
+    connectedAtRef.current = null
+    setPaused(true)
+    setPausing(false)
+  }
+
+  // Resume: re-mount the widget and auto-reconnect Morgan (onConnect → /coach/start → welcome-back
+  // recall). The restored transcript stays visible above; new turns append to it.
+  function resume() {
+    setAutoConnectResume(true)
+    setPaused(false)
+  }
+
   if (!hasCoachAgent()) {
     return (
       <div className="bg-gray-800 rounded-xl mb-8 border border-gray-700 p-6 text-sm text-gray-400">
@@ -177,8 +299,9 @@ export default function VoiceCoach({
 
       <p className="px-6 pt-3 text-sm text-gray-400">
         Talk through your idea with Morgan, the intake coach. She asks one question at a time and saves
-        each answer as it reaches the bar — watch the count climb. No microphone? Use the text fallback in
-        the widget below.
+        each answer as it reaches the bar — watch the count climb. Need to step away? Hit Pause &amp; save
+        and resume anytime — your fields and the conversation come right back. No microphone? Use the text
+        fallback in the widget below.
       </p>
 
       <div className="flex flex-col items-center px-6 py-4">
@@ -209,7 +332,35 @@ export default function VoiceCoach({
         ))}
       </div>
 
+      {loading && (
+        <div className="px-6 pb-4 flex items-center justify-center gap-2 text-sm text-gray-400">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading your session…
+        </div>
+      )}
+
+      {!loading && !paused && (
       <div className="px-6">
+        {connected && wrapSoon && (
+          <div className="mb-3 bg-amber-900/30 border border-amber-700/50 rounded-lg p-3 text-sm text-amber-200 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>
+              About 2 minutes left in this session — Morgan will wrap up shortly. Your answers are saved
+              as you go; Pause &amp; save and resume anytime to keep going.
+            </span>
+          </div>
+        )}
+        {connected && (
+          <div className="mb-3 flex justify-end">
+            <button
+              onClick={pauseAndSave}
+              disabled={pausing}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded-lg text-sm font-medium"
+            >
+              {pausing ? <Loader2 className="w-4 h-4 animate-spin" /> : <PauseCircle className="w-4 h-4" />}
+              Pause &amp; save
+            </button>
+          </div>
+        )}
         <VoiceWidget
           agentId={COACH_AGENT_ID}
           mode="interview"
@@ -219,6 +370,7 @@ export default function VoiceCoach({
           clientTools={clientTools}
           onConnect={async (conversationId) => {
             setConnected(true)
+            connectedAtRef.current = Date.now() // start the 20-min session clock
             convIdRef.current = conversationId
             startedRef.current = false
             // Open + bind the conversation in the hub memory loop, and pull welcome-back recall.
@@ -231,7 +383,7 @@ export default function VoiceCoach({
               const data = await res.json().catch(() => ({}))
               startedRef.current = res.ok
               if (res.ok && data.isReturningUser) {
-                setTranscript((t) => [{ source: 'ai', text: 'Welcome back — I have our earlier intake on file and can pick up where we left off.' }, ...t])
+                setTranscript((t) => [...t, { source: 'ai', text: 'Welcome back — I have our earlier intake on file and can pick up where we left off.' }])
               }
               if (res.ok) {
                 const buffered = pendingRef.current
@@ -251,32 +403,37 @@ export default function VoiceCoach({
             else pendingRef.current.push({ role, content: message })
           }}
           onStatusChange={(status) => setConnected(status === 'connected')}
+          autoConnect={autoConnectResume}
+          // Completion backstop if the user ends via the widget's own controls (Pause & save persists
+          // explicitly before unmounting, so this is the fallback path, not the only one).
           onDisconnect={async () => {
             setConnected(false)
-            // Completion backstop — fill any field captured conversationally but not saved.
-            if (turnsRef.current.length === 0) return
-            const convId = convIdRef.current
-            try {
-              await fetch('/api/admin/pipeline/new-ideas/backstop', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productSlug, transcript: turnsRef.current }),
-              })
-              // Finalise the persisted conversation (status + transcript snapshot for the card panel).
-              if (convId) {
-                await fetch('/api/admin/pipeline/new-ideas/coach/complete', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ elevenlabsConversationId: convId, transcript: turnsRef.current }),
-                })
-              }
-              await refreshCard()
-            } catch {
-              /* best-effort — primary save_field path already wrote what it captured */
-            }
+            connectedAtRef.current = null
+            await persistSession()
           }}
         />
       </div>
+      )}
+
+      {!loading && paused && (
+        <div className="px-6 pb-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-300 font-medium mb-1">
+              {resumable ? 'Paused — your progress is saved.' : 'Session paused.'}
+            </p>
+            <p className="text-xs text-gray-500 mb-3">
+              Your filled fields and this conversation are on file. Pick up exactly where you left off
+              whenever you’re ready — Morgan keeps what she already knows.
+            </p>
+            <button
+              onClick={resume}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium"
+            >
+              <PlayCircle className="w-4 h-4" /> Resume conversation
+            </button>
+          </div>
+        </div>
+      )}
 
       {blockers.length > 0 && (
         <div className="mx-6 mb-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3">
