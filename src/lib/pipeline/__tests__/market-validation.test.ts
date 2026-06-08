@@ -12,6 +12,11 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const WEBHOOK_SECRET = process.env.PIPELINE_INTAKE_WEBHOOK_SECRET ?? 'c783d980dd60533bfb36e817e5696b596acc476e924baa38e4585025ba93daf2'
 
+// The "API Endpoints" block below makes real HTTP calls. Opt-in only (set PIPELINE_TEST_BASE_URL) —
+// otherwise it ran against the prod Vercel URL on every `vitest run`. The HMAC + scoring suites
+// below are pure unit tests and always run.
+const LIVE = !!process.env.PIPELINE_TEST_BASE_URL
+
 const testProductId = `e2e-test-${Date.now()}`
 
 describe('Pipeline → InvestorPilot Integration', () => {
@@ -100,7 +105,7 @@ describe('Pipeline → InvestorPilot Integration', () => {
     })
   })
 
-  describe('API Endpoints', () => {
+  describe.skipIf(!LIVE)('API Endpoints (live)', () => {
     it('market-validate GET returns current status', async () => {
       const res = await fetch(`${BASE_URL}/api/admin/pipeline/nonexistent-product-${Date.now()}/market-validate`)
       expect(res.status).toBe(404)
@@ -127,7 +132,9 @@ describe('Pipeline → InvestorPilot Integration', () => {
         const json = await res.json()
         expect(json.mode).toBe('DRY_RUN')
       } else {
-        expect([400, 404]).toContain(res.status)
+        // 401/403 = the admin auth gate rejecting an unauthenticated call (correct); 400/404 = bad
+        // request / unknown product. All are acceptable non-200 outcomes for this probe.
+        expect([400, 401, 403, 404]).toContain(res.status)
       }
     })
   })
