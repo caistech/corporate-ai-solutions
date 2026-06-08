@@ -191,7 +191,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -207,7 +207,7 @@ export default function LoginPage() {
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
+                  className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
                   placeholder="••••••••"
                 />
                 <button
@@ -254,7 +254,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -270,7 +270,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
+                  className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
                   placeholder="••••••••"
                 />
                 <button
@@ -354,7 +354,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
