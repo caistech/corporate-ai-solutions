@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ConfirmDialog } from './ConfirmDialog'
+import { KNOWN_FEATURES, FEATURE_LABEL } from '@/lib/methodology/features'
 
 interface CardFields {
   pipeline_stage: string | null
@@ -32,16 +33,10 @@ const LANES = [
 const BUILDS = ['none', 'thin-mvp', 'fat-mvp', 'full']
 const CAMPAIGN_TYPES = ['target-user', 'distributor-candidate'] as const
 // Conditional features — which the product has drives the readiness scorer's applicability
-// (a CONDITIONAL-* check reads N/A when its feature isn't selected here).
-const FEATURES = ['voice', 'auth', 'supabase', 'third-party-content', 'address-or-abn-fields', 'email'] as const
-const FEATURE_LABEL: Record<(typeof FEATURES)[number], string> = {
-  voice: 'Voice agent',
-  auth: 'Auth',
-  supabase: 'Supabase',
-  'third-party-content': '3rd-party content',
-  'address-or-abn-fields': 'Address / ABN fields',
-  email: 'Sends email',
-}
+// (a CONDITIONAL-* check reads N/A when its feature isn't selected here). The list + labels
+// derive from the single source (lib/methodology/features) so the checkbox set never drifts
+// from the PATCH validator, auto-enrollment, or the shared applicability canon.
+const FEATURES = KNOWN_FEATURES
 
 export function CockpitControls({ productSlug, initial, mvpReady }: Props) {
   const router = useRouter()

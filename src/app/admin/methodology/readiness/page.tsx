@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Gate-1 readiness criteria — Methodology',
-  description: 'The ratified 45-check thin-MVP / Gate-1 readiness classification.',
+  description: 'The ratified 46-check thin-MVP / Gate-1 readiness classification.',
 }
 
 export const dynamic = 'force-dynamic'

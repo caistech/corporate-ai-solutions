@@ -1,6 +1,6 @@
 // Survey-gate scorer — the post-build twin of the Gate-1 readiness scorer (score.ts).
 //
-// Where scoreCard judges a card's spec against the 45-check readiness rubric, this judges a
+// Where scoreCard judges a card's spec against the 46-check readiness rubric, this judges a
 // BUILT product against what the live site/repo actually evidences. It answers the three-door
 // question: does this build go forward (RENOVATION → Stage 5), back to the workshop
 // (TEARDOWN → re-enter Stage 2 design→build), or is the spec itself not even complete yet
