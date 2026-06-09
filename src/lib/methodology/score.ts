@@ -1,6 +1,6 @@
 // Gate-1 readiness scorer — the methodology-harness keystone (HARNESS_BUILD_WORKLIST.md #1).
 //
-// Turns the seeded 45-check rubric (readiness_criteria) + a card's recorded per-check
+// Turns the seeded 46-check rubric (readiness_criteria) + a card's recorded per-check
 // verdicts (readiness_results) into a transparent, explainable Gate-1 readiness score — so
 // `mvp_ready` becomes harness-PROVEN, not an operator tickbox.
 //

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { advancesPastReview, missingGateCritical, missingLabels, poolsCaptured } from '@/lib/methodology/gate-critical'
 import { hasPassedGate, recordGate } from '@/lib/methodology/pipeline-gates'
+import { KNOWN_FEATURES } from '@/lib/methodology/features'
 
 /**
  * GET /api/methodology/cards/[slug] — fetch a single Hypothesis Card by product slug
@@ -76,9 +77,8 @@ const PatchSchema = z
     gate2_go: z.boolean().optional(),
     // Which conditional features this product has — drives the readiness scorer's
     // applicability (a CONDITIONAL-* check is N/A when its feature isn't here).
-    features: z
-      .array(z.enum(['voice', 'auth', 'supabase', 'third-party-content', 'address-or-abn-fields', 'email']))
-      .optional(),
+    // Enum derives from the single source (KNOWN_FEATURES) so it never drifts from the canon.
+    features: z.array(z.enum(KNOWN_FEATURES)).optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, { message: 'No fields to update' })
 

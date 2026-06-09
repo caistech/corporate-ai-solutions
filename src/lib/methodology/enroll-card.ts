@@ -17,14 +17,9 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Tokens score.ts matches via applies_when -> features.includes(token). */
-export const KNOWN_FEATURES = [
-  "auth",
-  "supabase",
-  "email",
-  "voice",
-  "third-party-content",
-] as const;
+// KNOWN_FEATURES is the single source of truth in ./features — re-exported here so existing
+// importers of this module keep working, and addFeatures() can only union canonical tokens.
+export { KNOWN_FEATURES } from "./features";
 
 export type EnrollResult =
   | { status: "created"; cardId: string; features: string[] }
