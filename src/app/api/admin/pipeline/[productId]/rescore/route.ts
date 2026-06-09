@@ -40,6 +40,7 @@ import { createClient } from '@supabase/supabase-js'
 import { loadCardScore } from '@/lib/methodology/readiness'
 import { loadCardFreshness } from '@/lib/methodology/freshness'
 import { runHeadlessAutoProbes } from '@/lib/methodology/auto-probes'
+import { runAgentReadinessProducer } from '@/lib/methodology/agent-ready-probe'
 
 // Live-state route: never serve a cached verdict/score.
 export const dynamic = 'force-dynamic'
@@ -135,6 +136,16 @@ export async function POST(
       if (probes.length > 0) ranProducers.push('auto-probes')
     } catch (probeErr) {
       console.warn('[RESCORE] auto-probes failed (non-fatal):', probeErr instanceof Error ? probeErr.message : probeErr)
+    }
+
+    // --- #42 agent-discoverable producer: probe the live surface for the Layer-1 markers, ---
+    // --- promote the card to public-web on detection, write the #42 verdict via the seam. ---
+    // Non-fatal: only writes when #42 is applicable; unreachable surface records nothing.
+    try {
+      const agentReady = await runAgentReadinessProducer(supabase, productSlug, mvpUrl, deploymentId)
+      if (agentReady.applicable) ranProducers.push('agent-ready')
+    } catch (arErr) {
+      console.warn('[RESCORE] agent-ready probe failed (non-fatal):', arErr instanceof Error ? arErr.message : arErr)
     }
 
     // --- Recompute (compute-on-read) + freshness against the deploy we just scored. ---
