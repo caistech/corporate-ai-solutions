@@ -5,6 +5,7 @@
  */
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { BalanceManager, type BalanceRow } from '@/components/admin/BalanceManager'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +87,16 @@ async function getIdleSources(): Promise<IdleSource[]> {
   return data ?? []
 }
 
+async function getBalances(): Promise<BalanceRow[]> {
+  const supabase = await getSupabase()
+  const { data } = await supabase
+    .from('cost_sources')
+    .select('provider, name, balance_usd, alert_threshold_usd, balance_updated_at')
+    .eq('is_active', true)
+    .order('provider')
+  return (data ?? []) as BalanceRow[]
+}
+
 async function getSourceCount(): Promise<number> {
   const supabase = await getSupabase()
   const { count } = await supabase
@@ -120,15 +131,19 @@ function fmtPercent(a: number, b: number): string {
 }
 
 export default async function OpsDashboard() {
-  const [monthlyProviders, thisMonth, lastMonth, idleSources, sourceCount] = await Promise.all([
+  const [monthlyProviders, thisMonth, lastMonth, idleSources, sourceCount, balances] = await Promise.all([
     getMonthlyByProvider(),
     getTotalThisMonth(),
     getTotalLastMonth(),
     getIdleSources(),
     getSourceCount(),
+    getBalances(),
   ])
 
   const hasData = sourceCount > 0
+  const lowBalances = balances.filter(
+    (b) => b.balance_usd !== null && b.balance_usd < (b.alert_threshold_usd ?? 20),
+  )
 
   return (
     <div className="mx-auto max-w-6xl p-6">
@@ -137,6 +152,19 @@ export default async function OpsDashboard() {
         Overview of all infrastructure costs across products and clients.
         Tracks spend, detects idle resources, and surfaces budget alerts.
       </p>
+
+      {lowBalances.length > 0 && (
+        <div className="mt-6 rounded-lg border border-rose-600 bg-rose-900/30 p-4 text-rose-100">
+          <h2 className="text-base font-semibold">⚠️ {lowBalances.length} low balance{lowBalances.length > 1 ? 's' : ''}</h2>
+          <p className="mt-1 text-sm text-rose-200/90">
+            {lowBalances
+              .map((b) => `${b.name} (${fmtCurrency(b.balance_usd ?? 0)})`)
+              .join(', ')}
+            {' '}— below the alert threshold. The admin is alerted by email (debounced; delivery
+            depends on email config).
+          </p>
+        </div>
+      )}
 
       {!hasData && (
         <div className="mt-8 rounded-lg border border-yellow-600/50 bg-yellow-900/20 p-6 text-yellow-200">
@@ -223,6 +251,8 @@ export default async function OpsDashboard() {
           )}
         </>
       )}
+
+      <BalanceManager initial={balances} />
 
       <div className="mt-8 border-t border-gray-800 pt-6">
         <h2 className="text-lg font-semibold text-white">Coming Soon</h2>

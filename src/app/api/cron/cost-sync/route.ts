@@ -11,6 +11,7 @@ import { listProjects as listSupabaseProjects, getProjectAddons, getProjectUsage
 import { monthlyComputeUsd } from '@/lib/ops/compute-pricing'
 import { getAnthropicUsage, getOpenAIUsage, getOpenRouterUsage } from '@/lib/ops/llm'
 import { getElevenLabsUsage, getResendUsage } from '@/lib/ops/voice-email'
+import { getOpenRouterBalance, recordBalance, evaluateLowBalancesAndAlert } from '@/lib/ops/balances'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const INTERNAL_ORG_ID = '00000000-0000-0000-0000-000000000001'
@@ -169,9 +170,28 @@ export async function POST(request: NextRequest) {
       await syncProvider(supabase, 'resend', { emails: resend.emails, cost: resend.cost })
       results.resend = resend
     }
-    
+
+    // Balances: sync the providers that expose a remaining-credit API (OpenRouter), then
+    // evaluate ALL recorded balances against their per-source thresholds and email the admin
+    // about any that dropped below. Anthropic/OpenAI/Open Code Zen have no balance API — their
+    // balances are recorded via POST /api/admin/ops/balance and still alerted here.
+    const openrouterBalance = await getOpenRouterBalance()
+    if (openrouterBalance !== null) {
+      const recorded = await recordBalance(supabase, { provider: 'openrouter', name: 'OpenRouter', balanceUsd: openrouterBalance, organisationId: INTERNAL_ORG_ID })
+      // Only report the synced balance if the write actually persisted — otherwise the response
+      // would claim a sync that didn't happen (e.g. migration not applied) and the alert eval runs on stale data.
+      if (recorded) {
+        results.openrouter_balance = openrouterBalance
+      } else {
+        results.openrouter_balance_error = 'failed to persist balance (is the cost_balance_alerts migration applied?)'
+      }
+    }
+
+    const alerted = await evaluateLowBalancesAndAlert(supabase)
+    results.low_balance_alerts = alerted
+
     console.log('[cost-sync] Complete:', results)
-    
+
     return NextResponse.json({ success: true, results })
   } catch (error) {
     console.error('[cost-sync] Fatal error:', error)
