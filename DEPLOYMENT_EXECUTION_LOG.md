@@ -77,7 +77,7 @@ SELECT tablename FROM pg_tables WHERE schemaname='public';  -- Should show both 
 **Setting ADMIN_EMAILS:**
 - Enter your email(s) exactly as they appear in Supabase Auth
 - Comma-separated for multiple admins
-- Example: `dennis@corporateaisolutions.com,admin@corporateaisolutions.com`
+- Example: `you@example.com,admin@example.com`
 
 **Verification:**
 - [ ] All 5 vars visible in Vercel dashboard

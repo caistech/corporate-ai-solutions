@@ -63,7 +63,7 @@ SELECT COUNT(*) FROM validation_events;         -- Should return 0
 2. Select "Corporate-AI-Solutions" project
 3. Settings → Environment Variables
 4. Add `ADMIN_EMAILS` = your email address exactly
-   - Example: `dennis@corporateaisolutions.com`
+   - Example: `you@example.com`
    - Multiple: `email1@example.com,email2@example.com`
 5. Save
 
