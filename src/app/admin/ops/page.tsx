@@ -160,7 +160,8 @@ export default async function OpsDashboard() {
             {lowBalances
               .map((b) => `${b.name} (${fmtCurrency(b.balance_usd ?? 0)})`)
               .join(', ')}
-            {' '}— below the alert threshold. An email alert has been sent to the admin.
+            {' '}— below the alert threshold. The admin is alerted by email (debounced; delivery
+            depends on email config).
           </p>
         </div>
       )}

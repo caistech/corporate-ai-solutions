@@ -34,7 +34,11 @@ comment on column public.cost_sources.alert_threshold_usd is 'Email the admin wh
 comment on column public.cost_sources.low_balance_alerted_at is 'When the last low-balance alert email was sent (debounce).';
 
 -- View: sources currently below their alert threshold (a known balance under the line).
-create or replace view public.v_low_balance_sources as
+-- security_invoker = on so the view runs with the CALLER's privileges (inheriting cost_sources'
+-- RLS) instead of the owner's — a plain view is security-definer-like and would otherwise bypass
+-- the base table's admin/service-role-only RLS and expose provider balances to any client.
+create or replace view public.v_low_balance_sources
+with (security_invoker = true) as
 select
   cs.id,
   cs.provider,
@@ -47,3 +51,9 @@ from public.cost_sources cs
 where cs.is_active = true
   and cs.balance_usd is not null
   and cs.balance_usd < cs.alert_threshold_usd;
+
+-- Defence in depth: cost balances are operator-only. Revoke the anon/authenticated grants the
+-- public schema hands out by default; only the service role (server-side, used by the cron + the
+-- admin API) may read it. Idempotent.
+revoke all on public.v_low_balance_sources from anon, authenticated;
+grant select on public.v_low_balance_sources to service_role;

@@ -22,7 +22,14 @@ export const fetchCache = 'force-no-store'
 const INTERNAL_ORG_ID = '00000000-0000-0000-0000-000000000001'
 
 function isOperator(email: string | undefined | null): boolean {
-  const allow = (process.env.ADMIN_EMAILS || 'mcmdennis@gmail.com,dennis@corporateaisolutions.com')
+  // Fail CLOSED: no hard-coded fallback addresses. If ADMIN_EMAILS is unset, a config mistake must
+  // deny access, not silently authorize baked-in personal accounts (that would be an auth bypass).
+  const raw = process.env.ADMIN_EMAILS
+  if (!raw) {
+    console.error('[ops/balance] ADMIN_EMAILS not set — denying operator access (fail closed)')
+    return false
+  }
+  const allow = raw
     .split(/[,:]/)
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean)

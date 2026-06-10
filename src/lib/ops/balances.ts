@@ -59,7 +59,7 @@ export async function recordBalance(
 
   const { data: existing } = await supabase
     .from('cost_sources')
-    .select('id')
+    .select('id, alert_threshold_usd')
     .eq('provider', provider)
     .limit(1)
     .maybeSingle()
@@ -68,9 +68,17 @@ export async function recordBalance(
   if (typeof balanceUsd === 'number') {
     update.balance_usd = balanceUsd
     update.balance_updated_at = new Date().toISOString()
-    // A balance now at/above its threshold clears the alert latch so a future drop re-alerts.
-    const threshold = typeof thresholdUsd === 'number' ? thresholdUsd : undefined
-    if (threshold === undefined || balanceUsd >= threshold) {
+    // Only clear the alert latch when the balance is genuinely back AT/ABOVE the EFFECTIVE
+    // threshold. The cron syncs balances WITHOUT passing a threshold, so fall back to the stored
+    // per-source threshold (then the $20 default). Treating "threshold omitted" as "clear the latch"
+    // reset it on every sync, so a still-low source re-alerted on every cron run.
+    const effectiveThreshold =
+      typeof thresholdUsd === 'number'
+        ? thresholdUsd
+        : typeof existing?.alert_threshold_usd === 'number'
+          ? (existing.alert_threshold_usd as number)
+          : 20
+    if (balanceUsd >= effectiveThreshold) {
       update.low_balance_alerted_at = null
     }
   }
@@ -131,6 +139,7 @@ export async function evaluateLowBalancesAndAlert(
   const debounceMs = ALERT_DEBOUNCE_HOURS * 60 * 60 * 1000
 
   const toAlert: LowBalanceSource[] = []
+  const alertedIds: string[] = []
   for (const s of low ?? []) {
     const balance = Number(s.balance_usd)
     const threshold = Number(s.alert_threshold_usd ?? 20)
@@ -145,15 +154,20 @@ export async function evaluateLowBalancesAndAlert(
       balanceUsd: balance,
       thresholdUsd: threshold,
     })
+    alertedIds.push(s.id as string)
+  }
 
+  if (toAlert.length === 0) return []
+
+  // Send FIRST, then set the debounce latch only on a CONFIRMED send. Stamping before the send
+  // means a failed/skipped email (missing key, Resend error) still suppresses retries for the
+  // whole debounce window — a silent miss during exactly the incident the alert exists to catch.
+  const sent = await sendLowBalanceAlert(toAlert)
+  if (sent) {
     await supabase
       .from('cost_sources')
       .update({ low_balance_alerted_at: new Date().toISOString() } as never)
-      .eq('id', s.id)
-  }
-
-  if (toAlert.length > 0) {
-    await sendLowBalanceAlert(toAlert)
+      .in('id', alertedIds)
   }
 
   return toAlert

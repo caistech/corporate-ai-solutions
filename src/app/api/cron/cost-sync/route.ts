@@ -177,8 +177,14 @@ export async function POST(request: NextRequest) {
     // balances are recorded via POST /api/admin/ops/balance and still alerted here.
     const openrouterBalance = await getOpenRouterBalance()
     if (openrouterBalance !== null) {
-      await recordBalance(supabase, { provider: 'openrouter', name: 'OpenRouter', balanceUsd: openrouterBalance, organisationId: INTERNAL_ORG_ID })
-      results.openrouter_balance = openrouterBalance
+      const recorded = await recordBalance(supabase, { provider: 'openrouter', name: 'OpenRouter', balanceUsd: openrouterBalance, organisationId: INTERNAL_ORG_ID })
+      // Only report the synced balance if the write actually persisted — otherwise the response
+      // would claim a sync that didn't happen (e.g. migration not applied) and the alert eval runs on stale data.
+      if (recorded) {
+        results.openrouter_balance = openrouterBalance
+      } else {
+        results.openrouter_balance_error = 'failed to persist balance (is the cost_balance_alerts migration applied?)'
+      }
     }
 
     const alerted = await evaluateLowBalancesAndAlert(supabase)
