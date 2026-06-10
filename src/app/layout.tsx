@@ -5,6 +5,7 @@ import { CorporateHeader } from '@/components/corporate/CorporateHeader'
 import { CorporateFooter } from '@/components/corporate/CorporateFooter'
 import { VoiceAgent } from '@/components/voice/VoiceAgent'
 import { SiteChrome } from '@/components/layout/SiteChrome'
+import { SayFixWidget } from "@caistech/sayfix-embed";
 import { NAV_ITEMS, FOOTER_LINKS } from '@/lib/constants'
 import '@/styles/globals.css'
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </SiteChrome>
         <main className="flex-grow">{children}</main>
+        <SayFixWidget repo="corporate-ai-solutions" />
         <SiteChrome>
           <CorporateFooter
             productName="Corporate AI Solutions"
