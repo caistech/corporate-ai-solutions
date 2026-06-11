@@ -9,6 +9,12 @@
  * admin/service-role-only under RLS), so callers must pass a service-role SupabaseClient.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  getProviderMeta,
+  providerHasKey,
+  type SyncCapability,
+  type SyncStatus,
+} from '@/lib/ops/providers'
 
 export const INTERNAL_ORG_ID = '00000000-0000-0000-0000-000000000001'
 
@@ -30,6 +36,16 @@ export interface CostSource {
   is_active: boolean
   notes: string | null
   created_at: string
+  // Auto-sync surface (billing_url is a per-source override of the registry default).
+  billing_url: string | null
+  last_sync_at: string | null
+  last_sync_status: SyncStatus | null
+  last_sync_detail: string | null
+  // Derived (server-side) from the provider registry — never persisted.
+  capability: SyncCapability
+  auto_capable: boolean
+  key_configured: boolean
+  effective_billing_url: string | null
 }
 
 export interface Organisation {
@@ -51,6 +67,7 @@ export interface SourceInput {
   alert_threshold_usd?: number | null
   source_ref?: string | null
   notes?: string | null
+  billing_url?: string | null
   is_active?: boolean
 }
 
@@ -58,7 +75,7 @@ export async function listSources(db: SupabaseClient): Promise<CostSource[]> {
   const { data, error } = await db
     .from('cost_sources')
     .select(
-      'id, provider, name, source_ref, organisation_id, billing_model, fixed_cost_usd, balance_usd, alert_threshold_usd, balance_updated_at, is_active, notes, created_at, organisations(name)',
+      'id, provider, name, source_ref, organisation_id, billing_model, fixed_cost_usd, balance_usd, alert_threshold_usd, balance_updated_at, is_active, notes, created_at, billing_url, last_sync_at, last_sync_status, last_sync_detail, organisations(name)',
     )
     .order('is_active', { ascending: false })
     .order('provider', { ascending: true })
@@ -70,6 +87,8 @@ export async function listSources(db: SupabaseClient): Promise<CostSource[]> {
   }
   return (data ?? []).map((r) => {
     const org = (r as { organisations?: { name?: string } | null }).organisations
+    const meta = getProviderMeta(r.provider as string)
+    const billingOverride = (r.billing_url as string | null) ?? null
     return {
       id: r.id as string,
       provider: r.provider as string,
@@ -85,6 +104,14 @@ export async function listSources(db: SupabaseClient): Promise<CostSource[]> {
       is_active: Boolean(r.is_active),
       notes: (r.notes as string | null) ?? null,
       created_at: r.created_at as string,
+      billing_url: billingOverride,
+      last_sync_at: (r.last_sync_at as string | null) ?? null,
+      last_sync_status: (r.last_sync_status as SyncStatus | null) ?? null,
+      last_sync_detail: (r.last_sync_detail as string | null) ?? null,
+      capability: meta.capability,
+      auto_capable: meta.capability !== 'none',
+      key_configured: providerHasKey(meta),
+      effective_billing_url: billingOverride ?? meta.billingUrl,
     }
   })
 }
@@ -121,6 +148,7 @@ export async function createSource(
   if (input.alert_threshold_usd != null) row.alert_threshold_usd = input.alert_threshold_usd
   if (input.source_ref) row.source_ref = input.source_ref.trim()
   if (input.notes) row.notes = input.notes.trim()
+  if (input.billing_url) row.billing_url = input.billing_url.trim()
 
   const { data, error } = await db.from('cost_sources').insert(row as never).select('id').single()
   if (error) {
@@ -144,6 +172,7 @@ export async function updateSource(
   if (patch.alert_threshold_usd !== undefined) row.alert_threshold_usd = patch.alert_threshold_usd
   if (patch.source_ref !== undefined) row.source_ref = patch.source_ref?.trim() || null
   if (patch.notes !== undefined) row.notes = patch.notes?.trim() || null
+  if (patch.billing_url !== undefined) row.billing_url = patch.billing_url?.trim() || null
   if (patch.is_active !== undefined) row.is_active = patch.is_active
   if (patch.balance_usd !== undefined) {
     row.balance_usd = patch.balance_usd

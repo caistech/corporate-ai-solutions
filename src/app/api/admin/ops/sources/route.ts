@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
     alert_threshold_usd: threshold,
     source_ref: body.source_ref ? String(body.source_ref) : undefined,
     notes: body.notes ? String(body.notes) : undefined,
+    billing_url: body.billing_url ? String(body.billing_url) : undefined,
   }
 
   const result = await createSource(db(), input)
