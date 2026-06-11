@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { LayoutGrid, Workflow, CreditCard, Star, Settings, Plus, ArrowRight, Package } from 'lucide-react'
+import { ExplanatoryHeader } from '@caistech/corporate-components'
 import { SURVEY_FIELDS } from '@/lib/methodology/survey'
 
 export const dynamic = 'force-dynamic'
@@ -100,12 +101,12 @@ export default async function AdminDashboard() {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Pipeline Admin</h1>
-          <p className="text-gray-400">
-            Product validation factory — manage your portfolio from idea to launch
-          </p>
-        </div>
+        <ExplanatoryHeader
+          what="Pipeline Admin"
+          whatLong="The control panel for the product validation factory."
+          todo="Jump into Pipeline to manage products, or pick a section below — costs, methodology, reviews, settings."
+          matters="One place to move every product from idea to launch and watch the spend that funds it."
+        />
 
         {/* Pipeline Card - Primary */}
         <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl p-6 mb-6 border border-blue-700">

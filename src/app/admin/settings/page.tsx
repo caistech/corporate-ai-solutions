@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ExplanatoryHeader } from '@caistech/corporate-components'
 import { createClient } from '@/lib/pipeline/supabase-server'
 import { ChangePasswordForm } from '@/components/admin/ChangePasswordForm'
 import { AdminSignOut } from '@/components/admin/AdminSignOut'
@@ -18,15 +19,12 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
-      <header className="mb-8">
-        <p className="mb-3 text-sm font-medium uppercase tracking-wider text-accent">Settings</p>
-        <h1 className="mb-3 text-2xl font-bold sm:text-3xl">Your account settings</h1>
-        <p className="max-w-xl text-base text-gray-light">
-          Manage the operator account that runs the pipeline cockpit. Change your password or sign
-          out of every device here. This is the account that gates access to all outreach and API
-          spend, so keep its credentials current.
-        </p>
-      </header>
+      <ExplanatoryHeader
+        what="Your account settings"
+        whatLong="Manage the operator account that runs the pipeline cockpit."
+        todo="Change your password, sign out of every device, or toggle the deployment-protection bypass for testers."
+        matters="This is the account that gates access to all outreach and API spend, so keep its credentials current."
+      />
 
       <div className="space-y-6">
         {/* Account */}

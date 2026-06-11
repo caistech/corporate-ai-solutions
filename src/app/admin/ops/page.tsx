@@ -11,6 +11,7 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { ExplanatoryHeader } from '@caistech/corporate-components'
 import { CostSourceManager } from '@/components/admin/CostSourceManager'
 import { listSources, listOrganisations, type CostSource } from '@/lib/ops/sources'
 
@@ -113,11 +114,13 @@ export default async function CostDashboard() {
 
   return (
     <div className="mx-auto max-w-6xl p-6">
-      <h1 className="text-2xl font-bold text-white">Cost Dashboard</h1>
-      <p className="mt-1 text-sm text-gray-400">
-        Real-time visibility of every infrastructure cost across products and clients. Tracks
-        spend and balances, detects idle resources, and emails the admin before any credit runs out.
-      </p>
+      <ExplanatoryHeader
+        what="Cost Dashboard"
+        whatLong="Real-time visibility of every infrastructure cost across products and clients."
+        todo="Add or edit the providers you want tracked below, and record balances to enable alerts."
+        matters="Tracks spend and balances, detects idle resources, and emails the admin before any credit runs out."
+      />
+
 
       {lowBalances.length > 0 && (
         <div className="mt-6 rounded-lg border border-rose-600 bg-rose-900/30 p-4 text-rose-100">
