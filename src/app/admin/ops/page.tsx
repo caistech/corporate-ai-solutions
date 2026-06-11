@@ -13,7 +13,9 @@ import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ExplanatoryHeader } from '@caistech/corporate-components'
 import { CostSourceManager } from '@/components/admin/CostSourceManager'
+import { UsageAnalytics } from '@/components/admin/UsageAnalytics'
 import { listSources, listOrganisations, type CostSource } from '@/lib/ops/sources'
+import { getUsageAnalytics, getUsageFilterOptions } from '@/lib/ops/usage'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,14 +99,21 @@ function fmtPercent(a: number, b: number): string {
 
 export default async function CostDashboard() {
   const db = serviceDb()
-  const [monthlyProviders, thisMonth, lastMonth, idleSources, sources, organisations] = await Promise.all([
-    getMonthlyByProvider(db),
-    getTotalThisMonth(db),
-    getTotalLastMonth(db),
-    getIdleSources(db),
-    listSources(db),
-    listOrganisations(db),
-  ])
+  const now = new Date()
+  const today = now.toISOString().split('T')[0]
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+
+  const [monthlyProviders, thisMonth, lastMonth, idleSources, sources, organisations, usage, usageOptions] =
+    await Promise.all([
+      getMonthlyByProvider(db),
+      getTotalThisMonth(db),
+      getTotalLastMonth(db),
+      getIdleSources(db),
+      listSources(db),
+      listOrganisations(db),
+      getUsageAnalytics(db, { from: monthStart, to: today }),
+      getUsageFilterOptions(db),
+    ])
 
   const activeSources = sources.filter((s) => s.is_active)
   const hasData = activeSources.length > 0
@@ -198,6 +207,8 @@ export default async function CostDashboard() {
       )}
 
       <CostSourceManager sources={sources} organisations={organisations} />
+
+      <UsageAnalytics initial={usage} options={usageOptions} defaultFrom={monthStart} defaultTo={today} />
 
       <div className="mt-8 border-t border-gray-800 pt-6">
         <h2 className="text-lg font-semibold text-white">How each provider is tracked</h2>

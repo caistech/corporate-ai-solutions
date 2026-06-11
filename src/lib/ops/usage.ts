@@ -165,6 +165,38 @@ interface RawUsageRow {
   occurred_at: string
 }
 
+export interface UsageFilterOptions {
+  products: string[]
+  providers: string[]
+  apis: string[]
+}
+
+/**
+ * Distinct product / provider / API values present in the data, for populating the dashboard's
+ * filter dropdowns. Scanned over all usage so the options reflect everything ever metered, not
+ * just the currently-filtered window.
+ */
+export async function getUsageFilterOptions(db: SupabaseClient): Promise<UsageFilterOptions> {
+  const { data, error } = await db
+    .from('usage_events')
+    .select('product_slug, provider, api')
+    .returns<Array<{ product_slug: string; provider: string; api: string | null }>>()
+  if (error) {
+    console.error('[ops/usage] getUsageFilterOptions error:', error)
+    return { products: [], providers: [], apis: [] }
+  }
+  const products = new Set<string>()
+  const providers = new Set<string>()
+  const apis = new Set<string>()
+  for (const r of data ?? []) {
+    if (r.product_slug) products.add(r.product_slug)
+    if (r.provider) providers.add(r.provider)
+    if (r.api) apis.add(r.api)
+  }
+  const sorted = (s: Set<string>) => Array.from(s).sort((a, b) => a.localeCompare(b))
+  return { products: sorted(products), providers: sorted(providers), apis: sorted(apis) }
+}
+
 /**
  * Fetch usage in a window and aggregate it for the dashboard — totals, by-product, by-API, and a
  * daily time-series. Filtering (product / provider / API / date range) is applied in the query so
