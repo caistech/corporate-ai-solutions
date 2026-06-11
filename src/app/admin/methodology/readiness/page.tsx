@@ -1,3 +1,4 @@
+// @explanatory-header-exempt — Pipeline/methodology surface slated for extraction to its own product (docs/PIPELINE_SEPARATION_PLAN.md); a proper <ExplanatoryHeader/> lands in that rewrite, not the cost-dashboard PR.
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'

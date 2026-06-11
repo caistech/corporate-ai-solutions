@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/pipeline', label: 'Products', icon: LayoutGrid },
   { href: '/admin/methodology', label: 'Methodology', icon: Workflow },
-  { href: '/admin/ops', label: 'Ops', icon: CreditCard },
+  { href: '/admin/ops', label: 'Cost', icon: CreditCard },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
 ] as const
 

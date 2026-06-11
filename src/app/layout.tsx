@@ -38,6 +38,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             navItems={NAV_ITEMS}
             theme="dark"
             LinkComponent={Link}
+            rightContent={
+              <Link
+                href="/admin/login"
+                className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 no-underline transition-colors hover:border-slate-500 hover:text-white"
+              >
+                Admin Login
+              </Link>
+            }
           />
         </SiteChrome>
         <main className="flex-grow">{children}</main>
