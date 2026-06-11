@@ -202,20 +202,20 @@ export default async function CostDashboard() {
       <div className="mt-8 border-t border-gray-800 pt-6">
         <h2 className="text-lg font-semibold text-white">How each provider is tracked</h2>
         <p className="mt-2 text-sm text-gray-400">
-          A daily sync (06:00) and the &ldquo;Sync now&rdquo; button pull live figures for the
+          A daily sync (06:00) and the &ldquo;Sync now&rdquo; button pull live figures for the two
           providers that expose an API: <span className="text-gray-300">OpenRouter</span> (credit
-          balance), <span className="text-gray-300">Supabase</span> (per-project compute estimate),
-          and <span className="text-gray-300">Anthropic</span> (month-to-date spend — needs an
-          Admin API key, <code className="text-gray-300">ANTHROPIC_ADMIN_KEY</code>). Each source
-          row shows its sync status; <span className="text-amber-300">Key missing</span> means the
-          provider&rsquo;s key isn&rsquo;t set in Vercel yet.
+          balance) and <span className="text-gray-300">Supabase</span> (per-project compute
+          estimate). Each source row shows its sync status; <span className="text-amber-300">Key
+          missing</span> means the provider&rsquo;s key isn&rsquo;t set in Vercel yet.
         </p>
         <p className="mt-2 text-sm text-gray-400">
-          Everything else (Brave, Hunter, Unipile, Resend, ElevenLabs, Open&nbsp;Code&nbsp;Zen, …)
-          exposes no usage/cost API, so it&rsquo;s tracked by hand: open the provider&rsquo;s billing
-          page from the row&rsquo;s <span className="text-gray-300">Billing&nbsp;↗</span> link, then
-          use <span className="text-gray-300">Update</span> to record the balance or this
-          month&rsquo;s spend. Balances show their age and turn amber once stale.
+          Everything else (Anthropic, OpenAI, Brave, Hunter, Unipile, Resend, ElevenLabs,
+          Open&nbsp;Code&nbsp;Zen, …) is tracked by hand — none exposes a usage/cost API a
+          single-operator account can read (Anthropic spend needs the org-level Admin Cost API,
+          which individual orgs can&rsquo;t provision). Open the provider&rsquo;s billing page from
+          the row&rsquo;s <span className="text-gray-300">Billing&nbsp;↗</span> link, then use{' '}
+          <span className="text-gray-300">Update</span> to record the balance or this month&rsquo;s
+          spend. Balances show their age and turn amber once stale.
         </p>
       </div>
     </div>

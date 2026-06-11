@@ -52,13 +52,19 @@ export const PROVIDER_REGISTRY: Record<string, ProviderMeta> = {
     capability: 'balance',
     billingUrl: 'https://openrouter.ai/credits',
   },
+  // Anthropic spend can only be pulled via the org-level Admin Cost API (an Admin key,
+  // sk-ant-admin…), which INDIVIDUAL orgs cannot provision — so for a single-operator account
+  // it's manual. The Console Cost page already shows per-key USD spend; record it by hand.
+  // (If this account ever becomes a team org, flip capability→'usage', envVar→'ANTHROPIC_ADMIN_KEY'
+  //  and the cost_report adapter in syncProviderData() takes over.)
   anthropic: {
     slug: 'anthropic',
     label: 'Anthropic (Claude API)',
-    envVar: 'ANTHROPIC_ADMIN_KEY',
-    capability: 'usage',
-    billingUrl: 'https://console.anthropic.com/settings/billing',
-    keyNote: 'needs an Admin API key (sk-ant-admin…), not the standard ANTHROPIC_API_KEY',
+    envVar: null,
+    capability: 'none',
+    billingUrl: 'https://console.anthropic.com/cost',
+    keyNote:
+      'spend auto-sync needs the org-level Admin Cost API (an Admin key), which individual orgs can’t provision — record spend by hand from the Console Cost page',
   },
   supabase: {
     slug: 'supabase',
