@@ -116,21 +116,21 @@ export const PROVIDER_REGISTRY: Record<string, ProviderMeta> = {
     label: 'Unipile (LinkedIn/email)',
     envVar: null,
     capability: 'none',
-    billingUrl: 'https://www.unipile.com/',
+    billingUrl: 'https://dashboard.unipile.com/billing',
   },
   ingest: {
     slug: 'ingest',
     label: 'Ingest (doc/drawing OCR)',
     envVar: null,
     capability: 'none',
-    billingUrl: null,
+    billingUrl: 'https://www.ingest.ai/dashboard',
   },
   'open-code-zen': {
     slug: 'open-code-zen',
     label: 'Open Code Zen',
     envVar: null,
     capability: 'none',
-    billingUrl: null,
+    billingUrl: 'https://opencode.zen/account/billing',
   },
 }
 
