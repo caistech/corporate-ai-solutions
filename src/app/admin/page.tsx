@@ -73,11 +73,11 @@ const NAV_CARDS = [
     icon: Workflow, 
     description: 'Validation framework & standards'
   },
-  { 
-    href: '/admin/ops', 
-    label: 'Ops', 
-    icon: CreditCard, 
-    description: 'Operational management & billing'
+  {
+    href: '/admin/ops',
+    label: 'Cost',
+    icon: CreditCard,
+    description: 'Real-time infrastructure cost tracking & low-balance alerts'
   },
   { 
     href: '/admin/reviews', 
