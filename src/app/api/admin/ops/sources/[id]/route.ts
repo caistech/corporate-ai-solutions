@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (body.organisation_id !== undefined) patch.organisation_id = body.organisation_id ? String(body.organisation_id) : null
   if (body.source_ref !== undefined) patch.source_ref = body.source_ref ? String(body.source_ref) : null
   if (body.notes !== undefined) patch.notes = body.notes ? String(body.notes) : null
+  if (body.billing_url !== undefined) patch.billing_url = body.billing_url ? String(body.billing_url) : null
   if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active)
 
   if (body.billing_model !== undefined) {
