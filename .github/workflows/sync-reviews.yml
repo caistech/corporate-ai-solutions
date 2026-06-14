@@ -3,11 +3,13 @@ name: Sync Reviews to Website
 on:
   # Manual trigger
   workflow_dispatch:
-  
-  # Scheduled: Daily at midnight UTC
-  schedule:
-    - cron: '0 0 * * *'
-  
+
+  # Scheduled trigger DISABLED 2026-06-14 — the reviews feature is dormant
+  # (no client_reviews data / secrets), so the daily cron failed every run.
+  # Re-enable by uncommenting once the feature is set up (see docs/DYNAMIC-REVIEWS-SETUP.md).
+  # schedule:
+  #   - cron: '0 0 * * *'
+
   # Webhook trigger (when review approved)
   repository_dispatch:
     types: [review_approved]
