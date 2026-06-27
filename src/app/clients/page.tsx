@@ -53,7 +53,7 @@ export default function ClientsPage() {
               </div>
               <div className="text-xs text-gray-light/70 text-right">
                 <p>Engagement: 2026 →</p>
-                <p>Status: in delivery</p>
+                <p>Status: live in production</p>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-6 mt-6">
@@ -72,6 +72,16 @@ export default function ClientsPage() {
                   Stripe. Platform Trust middleware for compliance posture.
                 </p>
               </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-gray-border">
+              <a
+                href="https://app.mmcbuild.com.au"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-white transition-colors"
+              >
+                Open the live app &mdash; app.mmcbuild.com.au <ExternalLink size={14} />
+              </a>
             </div>
           </div>
 

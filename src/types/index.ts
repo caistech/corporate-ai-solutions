@@ -20,6 +20,8 @@ export interface Platform {
   // All optional; existing entries remain valid without these.
   releaseMode?: 'commercial' | 'byok-free' | 'paid-client' | 'in-migration' | 'placeholder'
   githubUrl?: string // Public repo for byok-free releases
+  repoUrl?: string // Public source repo (inspectable/clonable) — distinct from githubUrl's BYOK-clone role. Presence of githubUrl OR repoUrl => the product is "runnable / open" (a visitor can read + clone the source), vs a deployment-only "live landing page".
+  trustRecordUrl?: string // Live Platform Trust verification record (/verify/<slug>) — only set where a real scan exists; a trust link must resolve to live state, never a marketing page.
   deployUrl?: string // Vercel Deploy button URL for one-click adoption
   deploymentModes?: Array<
     | 'customer-self-serve' // CQR: end-user clones to monitor any vendor's surfaces

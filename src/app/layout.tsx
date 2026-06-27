@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     default: 'Corporate AI Solutions | The Factory That Builds AI Companies',
     template: '%s | Corporate AI Solutions',
   },
-  description: '35+ live AI platforms built by one founder. The studio is the product. The portfolio is the moat.',
+  description: 'Inspectable, runnable AI products built by one operator. Clone one and run it in ~10 minutes — then hire the person who built all of them. Available for contract builds.',
   openGraph: {
     type: 'website',
     locale: 'en_AU',
     url: 'https://corporate-ai-solutions.vercel.app',
     siteName: 'Corporate AI Solutions',
     title: 'Corporate AI Solutions | The Factory That Builds AI Companies',
-    description: '35+ live AI platforms. One founder. Zero employees. The unicorn isn\'t the product — it\'s the factory.',
+    description: 'Don\'t take the count on faith — clone one and run it. Open, BYOK AI products built by one operator, on your keys and your infra. Available for contract builds.',
   },
 }
 

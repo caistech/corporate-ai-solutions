@@ -16,33 +16,34 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-6 py-24 relative z-10">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 px-4 py-2 rounded-full mb-8">
             <Sparkles size={16} className="text-accent" />
-            <span className="text-sm text-accent">BYOK Factory · {PLATFORMS.length} live AI products</span>
+            <span className="text-sm text-accent">BYOK Factory · {PLATFORMS.length} live AI products · open source you can clone</span>
           </div>
 
           <h1 className="mb-6">
-            The factory that ships AI products on your keys, your infra, your control.
+            Clone a real one in 10 minutes &mdash; then hire the operator who built all of them.
           </h1>
 
           <p className="text-xl text-gray-light max-w-3xl mb-6 leading-relaxed">
-            BYOK first. One operator. {PLATFORMS.length} AI products that ship with your keys, your
-            infrastructure, your control. Studio-in-residence engagements when your team wants the
-            factory installed in-house.
+            Don&apos;t take the count on faith. Several of these products are open-source and BYOK:
+            clone the repo, set your own keys, deploy to your own infra &mdash; and it runs. No
+            subscription, no managed backend you can&apos;t inspect.
           </p>
 
           <p className="text-base text-gray-light max-w-3xl mb-10 leading-relaxed">
-            AI collapsed the cost of building software by 100x. We&apos;re the first to exploit that
-            at scale &mdash; and to give every product back to the operator who runs it.
+            One operator, {PLATFORMS.length} AI products on one shared substrate. If you want that
+            velocity pointed at your problem, I take on contract builds &mdash; and
+            studio-in-residence engagements when a team wants the factory installed in-house.
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <Button href="/marketplace" size="lg">
-              Browse the Marketplace <ArrowRight size={20} />
+            <Button href="/marketplace#proof" size="lg">
+              Clone &amp; run the proof <ArrowRight size={20} />
             </Button>
-            <Button href="/engagement" variant="orange" size="lg">
-              Studio in Residence
+            <Button href="/contact" variant="orange" size="lg">
+              Hire me for a build
             </Button>
-            <Button href="#journey" variant="secondary" size="lg">
-              How We Got Here
+            <Button href="/marketplace" variant="secondary" size="lg">
+              Browse the marketplace
             </Button>
           </div>
         </div>
@@ -133,8 +134,8 @@ export default function HomePage() {
                 <p className="text-gray-light mb-4">
                   All of this led to a realization: we&apos;d built a machine for turning problems
                   into platforms. Fast. Cheap. Repeatable. The unicorn isn&apos;t any single product —
-                  it&apos;s the factory that creates them. {PLATFORMS.length} platforms, compounding into a portfolio
-                  targeting $200M+ ARR.
+                  it&apos;s the factory that creates them. {PLATFORMS.length} products, on one shared
+                  substrate, that you can clone and inspect.
                 </p>
                 <p className="text-white font-medium">
                   {PLATFORMS.length} platforms built. The factory is running. Now we scale.
