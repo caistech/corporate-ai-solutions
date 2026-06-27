@@ -100,9 +100,10 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'placeholder',
     name: 'Platform Trust',
     slug: 'platform-trust',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/platform-trust',
     tagline: 'Universal trust, security, and observability for AI platforms',
     problem: 'Production AI agents need security, audit trails, and compliance evidence — none of it comes free',
-    description: 'The brakes layer for the entire platform portfolio. Six modules: automated security scanning, agent quality evals, structured audit logging, per-tenant token/cost metering, permission governance with human-in-the-loop gates, and rate limiting. Compliance evidence for Australian Privacy Act, OWASP Top 10, and SOC 2 readiness — installed as @platform-trust/middleware in every product.',
+    description: 'The trust layer for the portfolio: automated security scanning (dependency audit, secret-exposure checks, agent permission-surface analysis, OWASP API checklist), agent quality evals, structured audit logging, per-tenant token/cost metering, permission governance with human-in-the-loop gates, and rate limiting. Every scanned product gets an inspectable trust record — grade, score, and scan date you can open and verify.',
     url: 'https://platform-trust.vercel.app',
     status: 'live',
     category: 'infrastructure',
@@ -117,7 +118,7 @@ export const PLATFORMS: Platform[] = [
     slug: 'pubguard',
     tagline: 'Automated vulnerability scanning and OWASP compliance for AI platforms',
     problem: 'AI products ship to enterprises without documented security posture — buyers demand evidence',
-    description: 'The security scanning engine inside Platform Trust. Runs on PR merge, deploy events, and weekly cron: dependency audits, secret exposure checks, API endpoint classification (read/write, auth-required), agent tool permission surface analysis, and the OWASP Top 10 checklist for API surfaces. Outputs severity-graded findings, downloadable PDF compliance reports for buyer sign-off, and public compliance badges.',
+    description: 'The security scanning engine inside Platform Trust. Runs on PR merge, deploy events, and weekly cron: dependency audits, secret exposure checks, API endpoint classification (read/write, auth-required), agent tool permission surface analysis, and the OWASP Top 10 checklist for API surfaces. Outputs severity-graded findings and a public trust badge per project, each linking to that project\'s live verification record.',
     url: 'https://kira-rho.vercel.app/pubguard/scan',
     status: 'live',
     category: 'infrastructure',
@@ -151,6 +152,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'RaiseReady Template',
     slug: 'raiseready-template',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/raise-ready',
     tagline: 'White-label founder/investor platform generator',
     problem: 'Founders need pitch practice, investors need deal flow management',
     description: 'Generator platform for creating white-label versions for founders to get investment-ready and investors to manage incoming pitch outreach. Spin up customized versions in days.',
@@ -168,6 +170,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'Connexions',
     slug: 'connexions',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/connexions',
     tagline: 'AI-powered survey and interview analysis',
     problem: 'Qualitative research is time-consuming and insights get lost',
     description: 'Generator platform for white-label AI voice interviewers with enhanced AI analysis. Conduct customer research, user feedback, exit interviews, and compliance audits - then let AI extract themes, sentiment, and actionable insights from your surveys and research interviews automatically.',
@@ -208,6 +211,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'Kira',
     slug: 'kira',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/kira',
     tagline: 'Your personalized AI thinking partner',
     problem: 'Generic AI assistants don\'t know your context and make you repeat yourself',
     description: 'Not one AI for everyone — a unique thinking partner built around YOUR specific goal. Whether it\'s career decisions, financial planning, business strategy, or life changes, Kira learns your context through voice conversation and remembers everything. She asks questions before jumping to answers, pushes back when something\'s unclear, and thinks WITH you instead of just answering.',
@@ -216,6 +220,52 @@ export const PLATFORMS: Platform[] = [
     category: 'voice-coaching',
     hasVoiceAI: true,
     featured: true,
+    type: 'parent',
+    isGenerator: false,
+  },
+  {
+    id: 'singify',
+    releaseMode: 'in-migration',
+    name: 'Singify',
+    slug: 'singify',
+    tagline: 'Sing better between lessons',
+    problem: 'Singing students lose momentum between weekly lessons with no way to practise and hear real progress',
+    description: 'Sing along to a real backing track, record yourself on video, and hear your take polished — with an AI voice coach that knows your vocal baseline and references your last session. Built for singing teachers to give students structured practice between lessons.',
+    url: 'https://singify-platform.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
+    featured: true,
+    type: 'parent',
+    isGenerator: false,
+  },
+  {
+    id: 'partready',
+    releaseMode: 'in-migration',
+    name: 'PartReady',
+    slug: 'partready',
+    tagline: 'Rehearse with a partner who acts',
+    problem: 'Actors can\'t always find a scene partner to run lines with on demand',
+    description: 'AI scene partner for actors. Feed in a script and rehearse your lines against a partner who actually acts the other roles — voice performance, cue tracking, and feedback. Practise any scene, any time.',
+    url: 'https://partready.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
+    type: 'parent',
+    isGenerator: false,
+  },
+  {
+    id: 'prelabz',
+    releaseMode: 'in-migration',
+    name: 'Prelabz',
+    slug: 'prelabz',
+    tagline: 'AI pitch coaching',
+    problem: 'Founders rehearse pitches alone with no honest, structured feedback',
+    description: 'AI pitch coaching platform. Practise your pitch out loud, get scored on clarity, structure, and delivery, and iterate with a voice coach before you face real investors.',
+    url: 'https://prelabz.vercel.app',
+    status: 'live',
+    category: 'voice-coaching',
+    hasVoiceAI: true,
     type: 'parent',
     isGenerator: false,
   },
@@ -243,14 +293,14 @@ export const PLATFORMS: Platform[] = [
     featured: true,
     type: 'parent',
     releaseMode: 'byok-free',
-    githubUrl: 'https://github.com/dennissolver/community-question-responder',
+    githubUrl: 'https://github.com/caistech/community-question-responder',
     deployUrl:
-      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fcommunity-question-responder' +
+      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcaistech%2Fcommunity-question-responder' +
       '&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,' +
       'ANTHROPIC_API_KEY,OPENAI_API_KEY,RESEND_API_KEY,RESEND_FROM_EMAIL,ELEVENLABS_API_KEY,' +
       'CRON_SECRET,NEXT_PUBLIC_APP_URL' +
       '&envDescription=Required+credentials+%E2%80%94+all+BYOK%2C+see+README+for+links' +
-      '&envLink=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fcommunity-question-responder%23required-credentials',
+      '&envLink=https%3A%2F%2Fgithub.com%2Fcaistech%2Fcommunity-question-responder%23required-credentials',
     deploymentModes: ['customer-self-serve', 'vendor-self-deploy'],
     requiredStack: ['GitHub', 'Vercel', 'Supabase'],
     requiredCredentials: [
@@ -277,14 +327,14 @@ export const PLATFORMS: Platform[] = [
     featured: true,
     type: 'parent',
     releaseMode: 'byok-free',
-    githubUrl: 'https://github.com/dennissolver/preflight',
+    githubUrl: 'https://github.com/caistech/preflight',
     deployUrl:
-      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fpreflight' +
+      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcaistech%2Fpreflight' +
       '&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,' +
       'ANTHROPIC_API_KEY,OPENAI_API_KEY,RESEND_API_KEY,RESEND_FROM_EMAIL,' +
       'GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,CRON_SECRET,NEXT_PUBLIC_APP_URL' +
       '&envDescription=Required+credentials+%E2%80%94+all+BYOK%2C+see+README+for+links' +
-      '&envLink=https%3A%2F%2Fgithub.com%2Fdennissolver%2Fpreflight%23required-credentials',
+      '&envLink=https%3A%2F%2Fgithub.com%2Fcaistech%2Fpreflight%23required-credentials',
     deploymentModes: ['project-owner-self-host', 'drafting-firm-self-host'],
     requiredStack: ['GitHub', 'Vercel', 'Supabase'],
     requiredCredentials: [
@@ -302,6 +352,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'LaunchReady',
     slug: 'launchready',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/launchready',
     tagline: 'Voice-guided IP protection for founders',
     problem: 'Founders\' IP is vulnerable - 72% have unprotected assets',
     description: 'Protect your ideas before someone else does. Voice-guided IP discovery, automatic evidence capture from GitHub, trademark monitoring, patent deadline tracking, and lawyer-ready packages. Free tier with shared infrastructure, $30/mo for dedicated isolation.',
@@ -317,6 +368,8 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'DealFindrs',
     slug: 'dealfindrs',
+    repoUrl: 'https://github.com/caistech/deal-findrs',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/dealfindrs',
     tagline: 'AI-powered property deal assessment',
     problem: 'Property developers waste time on bad deals',
     description: 'Platform for property developers to easily assess deals using AI voice coaches and analysis tools. Fast filtering, smart recommendations, voice-powered deal evaluation.',
@@ -332,6 +385,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'TenderWatch',
     slug: 'tenderwatch',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/tenderwatch',
     tagline: 'Government tender monitoring made easy',
     problem: 'Australian businesses miss relevant government tenders',
     description: 'Makes monitoring government tenders in Australia easy and convenient. AI-powered matching, automated alerts, never miss a relevant RFP again.',
@@ -372,6 +426,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'f2k-fund-tokenisation',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Parked 2026-06-28: Supabase project moved to a free org + going dormant (DB auto-pauses); don't show a "Live" card pointing at a paused app. Relist on reactivation.
     name: 'F2K Fund Tokenisation',
     slug: 'f2k-fund-tokenisation',
     tagline: 'Tokenised Australian housing fund on Ethereum',
@@ -381,7 +436,7 @@ export const PLATFORMS: Platform[] = [
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
-    featured: true,
+    featured: false,
     type: 'parent',
   },
   {
@@ -451,6 +506,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'SmartBoard',
     slug: 'smartboard',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/smartboard',
     tagline: 'Intelligent airline boarding management',
     problem: 'Gate congestion wastes time and frustrates passengers',
     description: 'Intelligent airline boarding management system that eliminates gate congestion by assigning passengers specific boarding time windows and overhead bin locations based on carry-on luggage and seat number. Self-configuring bin allocation with no airline API required.',
@@ -465,6 +521,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'Storefront MCP',
     slug: 'storefront-mcp',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/store-mcp',
     tagline: 'Agent marketplace via MCP protocol',
     problem: 'AI agents can\'t discover and book real-world services',
     description: 'MCP server exposing the Agent Storefront seller catalog as callable tools for any MCP-compatible agent. Agents can search sellers, check availability, and create bookings — bridging AI assistants to real-world service providers.',
@@ -479,10 +536,25 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'Easy Claude Code',
     slug: 'easy-claude-code',
+    trustRecordUrl: 'https://platform-trust.vercel.app/verify/easy-claude-code',
     tagline: 'Browser dashboard for Claude Code sessions',
     problem: 'Claude Code terminal sessions are ephemeral — context dies when you close them',
     description: 'Browser dashboard for managing local Claude Code sessions. Session persistence, project tracking, and remote control via Dispatch. Wraps the raw CLI tool in a persistent, context-aware interface with mobile-triggerable workflows.',
     url: 'https://easy-claude-code.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: false,
+    type: 'parent',
+  },
+  {
+    id: 'executorai',
+    releaseMode: 'in-migration',
+    name: 'ExecutorAI',
+    slug: 'executorai',
+    tagline: 'Understand the estate documents you\'ve been sent',
+    problem: 'Executors are handed dense legal and financial documents during probate with no plain-English guide to what they mean or what to do next',
+    description: 'Helps executors make sense of estate and probate paperwork. Upload the documents you\'ve been sent and get plain-English explanations, a structured view of what each one requires, and clear next steps — so administering an estate stops being a guessing game.',
+    url: 'https://executorai.vercel.app',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
@@ -522,6 +594,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     name: 'InvestorPilot',
     slug: 'investor-pilot',
+    repoUrl: 'https://github.com/caistech/investor-pilot',
     tagline: 'AI-powered investor relations and deal flow',
     problem: 'Founders struggle to manage investor relationships and deal flow effectively',
     description: 'AI-powered investor relations platform. Manage deal flow, track investor conversations, prepare pitch materials, and streamline the fundraising process with intelligent automation.',
@@ -554,10 +627,10 @@ export const PLATFORMS: Platform[] = [
     tagline: 'Modern methods of construction compliance & management',
     problem: 'MMC projects are buried in compliance, drawings, and document chaos',
     description: 'Property compliance and construction management platform for modern methods of construction. 3D visualization, document processing, and project workflows tailored to modular and prefab builds.',
-    // Scrubbed 2026-05-20: was mmcbuild.vercel.app, which now returns "MMC
-    // Minting dApp" (external crypto project). mmcbuild-webapp.vercel.app
-    // is the team-owned alias that still serves the right content publicly.
-    url: 'https://mmcbuild-webapp.vercel.app',
+    // 2026-06-28: MMC Build is now live in production on the client's own
+    // domain. Point at app.mmcbuild.com.au (the real client deployment) — this
+    // is the URL surfaced on /clients as real-client proof.
+    url: 'https://app.mmcbuild.com.au',
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
@@ -612,6 +685,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'f2k-offshore-modular',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Parked 2026-06-28: Supabase project moved to a free org + going dormant (DB auto-pauses); don't show a "Live" card pointing at a paused app. Relist on reactivation.
     name: 'F2K Offshore Modular',
     slug: 'f2k-offshore-modular',
     tagline: 'Pre-vetted offshore modular manufacturer marketplace',
@@ -865,6 +939,66 @@ export const getChildrenOf = (parentId: string) => PLATFORMS.filter(p => p.paren
 export const getLivePlatforms = () => PLATFORMS.filter(p => p.status === 'live')
 export const getFeaturedPlatforms = () => PLATFORMS.filter(p => p.featured)
 export const getVoiceAIPlatforms = () => PLATFORMS.filter(p => p.hasVoiceAI && p.type === 'parent')
+
+// ============================================
+// PROOF: the inspectable / runnable repo spine
+// ============================================
+// The small set of repos a technical evaluator can read or clone-and-run. This
+// is the proof surface — "don't take the count on faith, clone one and run it"
+// — kept deliberately short and honest. Each entry resolves to live, inspectable
+// state (public source, a one-click deploy, or a live verification wall), never
+// a marketing page. Order = strongest-first.
+export interface ShowcaseRepo {
+  name: string
+  what: string // one line: what it proves
+  repoUrl?: string // public source to read
+  deployUrl?: string // one-click clone-and-run (BYOK)
+  liveUrl?: string // a live inspectable surface (e.g. trust records)
+  label: 'Operator Core' | 'Clone & run' | 'Open source' | 'Live trust records'
+}
+
+export const SHOWCASE_REPOS: ShowcaseRepo[] = [
+  {
+    name: 'cais-shared-services',
+    what: 'Operator Core — the 44-package shared substrate ~38 products consume instead of re-implementing. The architecture, in one repo.',
+    repoUrl: 'https://github.com/caistech/cais-shared-services',
+    label: 'Operator Core',
+  },
+  {
+    name: 'community-question-responder',
+    what: 'The flagship BYOK product. Clone it, set your keys, deploy — running on your infra in ~10 minutes. MIT.',
+    repoUrl: 'https://github.com/caistech/community-question-responder',
+    deployUrl:
+      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcaistech%2Fcommunity-question-responder',
+    label: 'Clone & run',
+  },
+  {
+    name: 'preflight',
+    what: 'Drafter-led DA pre-submission triage. BYOK, self-host, MIT. Clone and run it against your own project.',
+    repoUrl: 'https://github.com/caistech/preflight',
+    deployUrl:
+      'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcaistech%2Fpreflight',
+    label: 'Clone & run',
+  },
+  {
+    name: 'investor-pilot',
+    what: 'AI investor sourcing for tokenised securities — full vertical product, public source you can read end-to-end.',
+    repoUrl: 'https://github.com/caistech/investor-pilot',
+    label: 'Open source',
+  },
+  {
+    name: 'deal-findrs',
+    what: 'AI property deal assessment — a full Next.js + Supabase app on the property-services substrate, public source.',
+    repoUrl: 'https://github.com/caistech/deal-findrs',
+    label: 'Open source',
+  },
+  {
+    name: 'platform-trust',
+    what: 'Automated security scanning across the portfolio. The engine stays private; the per-product verification records are public — open one and inspect the grade, score, and scan date.',
+    liveUrl: 'https://platform-trust.vercel.app',
+    label: 'Live trust records',
+  },
+]
 
 // Voice Agents — canonical persona is Morgan (consolidated 2026-05-19 per Wave 3 decision).
 // One voice across the whole site so a visitor moving between marketplace, pricing,

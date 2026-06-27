@@ -3,8 +3,10 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink, Shield, Github, Rocket, ShieldCheck, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PLATFORMS, getParentPlatforms, getChildrenOf } from '@/lib/constants'
+import { PLATFORMS, getParentPlatforms, getChildrenOf, SHOWCASE_REPOS } from '@/lib/constants'
 import { Platform } from '@/types'
+
+const isRunnable = (p: Platform) => Boolean(p.githubUrl || p.repoUrl)
 
 export const metadata: Metadata = {
   title: 'Marketplace',
@@ -22,6 +24,7 @@ export default function MarketplacePage() {
   const childPlatforms = PLATFORMS.filter(p => p.type === 'child')
   const voiceAIParents = parentPlatforms.filter(p => p.hasVoiceAI)
   const byokFreeCount = parentPlatforms.filter(p => p.releaseMode === 'byok-free').length
+  const runnableCount = parentPlatforms.filter(isRunnable).length
 
   return (
     <>
@@ -56,6 +59,10 @@ export default function MarketplacePage() {
             <div className="text-sm text-gray-light">BYOK-Free Releases</div>
           </div>
           <div>
+            <div className="text-3xl font-bold text-accent">{runnableCount}</div>
+            <div className="text-sm text-gray-light">Runnable / Open Source</div>
+          </div>
+          <div>
             <div className="text-3xl font-bold text-purple">{generators.length}</div>
             <div className="text-sm text-gray-light">Generators</div>
           </div>
@@ -66,6 +73,69 @@ export default function MarketplacePage() {
           <div>
             <div className="text-3xl font-bold text-accent">{voiceAIParents.length}</div>
             <div className="text-sm text-gray-light">With Voice AI</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Proof — the inspectable / runnable spine */}
+      <section id="proof" className="section">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Github className="text-accent" size={28} />
+              <h2 className="text-3xl font-bold">Proof: clone one and run it</h2>
+            </div>
+            <p className="text-gray-light max-w-3xl">
+              Don&apos;t take the count on faith. These are the repos you can read or clone-and-run
+              right now &mdash; open source, BYOK, on your own infra. Every link resolves to live,
+              inspectable state, not a marketing page.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {SHOWCASE_REPOS.map((repo) => (
+              <div key={repo.name} className="card hover:border-accent/50 transition-colors flex flex-col">
+                <div className="mb-3">
+                  <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded font-medium">
+                    {repo.label}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold mb-2 break-words font-mono">{repo.name}</h3>
+                <p className="text-sm text-gray-light mb-6 flex-grow">{repo.what}</p>
+                <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
+                  {repo.deployUrl && (
+                    <a
+                      href={repo.deployUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-orange hover:text-white transition-colors"
+                    >
+                      <Rocket size={14} /> Deploy your own
+                    </a>
+                  )}
+                  {repo.repoUrl && (
+                    <a
+                      href={repo.repoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-gray-light hover:text-white transition-colors"
+                    >
+                      <Github size={14} /> Read the source
+                    </a>
+                  )}
+                  {repo.liveUrl && (
+                    <a
+                      href={repo.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-accent hover:text-white transition-colors"
+                    >
+                      <ShieldCheck size={14} /> Inspect live
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -347,6 +417,15 @@ function ParentPlatformCard({ platform }: { platform: Platform }) {
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-2 flex-wrap">
           <ReleaseModeBadge platform={platform} />
+          {isRunnable(platform) ? (
+            <span className="flex items-center gap-1 text-xs bg-accent/20 text-accent px-2 py-1 rounded font-medium">
+              <Github size={12} /> Runnable / open
+            </span>
+          ) : (
+            <span className="text-xs bg-gray-mid/40 text-gray-light px-2 py-1 rounded font-medium">
+              Live landing page
+            </span>
+          )}
           {platform.hasVoiceAI && (
             <span className="flex items-center gap-1 text-xs bg-accent/20 text-accent px-2 py-1 rounded">
               <Mic size={12} /> Voice AI
@@ -370,6 +449,17 @@ function ParentPlatformCard({ platform }: { platform: Platform }) {
       <p className="text-sm text-gray-light mb-6">{platform.description}</p>
 
       <PlatformCardCTA platform={platform} />
+
+      {platform.trustRecordUrl && (
+        <a
+          href={platform.trustRecordUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1 text-xs text-gray-light hover:text-white transition-colors"
+        >
+          <ShieldCheck size={12} /> Trust record
+        </a>
+      )}
     </div>
   )
 }
