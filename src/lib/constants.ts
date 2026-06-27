@@ -426,6 +426,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'f2k-fund-tokenisation',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Parked 2026-06-28: Supabase project moved to a free org + going dormant (DB auto-pauses); don't show a "Live" card pointing at a paused app. Relist on reactivation.
     name: 'F2K Fund Tokenisation',
     slug: 'f2k-fund-tokenisation',
     tagline: 'Tokenised Australian housing fund on Ethereum',
@@ -435,7 +436,7 @@ export const PLATFORMS: Platform[] = [
     status: 'live',
     category: 'business-tools',
     hasVoiceAI: false,
-    featured: true,
+    featured: false,
     type: 'parent',
   },
   {
@@ -684,6 +685,7 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'f2k-offshore-modular',
     releaseMode: 'in-migration',
+    marketplaceHidden: true, // Parked 2026-06-28: Supabase project moved to a free org + going dormant (DB auto-pauses); don't show a "Live" card pointing at a paused app. Relist on reactivation.
     name: 'F2K Offshore Modular',
     slug: 'f2k-offshore-modular',
     tagline: 'Pre-vetted offshore modular manufacturer marketplace',
