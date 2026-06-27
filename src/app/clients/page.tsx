@@ -86,17 +86,11 @@ export default function ClientsPage() {
           </div>
 
           {/* LingoPure */}
-          <a
-            href="https://lingopure.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block bg-gray-dark rounded-lg border-l-4 border-blue-400 p-8 hover:bg-gray-dark/70 transition-colors group"
-          >
+          <div className="bg-gray-dark rounded-lg border-l-4 border-blue-400 p-8">
             <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
               <div>
-                <p className="text-xs uppercase tracking-wider text-blue-400 mb-2 font-mono inline-flex items-center gap-2">
+                <p className="text-xs uppercase tracking-wider text-blue-400 mb-2 font-mono">
                   Chief Technology Advisor
-                  <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </p>
                 <h2 className="text-2xl font-bold mb-1">LingoPure</h2>
                 <p className="text-sm text-gray-light">AI voice tutoring platform</p>
@@ -116,26 +110,35 @@ export default function ClientsPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-white mb-2 font-mono">Site</p>
-                <p className="text-sm text-blue-400 inline-flex items-center gap-1">
-                  lingopure.com <ExternalLink size={12} />
-                </p>
+                <p className="text-xs uppercase tracking-wider text-white mb-2 font-mono">Links</p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href="https://lingo-pure-ai.vercel.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-accent hover:text-white transition-colors inline-flex items-center gap-1"
+                  >
+                    Open my build <ExternalLink size={12} />
+                  </a>
+                  <a
+                    href="https://lingopure.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-400 hover:text-white transition-colors inline-flex items-center gap-1"
+                  >
+                    Live client site: lingopure.com <ExternalLink size={12} />
+                  </a>
+                </div>
               </div>
             </div>
-          </a>
+          </div>
 
           {/* PreLabz */}
-          <a
-            href="https://prelabz.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block bg-gray-dark rounded-lg border-l-4 border-orange p-8 hover:bg-gray-dark/70 transition-colors group"
-          >
+          <div className="bg-gray-dark rounded-lg border-l-4 border-orange p-8">
             <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
               <div>
-                <p className="text-xs uppercase tracking-wider text-orange mb-2 font-mono inline-flex items-center gap-2">
+                <p className="text-xs uppercase tracking-wider text-orange mb-2 font-mono">
                   Chief Technology Advisor
-                  <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </p>
                 <h2 className="text-2xl font-bold mb-1">PreLabz</h2>
                 <p className="text-sm text-gray-light">Pre-seed &rarr; Series A investor-readiness venture studio</p>
@@ -155,13 +158,28 @@ export default function ClientsPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-white mb-2 font-mono">Site</p>
-                <p className="text-sm text-orange inline-flex items-center gap-1">
-                  prelabz.com <ExternalLink size={12} />
-                </p>
+                <p className="text-xs uppercase tracking-wider text-white mb-2 font-mono">Links</p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href="https://prelabz.vercel.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-accent hover:text-white transition-colors inline-flex items-center gap-1"
+                  >
+                    Open my build <ExternalLink size={12} />
+                  </a>
+                  <a
+                    href="https://prelabz.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-orange hover:text-white transition-colors inline-flex items-center gap-1"
+                  >
+                    Live client site: prelabz.com <ExternalLink size={12} />
+                  </a>
+                </div>
               </div>
             </div>
-          </a>
+          </div>
         </div>
       </section>
 
