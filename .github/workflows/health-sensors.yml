@@ -1,29 +1,25 @@
-# Step 7 Operations & Maintenance - Health Sensors
+# Operations & Maintenance — Health Sensors
 #
-# Runs health checks on schedule:
-# - Light (every 6 hours): auth pages + routes
-# - Full (daily): + authenticated routes
+# Scheduled runtime health check against the live site, catching issues CI can't
+# (dead routes, missing env vars, DB/RLS down) before operators or users notice.
 #
-# This catches runtime issues CI doesn't (missing env vars, DB, RLS, etc)
+# Scope for THIS repo: corporate-ai-solutions is a marketing + marketplace site
+# with NO user-facing auth flow (no /login, /signup, /forgot-password — those
+# 404 by design; the only auth is the operator /admin + /pipeline consoles). So,
+# exactly as gate.yml does, the auth-smoke and session-smoke checks are
+# intentionally OMITTED and only the route smoke runs. (auth.config.json /
+# session.config.json are left in the repo as unused template stubs.)
 
 name: health-sensors
 
 on:
   schedule:
-    # Light check every 6 hours
+    # Every 6 hours
     - cron: '0 */6 * * *'
-    # Full check daily at 6am UTC
-    - cron: '0 6 * * *'
   workflow_dispatch:
-    inputs:
-      full:
-        description: 'Run full check (includes session test)'
-        required: false
-        default: 'false'
 
 jobs:
-  health-light:
-    if: github.event_name == 'schedule' || github.event.inputs.full != 'true'
+  health:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -31,45 +27,52 @@ jobs:
       TEST_BASE_URL: ${{ vars.PORTFOLIO_GATE_PREVIEW_URL }}
 
     steps:
-      - name: Run auth smoke test
-        run: |
-          npx --no-install portfolio-gate-smoke-auth \
-            --config auth.config.json \
-            --base-url "$TEST_BASE_URL"
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Run route smoke test
+      # Detect package manager so setup-node's cache key + the install step use
+      # the right tooling (mirrors gate.yml).
+      - name: Detect package manager
+        id: detect-pm
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "pm=pnpm" >> $GITHUB_OUTPUT
+          else
+            echo "pm=npm" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup pnpm
+        if: steps.detect-pm.outputs.pm == 'pnpm'
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      # Node with @caistech GitHub Packages registry auth — this is what was
+      # missing: without it, `npx --no-install portfolio-gate-smoke-*` finds no
+      # local bin and falls back to the public registry, which 404s.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: ${{ steps.detect-pm.outputs.pm }}
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@caistech'
+
+      - name: Install dependencies
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+          elif [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.CAISTECH_PACKAGES_TOKEN }}
+
+      - name: Route smoke test
         run: |
           npx --no-install portfolio-gate-smoke-routes \
             --config routes.config.json \
             --base-url "$TEST_BASE_URL"
-
-  health-full:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 6 * * *')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    env:
-      TEST_BASE_URL: ${{ vars.PORTFOLIO_GATE_PREVIEW_URL }}
-      TEST_EMAIL: ${{ secrets.QA_TEST_EMAIL }}
-      TEST_PASSWORD: ${{ secrets.QA_TEST_PASSWORD }}
-
-    steps:
-      - name: Run auth smoke test
-        run: |
-          npx --no-install portfolio-gate-smoke-auth \
-            --config auth.config.json \
-            --base-url "$TEST_BASE_URL"
-
-      - name: Run route smoke test
-        run: |
-          npx --no-install portfolio-gate-smoke-routes \
-            --config routes.config.json \
-            --base-url "$TEST_BASE_URL"
-
-      - name: Run session smoke test
-        if: env.TEST_EMAIL && env.TEST_PASSWORD
-        run: |
-          npx --no-install portfolio-gate-smoke-session \
-            --config session.config.json \
-            --base-url "$TEST_BASE_URL"
-
