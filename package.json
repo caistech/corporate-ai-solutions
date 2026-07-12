@@ -25,6 +25,7 @@
     "@caistech/corporate-components": "^0.3.0",
     "@caistech/elevenlabs-convai": "^0.4.9",
     "@caistech/sayfix-embed": "^0.4.0",
+    "@caistech/webmcp-kit": "^0.1.0",
     "@elevenlabs/client": "^0.11.0",
     "@elevenlabs/react": "^1.6.3",
     "@supabase/ssr": "^0.1.0",

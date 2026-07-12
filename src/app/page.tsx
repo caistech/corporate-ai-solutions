@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { ArrowRight, Mic, Users, Layers, Rocket, ChevronRight, Sparkles, Linkedin, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PLATFORMS, SKOOL, FOUNDER, getParentPlatforms, getChildrenOf } from '@/lib/constants'
+import { AgentJsonLd } from '@caistech/webmcp-kit/react'
+import { agentConfig } from '@/agent-readiness.config'
 
 export default function HomePage() {
   const parentPlatforms = getParentPlatforms().filter(p => p.status === 'live' && !p.marketplaceHidden)
@@ -10,6 +12,7 @@ export default function HomePage() {
 
   return (
     <>
+      <AgentJsonLd config={agentConfig} />
       {/* Hero - What We Do */}
       <section className="min-h-[80vh] flex flex-col justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-30" />
