@@ -1,22 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Loader2, CheckCircle2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 type Stage = 'card' | 'pattern'
 
-const LABELS: Record<Stage, { idle: string; running: string; done: string }> = {
-  card: {
-    idle: 'Generate Capability Card',
-    running: 'Analysing… (~10–20s, please wait)',
-    done: 'Capability Card generated — see above.',
-  },
-  pattern: {
-    idle: 'Abstract Pattern',
-    running: 'Abstracting on Opus… (~30–60s, please wait)',
-    done: 'Pattern map generated — see above.',
-  },
+const LABELS: Record<Stage, { idle: string; running: string }> = {
+  card: { idle: 'Generate Capability Card', running: 'Analysing… (~10–20s, please wait)' },
+  pattern: { idle: 'Abstract Pattern', running: 'Abstracting on Opus… (~30–60s, please wait)' },
 }
 
 export function StageRunner({
@@ -32,28 +23,26 @@ export function StageRunner({
   disabled?: boolean
   disabledHint?: string
 }) {
-  const router = useRouter()
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
 
   async function run() {
     setError(null)
-    setDone(false)
     setRunning(true)
     try {
       const res = await fetch(`/api/admin/reverse-scout/assets/${assetId}/${stage}`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || `Stage failed (HTTP ${res.status})`)
-      // Soft-refresh re-runs the server component so the new result renders above.
-      // Client state (this `done` flag) survives the refresh, so the confirmation stays visible.
-      setDone(true)
-      router.refresh()
+      // The result is persisted; reload so the server component re-reads and renders it.
+      // A hard reload (not router.refresh) guarantees the new card/pattern shows — the soft
+      // refresh proved unreliable here, leaving the page unchanged after a successful run.
+      window.location.reload()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Stage failed')
-    } finally {
       setRunning(false)
     }
+    // On success we intentionally do NOT clear `running` — the page reloads, so the spinner
+    // stays until the fresh render replaces it.
   }
 
   const label = hasResult ? `Re-run · ${LABELS[stage].idle}` : LABELS[stage].idle
@@ -71,14 +60,7 @@ export function StageRunner({
       </button>
       {running && (
         <p className="text-xs text-gray-light" role="status">
-          Working — this calls the model and can take a bit. Leave this open; the result appears above when it&apos;s
-          ready.
-        </p>
-      )}
-      {done && !running && !error && (
-        <p className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-300">
-          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-          {LABELS[stage].done}
+          Working — this calls the model and can take a bit. The page refreshes with the result when it&apos;s ready.
         </p>
       )}
       {disabled && disabledHint && !running && <p className="text-xs text-gray-light">{disabledHint}</p>}
