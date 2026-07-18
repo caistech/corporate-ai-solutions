@@ -1,11 +1,28 @@
 /**
  * Reverse Scout data access — service-role reads/writes over the reverse_scout_* tables.
  *
- * The tables are RLS-on with no policies, so every access goes through the service-role client
- * (supabaseAdmin). Callers are already operator-gated (page under /admin/*; API routes self-guard).
+ * The tables are RLS-on with no policies, so every access goes through the service-role client.
+ * Callers are already operator-gated (page under /admin/*; API routes self-guard).
+ *
+ * We use a dedicated client with `cache: 'no-store'` on its fetch — NOT the shared supabaseAdmin.
+ * In RSC, Next caches supabase-js GETs in the Data Cache; the detail page first rendered before a
+ * card existed, cached the empty result, and kept serving it (the "generation works but the card
+ * never shows" bug). Forcing no-store makes every read live.
  */
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+
+function rsDb(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    throw new Error('Reverse Scout store requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (input, init) => fetch(input as RequestInfo, { ...init, cache: 'no-store' }) },
+  })
+}
 import type {
   Asset,
   AssetDetail,
@@ -18,7 +35,7 @@ import type {
 } from './types'
 
 export async function listAssets(): Promise<Asset[]> {
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await rsDb()
     .from('reverse_scout_asset')
     .select('*')
     .order('created_at', { ascending: false })
@@ -32,7 +49,7 @@ export async function createAsset(input: {
   raw_ref: string | null
   source_text: string
 }): Promise<Asset> {
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await rsDb()
     .from('reverse_scout_asset')
     .insert({
       name: input.name,
@@ -47,7 +64,7 @@ export async function createAsset(input: {
 }
 
 export async function getAsset(assetId: string): Promise<Asset | null> {
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await rsDb()
     .from('reverse_scout_asset')
     .select('*')
     .eq('id', assetId)
@@ -58,7 +75,7 @@ export async function getAsset(assetId: string): Promise<Asset | null> {
 
 /** Latest capability card for an asset (Stage 1 re-runs append; newest wins). */
 async function getLatestCard(assetId: string): Promise<CapabilityCard | null> {
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await rsDb()
     .from('reverse_scout_capability_card')
     .select('*')
     .eq('asset_id', assetId)
@@ -70,7 +87,7 @@ async function getLatestCard(assetId: string): Promise<CapabilityCard | null> {
 }
 
 export async function saveCapabilityCard(assetId: string, draft: CapabilityCardDraft): Promise<CapabilityCard> {
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await rsDb()
     .from('reverse_scout_capability_card')
     .insert({
       asset_id: assetId,
@@ -90,7 +107,7 @@ export async function saveCapabilityCard(assetId: string, draft: CapabilityCardD
 }
 
 async function getLatestPattern(assetId: string): Promise<(Pattern & { sectors: SectorMap[] }) | null> {
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await rsDb()
     .from('reverse_scout_pattern')
     .select('*')
     .eq('asset_id', assetId)
@@ -101,7 +118,7 @@ async function getLatestPattern(assetId: string): Promise<(Pattern & { sectors: 
   if (!data) return null
 
   const pattern = data as Pattern
-  const { data: sectorData, error: sectorErr } = await supabaseAdmin()
+  const { data: sectorData, error: sectorErr } = await rsDb()
     .from('reverse_scout_sector_map')
     .select('*')
     .eq('pattern_id', pattern.id)
@@ -115,7 +132,7 @@ export async function savePattern(
   assetId: string,
   draft: PatternDraft,
 ): Promise<Pattern & { sectors: SectorMap[] }> {
-  const { data: patternRow, error: patternErr } = await supabaseAdmin()
+  const { data: patternRow, error: patternErr } = await rsDb()
     .from('reverse_scout_pattern')
     .insert({
       asset_id: assetId,
@@ -135,7 +152,7 @@ export async function savePattern(
     confidence: s.confidence,
   }))
 
-  const { data: sectorData, error: sectorErr } = await supabaseAdmin()
+  const { data: sectorData, error: sectorErr } = await rsDb()
     .from('reverse_scout_sector_map')
     .insert(rows)
     .select('*')

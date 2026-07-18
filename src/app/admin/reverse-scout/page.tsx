@@ -16,6 +16,8 @@ import { PLATFORMS } from '@/lib/constants'
 import { NewAssetForm } from '@/components/admin/reverse-scout/NewAssetForm'
 
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 export const metadata = { title: 'Reverse Scout' }
 
 // Prefill options for dogfooding on the founder's own portfolio (BUILD_SPEC §0 "First user").

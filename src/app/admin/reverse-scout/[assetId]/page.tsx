@@ -12,6 +12,8 @@ import { StageRunner } from '@/components/admin/reverse-scout/StageRunner'
 import type { Adjacency, SectorMap } from '@/lib/reverse-scout/types'
 
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 export const metadata = { title: 'Asset · Reverse Scout' }
 
 const ADJACENCY_STYLE: Record<Adjacency, string> = {
