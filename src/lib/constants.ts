@@ -188,7 +188,7 @@ export const PLATFORMS: Platform[] = [
     id: 'universallingo',
     releaseMode: 'in-migration',
     name: 'UniversalLingo',
-    slug: 'universallingo',
+    slug: 'universal-lingo',
     tagline: 'Break language barriers in real-time',
     problem: 'Businesses need scalable multilingual communication',
     description: 'Generator platform for real-time AI translation across industries. One core capability—<1s latency translation in 100+ languages—verticalized into industry-specific products. Spin up white-label translation solutions for tourism, healthcare, government, education, hospitality, and more.',
@@ -367,7 +367,7 @@ export const PLATFORMS: Platform[] = [
     id: 'dealfindrs',
     releaseMode: 'in-migration',
     name: 'DealFindrs',
-    slug: 'dealfindrs',
+    slug: 'deal-findrs',
     repoUrl: 'https://github.com/caistech/deal-findrs',
     trustRecordUrl: 'https://platform-trust.vercel.app/verify/dealfindrs',
     tagline: 'AI-powered property deal assessment',
@@ -399,7 +399,7 @@ export const PLATFORMS: Platform[] = [
     id: 'checkpoint',
     releaseMode: 'paid-client',
     name: 'Checkpoint',
-    slug: 'checkpoint',
+    slug: 'f2k-checkpoint-new',
     tagline: 'Modular industry project management',
     problem: 'Generic project tools don\'t fit industry workflows',
     description: 'Modular industry project management and execution platform. Configurable for construction, manufacturing, services - any industry with complex project workflows.',
@@ -456,6 +456,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'outreachready',
+    marketplaceHidden: true, // Removed from public marketplace 2026-07-19 (operator decision).
     releaseMode: 'in-migration',
     name: 'OutreachReady',
     slug: 'outreachready',
@@ -472,7 +473,7 @@ export const PLATFORMS: Platform[] = [
     id: 'rnd-tax-tracker',
     releaseMode: 'in-migration',
     name: 'R&D Tax Tracker',
-    slug: 'rnd-tax-tracker',
+    slug: 'r-and-d-tax',
     tagline: 'R&D tax eligibility work recording',
     problem: 'Businesses miss R&D tax credits because they don\'t track eligible work',
     description: 'Platform for recording and tracking work eligible for R&D tax credits. Capture activities, link to eligible categories, and generate compliance-ready documentation for your tax agent.',
@@ -487,7 +488,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     marketplaceHidden: true, // Dropped 2026-05-26 (GTM landing-story audit): bare slug hijacked (serves "PF Platform — Property Friends"); single-client instance, no generic product story. Relist when pointed at a product page.
     name: 'NDIS SDA Automate',
-    slug: 'ndis-sda-automate',
+    slug: 'ndissda-automate',
     tagline: 'NDIS & SDA compliance automation',
     problem: 'NDIS providers drown in compliance paperwork',
     description: 'Automation platform for NDIS and SDA compliance. Streamline participant documentation, service agreements, reporting requirements, and audit preparation for disability service providers.',
@@ -505,7 +506,7 @@ export const PLATFORMS: Platform[] = [
     id: 'smartboard',
     releaseMode: 'in-migration',
     name: 'SmartBoard',
-    slug: 'smartboard',
+    slug: 'smart-board',
     trustRecordUrl: 'https://platform-trust.vercel.app/verify/smartboard',
     tagline: 'Intelligent airline boarding management',
     problem: 'Gate congestion wastes time and frustrates passengers',
@@ -562,6 +563,20 @@ export const PLATFORMS: Platform[] = [
   },
 
   {
+    id: 'sayfix',
+    releaseMode: 'in-migration',
+    name: 'SayFix',
+    slug: 'sayfix',
+    tagline: 'Voice-first bug reporting that fixes itself',
+    problem: 'Website feedback dies in a form — owners drown in vague tickets and visitors never feel heard',
+    description: 'A "report a problem" button for any website that opens a voice AI conversation instead of a form. It triages what the visitor says, routes suggestions to the site admin and bugs to a Claude-powered fixer that opens a pull request for review, and keeps the reporter updated through to resolution. Built for web-dev agencies to bundle across the sites they run.',
+    url: 'https://sayfix.vercel.app',
+    status: 'live',
+    category: 'business-tools',
+    hasVoiceAI: true,
+    type: 'parent',
+  },
+  {
     id: 'disaster-support',
     releaseMode: 'in-migration',
     name: 'Disaster Support',
@@ -593,7 +608,7 @@ export const PLATFORMS: Platform[] = [
     id: 'investor-pilot',
     releaseMode: 'in-migration',
     name: 'InvestorPilot',
-    slug: 'investor-pilot',
+    slug: 'investorpilot',
     repoUrl: 'https://github.com/caistech/investor-pilot',
     tagline: 'AI-powered investor relations and deal flow',
     problem: 'Founders struggle to manage investor relationships and deal flow effectively',
@@ -638,6 +653,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'mova',
+    marketplaceHidden: true, // Removed from public marketplace 2026-07-19 (operator decision).
     releaseMode: 'in-migration',
     name: 'Mova',
     slug: 'mova',
@@ -658,7 +674,7 @@ export const PLATFORMS: Platform[] = [
     releaseMode: 'in-migration',
     marketplaceHidden: true, // Dropped 2026-05-26 (GTM landing-story audit): public tile pointed at a self-disowning demo ("not the real service"). Relist when re-routed to the real LingoPure or the demo owns its story.
     name: 'LingoPure AI',
-    slug: 'lingopure-ai',
+    slug: 'lingo-pure-ai',
     tagline: 'AI-first business English platform',
     problem: 'Business English learners need real conversation practice, not textbooks',
     description: 'AI-first business English learning platform with placement assessment, ClassIn integration, and voice agent practice. Students get adaptive lessons and conversation reps with an ElevenLabs-powered tutor.',
@@ -670,6 +686,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'hairstylist-ai',
+    marketplaceHidden: true, // Removed from public marketplace 2026-07-19 (operator decision).
     releaseMode: 'in-migration',
     name: 'HairStylist AI',
     slug: 'hairstylist-ai',
@@ -713,6 +730,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'leadspark',
+    marketplaceHidden: true, // Removed from public marketplace 2026-07-19 (operator decision).
     releaseMode: 'in-migration',
     name: 'LeadSpark',
     slug: 'leadspark',
@@ -729,6 +747,7 @@ export const PLATFORMS: Platform[] = [
   },
   {
     id: 'omq-outreach',
+    marketplaceHidden: true, // Removed from public marketplace 2026-07-19 (operator decision).
     releaseMode: 'in-migration',
     name: 'OMQ Outreach',
     slug: 'omq-outreach',
