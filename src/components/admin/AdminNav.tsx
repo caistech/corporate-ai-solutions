@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Workflow, Settings, LayoutGrid, Star, CreditCard, LayoutDashboard } from 'lucide-react'
+import { Menu, X, Workflow, Settings, LayoutGrid, Star, CreditCard, LayoutDashboard, Radar } from 'lucide-react'
 import { AdminSignOut } from './AdminSignOut'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/pipeline', label: 'Products', icon: LayoutGrid },
   { href: '/admin/methodology', label: 'Methodology', icon: Workflow },
+  { href: '/admin/reverse-scout', label: 'Reverse Scout', icon: Radar },
   { href: '/admin/ops', label: 'Cost', icon: CreditCard },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
 ] as const
