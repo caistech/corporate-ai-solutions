@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "@caistech/brave-search": "^0.1.0",
-    "@caistech/corporate-components": "^0.3.0",
-    "@caistech/elevenlabs-convai": "^0.9.0",
+    "@caistech/corporate-components": "^0.7.0",
+    "@caistech/elevenlabs-convai": "^0.11.2",
     "@caistech/sayfix-embed": "^0.6.0",
     "@caistech/webmcp-kit": "^0.1.0",
     "@elevenlabs/client": "^0.11.0",
@@ -45,7 +45,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@caistech/portfolio-gate": "^0.3.0",
+    "@caistech/portfolio-gate": "^0.9.2",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
