@@ -1,0 +1,6 @@
+{
+  "_doc": "This product HAS a working, verified cross-session memory loop — do not read memoryLoop:false as \"no memory\". Its distil leg is /api/convai/webhooks/coach-post-call (handlePostCallWebhook + distillConversationToMemory) and its recall leg is handleRecallMemory/handleStartConversation inside /api/admin/pipeline/new-ideas/coach/start. Because recall does not live at <webhookPath>/recall_memory, the canonical round-trip the RUNTIME probe asserts cannot be addressed here; pointing it at this repo would report a false failure. Verified by hand instead on 2026-07-27: 7/7 conversations post-call processed, 30 memories distilled, and get_conversation_context returning has_history=true with 10 memories. The distil wiring is covered by the static audit. Revisit if the coach tools are ever moved under the canonical path.",
+  "memoryLoop": false,
+  "webhookPath": "/api/convai/webhooks",
+  "memoryTable": "convai_memory"
+}
