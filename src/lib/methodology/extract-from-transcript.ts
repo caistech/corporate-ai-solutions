@@ -10,9 +10,8 @@
 // the EVAL (the parser must never FABRICATE an absent field), not by the typed-path regression.
 
 import { GRADED_FIELDS, FEASIBILITY_FIELDS, type CoachFieldInput } from './apply-coach-fields'
+import { ANTHROPIC_API_URL, ANTHROPIC_MODEL, firstText, noThinking } from '@/lib/ai/anthropic-model'
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
-const MODEL = 'claude-sonnet-4-20250514'
 
 export interface TranscriptTurn {
   role: 'user' | 'assistant'
@@ -103,12 +102,16 @@ export async function extractFromTranscript(
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: MODEL,
+        model: ANTHROPIC_MODEL,
         // 8192, not 1024: a rich 20-min transcript yields a large extraction JSON. At 1024 the JSON
         // was truncated mid-object → JSON.parse failed → the WHOLE extraction was lost (all-or-
         // nothing), which is exactly how the SafeFix backstop silently filled nothing. 8192 leaves
         // ample headroom for all 14 fields + feasibility; we only pay for tokens actually emitted.
         max_tokens: 8192,
+        // Thinking off, for the same reason the cap above is 8192: on Sonnet 5 an omitted `thinking`
+        // field means thinking is ON, and the cap covers thinking plus the answer — so the budget
+        // reasoned about here would be shared with reasoning tokens and truncate the same JSON again.
+        ...noThinking('low'),
         system: buildExtractionPrompt(),
         messages: [{ role: 'user', content: renderTranscript(turns) }],
       }),
@@ -118,7 +121,7 @@ export async function extractFromTranscript(
       return { fields: {}, feasibility: {} }
     }
     const data = await res.json()
-    const text: string = data.content?.[0]?.text ?? ''
+    const text: string = firstText(data)
     // Surface truncation explicitly — if the model still hit the cap, the JSON may be partial and
     // the parse will salvage what it can; log it so a future under-extraction isn't silent.
     if (data.stop_reason === 'max_tokens') {

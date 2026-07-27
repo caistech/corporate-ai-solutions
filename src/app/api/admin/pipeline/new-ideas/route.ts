@@ -24,9 +24,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { deriveFieldsFromLiveUrl } from '@/lib/methodology/live-derive'
+import { ANTHROPIC_API_URL, ANTHROPIC_MODEL, firstText, noThinking } from '@/lib/ai/anthropic-model'
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
-const MODEL = 'claude-sonnet-4-20250514'
 
 // Matches the live CHECK constraint feasibility_demand_tier_valid.
 const DEMAND_TIERS = ['intuition', 'anecdote', 'article', 'data', 'traction'] as const
@@ -187,8 +186,12 @@ export async function POST(request: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1024,
+        model: ANTHROPIC_MODEL,
+        // 2048, not 1024: Sonnet 5's tokenizer counts ~30% more tokens for the same text, and a
+        // truncated coach turn here fails the route outright (the 500 below) rather than degrading.
+        max_tokens: 2048,
+        // 'medium' rather than 'low' — this one is conversational and generative, not extraction.
+        ...noThinking('medium'),
         system: systemPrompt, // <-- top-level system param, NOT a user turn
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
       }),
@@ -201,7 +204,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await response.json()
-    const assistantMessage: string | undefined = result.content?.[0]?.text
+    const assistantMessage: string | undefined = firstText(result) || undefined
     if (!assistantMessage) {
       return NextResponse.json({ error: 'No response from LLM' }, { status: 500 })
     }

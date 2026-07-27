@@ -7,9 +7,8 @@
 // This is the recall layer (free-form), distinct from the 14 captured card FIELDS (domain data).
 
 import type { DistilledMemory, MemoryExtractor } from '@caistech/elevenlabs-convai'
+import { ANTHROPIC_API_URL, ANTHROPIC_MODEL, firstText, noThinking } from '@/lib/ai/anthropic-model'
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
-const MODEL = 'claude-sonnet-4-20250514'
 const VALID_TYPES = new Set(['preference', 'context', 'goal', 'decision', 'followup', 'correction', 'insight'])
 
 function buildPrompt(): string {
@@ -64,8 +63,9 @@ export const coachMemoryExtractor: MemoryExtractor = async (turns) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 2048,
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4096,
+        ...noThinking('low'),
         system: buildPrompt(),
         messages: [{ role: 'user', content: transcript }],
       }),
@@ -75,7 +75,12 @@ export const coachMemoryExtractor: MemoryExtractor = async (turns) => {
       return []
     }
     const data = await res.json()
-    return parseMemories(data.content?.[0]?.text ?? '')
+    if (data.stop_reason === 'max_tokens') {
+      // The JSON array is truncated, so parseMemories silently drops everything after the cut. Say so
+      // rather than reporting a smaller distil as a complete one.
+      console.warn('[distil-coach-memory] hit max_tokens — memories may be partial')
+    }
+    return parseMemories(firstText(data))
   } catch (e) {
     console.error('[distil-coach-memory] failed', e instanceof Error ? e.message : e)
     return []

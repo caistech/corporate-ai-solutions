@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { ANTHROPIC_API_URL, ANTHROPIC_MODEL, firstText, noThinking } from '@/lib/ai/anthropic-model';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
@@ -79,7 +80,7 @@ Product Information:
 
 Output ONLY valid JSON, no other text.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,8 +88,9 @@ Output ONLY valid JSON, no other text.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4000,
+        ...noThinking('medium'),
         system: 'You are a B2B go-to-market expert. Generate specific, actionable ICP details based on product information. Be precise - vague answers like "any size" or "various industries" are not helpful. Output ONLY JSON.',
         messages: [
           { role: 'user', content: prompt }
@@ -103,7 +105,7 @@ Output ONLY valid JSON, no other text.`;
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || '';
+    const content = firstText(data);
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
