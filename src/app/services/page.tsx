@@ -163,8 +163,8 @@ export default function ServicesPage() {
               <p className="text-xs text-gray-light/70 mb-6">
                 50% on signature, 50% on delivery. Two slots a month.
               </p>
-              <Button href={auditMailto} external variant="orange" fullWidth>
-                Enquire &rarr;
+              <Button href={FOUNDER.calendly} external variant="orange" fullWidth>
+                Book a call &rarr;
               </Button>
             </div>
 
@@ -191,8 +191,8 @@ export default function ServicesPage() {
               <p className="text-xs text-gray-light/70 mb-6">
                 Optional. Offered at handover, never a condition of it.
               </p>
-              <Button href={auditMailto} external variant="secondary" fullWidth>
-                Enquire &rarr;
+              <Button href={FOUNDER.calendly} external variant="secondary" fullWidth>
+                Book a call &rarr;
               </Button>
             </div>
           </div>
