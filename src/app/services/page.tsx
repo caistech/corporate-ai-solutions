@@ -87,7 +87,7 @@ export default function ServicesPage() {
             Most AI projects spend their first two months on the parts nobody sees — authentication,
             permissions, billing, document handling, voice, audit logging, compliance. I finished
             those two years ago.{' '}
-            <strong className="text-white">53 production packages, already written, already running.</strong>
+            <strong className="text-white">53 shared code packages, already written, already running.</strong>
           </p>
           <p className="text-base text-gray-light">
             So the clock starts on your actual problem, not the scaffolding around it.
@@ -132,7 +132,7 @@ export default function ServicesPage() {
                 <li>&middot; One of them built as a working prototype, not a slide</li>
                 <li>&middot; A straight answer on whether the full build is worth it</li>
               </ul>
-              <p className="text-xs text-gray-light/70 mb-6">
+              <p className="text-sm text-gray-light mb-6">
                 Credited in full against a Sprint booked within 30 days.
               </p>
               <Button href={FOUNDER.calendly} external variant="primary" fullWidth>
@@ -160,7 +160,7 @@ export default function ServicesPage() {
                 <li>&middot; Usable on a private link from about day eight</li>
                 <li>&middot; Written handover and your team trained on it</li>
               </ul>
-              <p className="text-xs text-gray-light/70 mb-6">
+              <p className="text-sm text-gray-light mb-6">
                 50% on signature, 50% on delivery. Two slots a month.
               </p>
               <Button href={FOUNDER.calendly} external variant="orange" fullWidth>
@@ -188,7 +188,7 @@ export default function ServicesPage() {
                 <li>&middot; Direct access — you talk to the person who built it</li>
                 <li>&middot; Cancel any month without penalty</li>
               </ul>
-              <p className="text-xs text-gray-light/70 mb-6">
+              <p className="text-sm text-gray-light mb-6">
                 Optional. Offered at handover, never a condition of it.
               </p>
               <Button href={FOUNDER.calendly} external variant="secondary" fullWidth>
@@ -257,11 +257,80 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* Fit — who it isn't for */}
+      {/* A worked example.
+          The page was excellent on HOW the work runs and silent on WHAT gets built. A buyer persona
+          read the whole thing and his one remaining question — "what would you actually build for a
+          firm like mine?" — was answered nowhere on the site. This is the paragraph that turns the
+          pitch into something he can picture on Monday. */}
       <section className="section">
         <div className="max-w-4xl mx-auto">
           <div className="mb-10">
-            <p className="text-accent font-medium mb-3 uppercase text-xs tracking-wider">Fit</p>
+            <p className="text-accent font-medium mb-3 uppercase text-sm tracking-wider">
+              What it looks like
+            </p>
+            <h2 className="text-3xl font-bold mb-3">
+              A sprint against a quoting process, start to finish.
+            </h2>
+            <p className="text-gray-light max-w-2xl">
+              This is the shape most often. Your details will differ; the sequence usually does not.
+            </p>
+          </div>
+
+          <div className="card p-8 space-y-6">
+            <div>
+              <h3 className="font-bold text-white mb-2">Where it starts</h3>
+              <p className="text-gray-light">
+                A contracting business, forty staff. One estimator spends about two days a week
+                turning site notes, supplier prices and a rate sheet into a quote. Every quote is
+                assembled by hand in a spreadsheet, and a variation means doing most of it again.
+                Nobody thinks this is a technology problem — they think it is just how quoting works.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-white mb-2">Week one</h3>
+              <p className="text-gray-light">
+                I sit with the estimator and watch a real quote get built, end to end, without
+                helping. That is where the hours actually are — usually not where anyone expects. In
+                this shape, roughly half is re-keying numbers that already exist somewhere else, and
+                a third is chasing a supplier price that was current last month.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-white mb-2">Weeks two and three</h3>
+              <p className="text-gray-light">
+                What gets built is unglamorous and specific: the rate sheet becomes the single source
+                of prices, site notes go in once, and the quote assembles itself into your existing
+                template — your wording, your terms, your logo. A variation reuses the original
+                instead of restarting it. The estimator still decides every number; the system stops
+                asking him to type them twice.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-white mb-2">What changes</h3>
+              <p className="text-gray-light">
+                The two days becomes a few hours, and quotes go out the same week rather than the
+                next one — which in most trades matters more than the hours saved. It runs on your
+                infrastructure, and you own it outright.
+              </p>
+            </div>
+
+            <p className="text-sm text-gray-light border-t border-gray-700 pt-5">
+              This is an illustration of the shape, not a case study or a promise of a particular
+              result. The audit exists to tell you what your own numbers are before you commit to the
+              sprint — and if they do not justify it, it will say so.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Fit — who it isn't for */}
+      <section className="section bg-gray-dark">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-10">
+            <p className="text-accent font-medium mb-3 uppercase text-sm tracking-wider">Fit</p>
             <h2 className="text-3xl font-bold mb-3">Who this works for, and who it doesn&apos;t.</h2>
           </div>
 
@@ -295,7 +364,7 @@ export default function ServicesPage() {
       {/* CTA */}
       <section className="section bg-grid pb-24">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Start with a twenty-minute call.</h2>
+          <h2 className="text-3xl font-bold mb-4">Start with a fifteen-minute call.</h2>
           <p className="text-gray-light mb-8">
             Tell me what the process is and roughly how many hours a week it costs you. If I
             can&apos;t see a way to make it materially better, I&apos;ll say so on the call and it
@@ -309,7 +378,7 @@ export default function ServicesPage() {
               Email me
             </Button>
           </div>
-          <p className="text-xs text-gray-light/70 mt-8">
+          <p className="text-sm text-gray-light mt-8">
             All prices exclude GST. {SITE.company} &middot; ABN {SITE.abn} &middot; Australian clients.
           </p>
         </div>

@@ -73,8 +73,22 @@ export function CorporateFooter({ productName, extraLinks = [], theme = 'light' 
               <span className="opacity-40">·</span>
               {/* Cockpit front door (§8.5 dual-auth): distinct User vs Operator sign-in, kept discreet
                   in the footer rather than advertised on the public marketing hero. */}
-              <a href="/pipeline/login" className="hover:text-slate-900 transition-colors">User sign-in</a>
-              <a href="/admin/login" className="hover:text-slate-900 transition-colors">Operator sign-in</a>
+              <a href="/pipeline/login" className="min-h-[44px] inline-flex items-center hover:text-slate-900 transition-colors">User sign-in</a>
+              <a href="/admin/login" className="min-h-[44px] inline-flex items-center hover:text-slate-900 transition-colors">Operator sign-in</a>
+              <span className="opacity-40">·</span>
+              {/* Privacy and Terms were 404 on every route while this site collected names, emails,
+                  phone numbers and business descriptions through the contact form, and ran a voice
+                  agent on every page. /services also claims "privacy surfaces. Built in, not bolted
+                  on", which made the absence worse than neutral. REGULATORY_INCLUSIONS.md I1/I2. */}
+              <a href="/privacy" className="min-h-[44px] inline-flex items-center hover:text-slate-900 transition-colors">Privacy</a>
+              <a href="/terms" className="min-h-[44px] inline-flex items-center hover:text-slate-900 transition-colors">Terms</a>
+            </div>
+
+            {/* The legal entity, on EVERY page rather than only the two that hand-rolled it.
+                /clients, /marketplace and /about named no entity at all. */}
+            <div className="text-center sm:text-right">
+              Global Buildtech Australia Pty Ltd &middot; ABN 54&nbsp;672&nbsp;395&nbsp;685 &middot;
+              Brisbane, Queensland
             </div>
             {extraLinks.length > 0 && (
               <div className="flex gap-4">

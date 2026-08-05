@@ -107,14 +107,14 @@ export function VoiceAgent() {
     setIsSpeaking(true)
     setTimeout(() => {
       const responses: Record<string, string> = {
-        'What do you offer?': `We ship BYOK-first AI products you run on your own keys. ${PLATFORMS.length} of them in the marketplace, all free with BYOK. We also do studio-in-residence engagements at sixty-five thousand a month for studios and accelerators, technical advisory from fifteen thousand a month, and custom platform builds by negotiation. Which one are you here for?`,
-        'How does pricing work?': "Four shapes. Marketplace is free with BYOK. Studio-in-residence is sixty-five thousand a month, three or six months, for studios and accelerators. Technical advisory starts at fifteen thousand a month. Custom platform builds by negotiation. What sounds like your shape?",
-        'Tell me about studio in residence': "Studio-in-residence brings the BYOK Factory into your studio or accelerator for one cohort. I install the substrate, ship a version-zero-one for each cohort company on their own keys, leave a case study and a team running the factory. Two engagements a year, by application. Windows are January through March and July through September. What does your cohort look like?",
+        'What do you offer?': `Three ways in. An Opportunity Audit is two and a half thousand plus GST for one week — Dennis maps the process, costs the automation targets, and you get a working prototype, not a slide deck. A Deployment Sprint is eighteen thousand plus GST for three weeks, fixed scope, production-ready, and you own the code outright with no licence and no lock-in. Run and Extend is three and a half thousand a month plus GST if you want him to keep building, cancellable any month. There are also ${PLATFORMS.length} BYOK products in the marketplace, free on your own keys. Which sounds like your shape?`,
+        'How does pricing work?': "Fixed price, fixed scope, fixed end date — an overrun is his, not yours. The Opportunity Audit is two and a half thousand plus GST for a week, and it is credited in full against a Sprint booked within thirty days. The Deployment Sprint is eighteen thousand plus GST for three weeks, half on signature and half on delivery. Run and Extend is three and a half thousand a month plus GST, cancel any month without penalty. What he does not do is day rates, staff augmentation, or open-ended retainers with no deliverable. What are you trying to solve?",
+        'What happens in the audit?': "One week. Dennis maps how the process actually runs today, costs the parts worth automating, and builds a working prototype of the piece that matters — something you can click, not a recommendation. Two and a half thousand plus GST, credited in full against a Sprint if you book one within thirty days. If the audit finds it is not worth building, it tells you that in week one, and he would rather it did. What process is eating your team's time?",
       }
 
       const agentMsg: Message = {
         role: 'agent',
-        content: responses[content] || "That's a great question. Could you tell me a bit more about what you're looking for? Are you exploring the BYOK marketplace, considering studio-in-residence for your studio or accelerator, or thinking about advisory?",
+        content: responses[content] || "Good question — tell me a bit more about what you're trying to solve. Is there a process eating a couple of days a week, like quoting, compliance paperwork, intake or reporting? That is usually where the audit starts.",
         timestamp: Date.now()
       }
       setTranscript(prev => [...prev, agentMsg])
@@ -237,7 +237,7 @@ export function VoiceAgent() {
           <div className="p-4 border-t border-gray-border bg-black/10">
             <p className="text-xs text-gray-light mb-2">Quick questions:</p>
             <div className="flex flex-wrap gap-2">
-              {['What do you offer?', 'How does pricing work?', 'Tell me about studio in residence'].map((q) => (
+              {['What do you offer?', 'How does pricing work?', 'What happens in the audit?'].map((q) => (
                 <button
                   key={q}
                   onClick={() => addUserMessage(q)}

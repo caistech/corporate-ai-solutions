@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const { name, email, phone, company, source_page, source_agent, intent, problem_description } = body
+    const { name, email, phone, company, source, source_page, source_agent, intent, problem_description } = body
 
     if (!name || !email || !intent) {
       return NextResponse.json(
@@ -24,6 +24,13 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         company,
+        // `leads.source` is NOT NULL and this route never set it, so EVERY insert failed with
+        // 'null value in column "source" ... violates not-null constraint' and returned a 500.
+        // The table held zero rows, which is the confirming evidence: no lead has ever reached it.
+        // Categorical channel ('website' | 'voice' | ...), distinct from source_page/source_agent
+        // which record the specific surface. Defaulted rather than required so existing callers keep
+        // working.
+        source: source || 'website',
         source_page,
         source_agent,
         intent,
