@@ -34,15 +34,15 @@ export default function HomePage() {
 
           <p className="text-base text-gray-light max-w-3xl mb-10 leading-relaxed">
             One operator, {PLATFORMS.length} AI products on one shared substrate. If you want that
-            velocity pointed at your problem, I take on contract builds &mdash; and
-            studio-in-residence engagements when a team wants the factory installed in-house.
+            velocity pointed at your problem, I take on fixed-price builds &mdash; a one-week
+            audit, then a three-week build you own outright.
           </p>
 
           <div className="flex flex-wrap gap-4">
             <Button href="/marketplace#proof" size="lg">
               Clone &amp; run the proof <ArrowRight size={20} />
             </Button>
-            <Button href="/contact" variant="orange" size="lg">
+            <Button href="/services" variant="orange" size="lg">
               Hire me for a build
             </Button>
             <Button href="/marketplace" variant="secondary" size="lg">
@@ -233,15 +233,16 @@ export default function HomePage() {
       <section id="solutions" className="section bg-gray-dark">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-accent font-medium mb-4">Choose Your Path</p>
-            <h2 className="mb-4">What Brings You Here?</h2>
+            <p className="text-accent font-medium mb-4">Two ways in</p>
+            <h2 className="mb-4">Run it yourself, or have it built for you.</h2>
             <p className="text-gray-light text-lg max-w-2xl mx-auto">
-              Whether you&apos;re looking for a solution, need one built, or want to join the journey—
-              there&apos;s a path for you.
+              Every platform here is free if you bring your own keys and run it yourself. If you
+              would rather it was built for your business and handed over working, that is the
+              other path.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-2 gap-8">
             {/* Path 1: Use the Products BYOK-Free */}
             <div className="bg-black p-8 rounded-lg border-2 border-accent/50 hover:border-accent transition-colors group">
               <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center mb-6">
@@ -277,71 +278,40 @@ export default function HomePage() {
               <p className="text-center text-sm text-gray-light mt-4">Free with BYOK</p>
             </div>
 
-            {/* Path 2: Install the Factory In-House */}
+            {/* Path 2: Have it built for your business */}
             <div className="bg-black p-8 rounded-lg border-2 border-orange/50 hover:border-orange transition-colors group">
               <div className="w-12 h-12 bg-orange/20 rounded-lg flex items-center justify-center mb-6">
                 <Users className="text-orange" size={24} />
               </div>
-              <h3 className="text-2xl font-semibold mb-3">Install the Factory In-House</h3>
+              <h3 className="text-2xl font-semibold mb-3">Have it built for your business</h3>
               <p className="text-gray-light mb-6">
-                Bring the BYOK Factory inside your studio or accelerator for one cohort. Substrate
-                installed, anchor company shipped, cohort scaled, case study published. Your team
-                runs it after I leave.
+                One AI system, running in your production environment, that you own outright.
+                Three weeks, fixed price &mdash; because the plumbing is already built and your
+                project inherits it on day one.
               </p>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  3 or 6 month engagement
+                  <strong className="text-white">Audit:</strong> one week, $2,500 + GST
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  $65k/mo + 1&ndash;3% equity
+                  <strong className="text-white">Sprint:</strong> three weeks, $18,000 + GST
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  Hybrid shape available
+                  Built on your accounts &mdash; you own it outright
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-orange" />
-                  2 engagements/year, by application
+                  Fixed price. An overrun is mine, not yours.
                 </li>
               </ul>
-              <Button href="/engagement" variant="orange" fullWidth>
-                Studio in Residence
+              <Button href="/services" variant="orange" fullWidth>
+                See services
                 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <p className="text-center text-sm text-gray-light mt-4">Jan&ndash;Mar &middot; Jul&ndash;Sep</p>
-            </div>
-
-            {/* Path 3: Join the Journey */}
-            <div className="bg-black p-8 rounded-lg border-2 border-purple/50 hover:border-purple transition-colors group">
-              <div className="w-12 h-12 bg-purple/20 rounded-lg flex items-center justify-center mb-6">
-                <Rocket className="text-purple" size={24} />
-              </div>
-              <h3 className="text-2xl font-semibold mb-3">Join the Journey</h3>
-              <p className="text-gray-light mb-6">
-                Help us build the portfolio. We&apos;re looking for GTM experts and DevOps engineers
-                to harden the BYOK Factory across more verticals.
-              </p>
-              <ul className="space-y-3 mb-8 text-sm">
-                <li className="flex items-center gap-2 text-gray-light">
-                  <ChevronRight size={16} className="text-purple" />
-                  <strong className="text-white">GTM/Growth:</strong> Scale to $1M ARR
-                </li>
-                <li className="flex items-center gap-2 text-gray-light">
-                  <ChevronRight size={16} className="text-purple" />
-                  <strong className="text-white">DevOps:</strong> Harden platforms
-                </li>
-                <li className="flex items-center gap-2 text-gray-light">
-                  <ChevronRight size={16} className="text-purple" />
-                  Equity + revenue share
-                </li>
-              </ul>
-              <Button href="/studio/join" variant="purple" fullWidth>
-                Join the Team
-                <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <p className="text-center text-sm text-gray-light mt-4">Equity + upside</p>
+              <p className="text-center text-sm text-gray-light mt-4">Two build slots a month</p>
             </div>
           </div>
         </div>

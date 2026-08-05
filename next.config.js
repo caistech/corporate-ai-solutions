@@ -19,20 +19,35 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Message consolidation 2026-08-05 — the site offered four price points across four pages
+      // and a buyer could not tell what was for sale. Everything commercial now lands on
+      // /services. These are TEMPORARY (307) on purpose: `permanent: true` is cached hard by
+      // browsers and would make restoring /pricing or /engagement painful. Flip to `true` only
+      // once the consolidation is settled.
+      {
+        source: '/pricing',
+        destination: '/services',
+        permanent: false,
+      },
+      {
+        source: '/engagement',
+        destination: '/services',
+        permanent: false,
+      },
       {
         source: '/partner',
-        destination: '/engagement',
-        permanent: true,
+        destination: '/services',
+        permanent: false,
       },
       {
         source: '/studio/partner',
-        destination: '/engagement',
-        permanent: true,
+        destination: '/services',
+        permanent: false,
       },
       {
         source: '/studio-partner',
-        destination: '/engagement',
-        permanent: true,
+        destination: '/services',
+        permanent: false,
       },
       // Long Tail Venture Studio LP surfaces retired 2026-05-19 — see
       // docs/BYOK_PIVOT_REQUIREMENTS.md. SEO equity from these URLs lands

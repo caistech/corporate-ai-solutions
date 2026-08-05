@@ -41,7 +41,7 @@ export default function MarketplacePage() {
             </p>
             <div className="flex gap-4">
               <Button href="/marketplace/cqr">See CQR &mdash; the first BYOK release</Button>
-              <Button href="/engagement" variant="orange">Studio in Residence</Button>
+              <Button href="/services" variant="orange">See services</Button>
             </div>
           </div>
         </div>
@@ -282,14 +282,15 @@ export default function MarketplacePage() {
       {/* CTA */}
       <section className="section bg-gray-dark">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="mb-4">Want the factory installed in your studio?</h2>
+          <h2 className="mb-4">Want one of these built for your business?</h2>
           <p className="text-xl text-gray-light mb-8">
-            Studio-in-residence engagements bring the BYOK Factory inside your team for one cohort.
-            Substrate installed, products shipped, case study published, team trained.
+            Everything above runs on the same substrate. That is why a build takes three weeks
+            instead of three months &mdash; and why it starts with a one-week audit rather than
+            a proposal.
           </p>
           <div className="flex justify-center gap-4">
-            <Button href="/engagement" variant="orange">Studio in Residence</Button>
-            <Button href="/pricing" variant="secondary">See Pricing</Button>
+            <Button href="/services" variant="orange">See services</Button>
+            <Button href="/clients" variant="secondary">Who I build for</Button>
           </div>
         </div>
       </section>

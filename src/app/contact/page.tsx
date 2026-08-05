@@ -129,7 +129,7 @@ export default function ContactPage() {
                   <Button href="/marketplace" variant="secondary" size="sm" fullWidth>
                     Browse Platforms
                   </Button>
-                  <Button href="/engagement" variant="orange" size="sm" fullWidth>
+                  <Button href="/services" variant="orange" size="sm" fullWidth>
                     Studio-in-Residence Inquiry
                   </Button>
                 </div>
@@ -198,9 +198,8 @@ export default function ContactPage() {
                       >
                         <option value="general">General Inquiry</option>
                         <option value="subscribe">Subscribe to Platforms</option>
+                        <option value="build">Have something built (audit / sprint)</option>
                         <option value="partner">Partnership / Revenue Share</option>
-                        <option value="investor">Investment Opportunity</option>
-                        <option value="team">Join the Team</option>
                         <option value="media">Media / Press</option>
                       </select>
                     </div>

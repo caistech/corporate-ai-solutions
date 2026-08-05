@@ -60,12 +60,17 @@ export const SKOOL = {
 // `app/layout.tsx` via the @caistech/corporate-components <CorporateHeader />).
 // Flat shape because CorporateHeader does not support dropdowns; secondary
 // pages live in FOOTER_LINKS below.
+// ARCHIVED FROM NAV 2026-08-05 — the site was telling four stories at four price points
+// ($65k/mo studio-in-residence, $15k/mo advisory, free BYOK, "by negotiation" builds), which
+// left a services buyer unable to tell what is actually being sold. The message is now single:
+// /services. The archived pages still BUILD and are still reachable by direct URL — they are
+// unlisted, not deleted. To restore, put the entry back in this array and in `sitemap.ts`.
+//   Archived: /engagement · /pricing (both redirect to /services) · /studio · /studio/thesis
+//             · /studio/portfolio · /studio/join · /community
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Marketplace', href: '/marketplace' },
-  { label: 'Engagement', href: '/engagement' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Studio', href: '/studio' },
-  { label: 'Community', href: '/community' },
+  { label: 'Services', href: '/services' },
+  { label: 'Clients', href: '/clients' },
+  { label: 'Work', href: '/marketplace' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ]
@@ -73,13 +78,9 @@ export const NAV_ITEMS: NavItem[] = [
 // Secondary navigation — rendered in the footer via CorporateFooter's `extraLinks`.
 // Pages that are real but don't need to compete for primary-nav real-estate.
 export const FOOTER_LINKS: NavItem[] = [
-  { label: 'Clients', href: '/clients' },
   { label: 'CQR', href: '/marketplace/cqr' },
   { label: 'Voice AI', href: '/voice-ai' },
   { label: 'Solutions', href: '/solutions' },
-  { label: 'Studio Thesis', href: '/studio/thesis' },
-  { label: 'Studio Portfolio', href: '/studio/portfolio' },
-  { label: 'Join the Team', href: '/studio/join' },
 ]
 
 // All platforms - Parent/Child Structure

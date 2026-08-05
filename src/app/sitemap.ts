@@ -4,20 +4,19 @@ import { PLATFORMS } from '@/lib/constants'
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://corporate-ai-solutions.vercel.app'
   
+  // Archived from the sitemap 2026-08-05 alongside NAV_ITEMS (see src/lib/constants.ts) so the
+  // single services message isn't diluted in search results by four competing price points:
+  // /pricing, /engagement, /community, /studio, /studio/thesis, /studio/portfolio, /studio/join.
+  // /pricing and /engagement 301 to /services (next.config.js); the rest are simply unlisted.
   const staticPages = [
     '',
+    '/services',
+    '/clients',
     '/marketplace',
     '/marketplace/cqr',
-    '/pricing',
-    '/community',
-    '/contact',
     '/voice-ai',
-    '/studio',
-    '/studio/thesis',
-    '/studio/portfolio',
-    '/studio/join',
-    '/engagement',
-    '/clients',
+    '/solutions',
+    '/contact',
     '/about',
   ]
 

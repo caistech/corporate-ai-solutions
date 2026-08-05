@@ -112,7 +112,7 @@ export default function ByokFormGatePage({ params }: PageProps) {
                 Free + BYOK means no SLA, no managed updates, no on-call. Pick the paid hosted
                 option from the {platform.name} marketplace page if you want a supported version.
                 Or, if your team wants the substrate installed in-house, see{' '}
-                <Link href="/engagement" className="text-accent underline">
+                <Link href="/services" className="text-accent underline">
                   studio-in-residence engagements
                 </Link>
                 .

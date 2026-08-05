@@ -159,36 +159,34 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Studio in Residence invitation */}
+      {/* Work-with-me invitation */}
       <section className="section bg-gradient-to-b from-black to-gray-dark border-y border-orange/20">
         <div className="max-w-4xl mx-auto">
-          <div className="tag mb-4" style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#fb923c' }}>Studio in Residence</div>
-          <h2 className="mb-6">Looking for studio-in-residence engagements</h2>
+          <div className="tag mb-4" style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#fb923c' }}>Working together</div>
+          <h2 className="mb-6">Taking on fixed-price builds</h2>
           <p className="text-lg text-gray-light mb-4">
-            The factory shape that produced 46 BYOK-first products is now offered as an in-residence
-            engagement at studios, accelerators, and dev shops that want the substrate installed
-            in-house. Two engagements per year. By application.
+            The same substrate that produced the platforms above is what I build client systems on.
+            It is why a working system takes three weeks rather than three months, and why the
+            price is fixed before it starts rather than argued about afterwards.
           </p>
           <p className="text-gray-light mb-4">
-            <strong className="text-white">What gets installed:</strong> the auth pattern (forgot-password,
-            visibility toggle, magic link), bootstrap automation (env sync, SMTP wiring, project
-            scaffolding), CLAUDE.md customised to your stack, the first 3 <code>@caistech/*</code>
-            packages wired in, voice agent surface per the portfolio standard.
+            <strong className="text-white">The way in:</strong> a one-week Opportunity Audit &mdash;
+            $2,500 + GST. I map where your hours actually go, rank the best automation targets, and
+            build one of them so you can click it. Credited in full against a build if you proceed.
           </p>
           <p className="text-gray-light mb-4">
-            <strong className="text-white">Who it fits:</strong> engineering leaders and dev-shop
-            owners running 5&ndash;20 person teams who want their next cohort of portfolio companies
-            shipping BYOK-first within weeks &mdash; with the factory operational long after I leave.
+            <strong className="text-white">The build:</strong> a three-week Deployment Sprint at
+            $18,000 + GST &mdash; one AI system running in your production environment, on your
+            accounts, that you own outright. Fixed scope, fixed price, fixed end date.
           </p>
           <p className="text-gray-light mb-8">
-            <strong className="text-white">The model:</strong> $65k/month retainer (3 or 6 months) +
-            1&ndash;3% equity in the host. Hybrid shape available where individual cohort companies
-            cover a fractional CTO retainer on top of a lower studio base. Kill criteria built into
-            every contract &mdash; either party exits at the halfway mark if the criteria miss.
+            <strong className="text-white">Who it fits:</strong> established Australian businesses
+            with a process that eats hours every week &mdash; quoting, compliance paperwork, intake,
+            reporting &mdash; and someone who can say yes without a committee.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Link href="/engagement" className="btn btn-orange inline-flex items-center gap-2">
-              Studio in Residence details <ArrowRight size={16} />
+            <Link href="/services" className="btn btn-orange inline-flex items-center gap-2">
+              See services <ArrowRight size={16} />
             </Link>
             <a
               href="https://www.calendly.com/mcmdennis"
@@ -331,7 +329,7 @@ export default function AboutPage() {
               <p className="text-sm text-purple mb-3">BYOK Factory · AI Platform Portfolio</p>
               <p className="text-gray-light text-sm">
                 A portfolio of BYOK-first parent platforms plus white-label children. Voice AI, business tools,
-                generators. Methodology installed inside dev shops as studio-in-residence engagements.
+                generators &mdash; and the substrate every client build starts from.
               </p>
             </Link>
 

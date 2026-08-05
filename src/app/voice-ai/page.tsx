@@ -173,11 +173,11 @@ export default function VoiceAIPage() {
           <h2 className="mb-4">Got a Problem That Needs Voice?</h2>
           <p className="text-gray-light mb-8">
             Let&apos;s talk about whether voice AI actually solves your problem &mdash;
-            or just sounds cool. Bring it to a studio-in-residence engagement
-            or pick up a voice-enabled product from the marketplace.
+            or just sounds cool. Bring it to a one-week audit, or pick up a
+            voice-enabled product from the marketplace and run it yourself.
           </p>
           <div className="flex justify-center gap-4">
-            <Button href="/engagement" variant="orange">Studio in Residence</Button>
+            <Button href="/services" variant="orange">See services</Button>
             <Button href="/marketplace" variant="secondary">Voice-Enabled Marketplace</Button>
           </div>
         </div>

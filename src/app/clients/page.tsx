@@ -30,7 +30,7 @@ export default function ClientsPage() {
           </p>
           <p className="text-lg text-gray-light mb-3">
             <strong className="text-white">What you do here:</strong> verify the work shape before
-            opening a studio-in-residence conversation. Each entry lists the contract type, scope,
+            starting a conversation about your own build. Each entry lists the contract type, scope,
             stack, and dates.
           </p>
           <p className="text-lg text-gray-light">
@@ -188,13 +188,13 @@ export default function ClientsPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="mb-4">Looking for the same kind of work, programmatically?</h2>
           <p className="text-lg text-gray-light mb-8">
-            These engagements are bespoke. The BYOK Factory&apos;s repeatable shape is the
-            studio-in-residence engagement &mdash; the methodology installed inside your studio
-            or accelerator across one cohort. Two slots per year, by application.
+            The work above was delivered solo, on the same substrate every build starts from.
+            If your business has a process that eats hours every week, the way in is a one-week
+            audit &mdash; $2,500 + GST, credited against the build if you go ahead.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button href="/engagement" variant="orange">
-              Studio in Residence <ArrowRight size={16} />
+            <Button href="/services" variant="orange">
+              See services <ArrowRight size={16} />
             </Button>
             <a
               href={FOUNDER.calendly}

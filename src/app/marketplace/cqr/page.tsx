@@ -287,7 +287,7 @@ export default function CqrPage() {
               </span>
             </li>
             <li>
-              <Link href="/engagement" className="inline-flex items-center gap-2 text-orange hover:text-white transition">
+              <Link href="/services" className="inline-flex items-center gap-2 text-orange hover:text-white transition">
                 Studio-in-residence engagements <ArrowRight size={14} />
               </Link>
             </li>
@@ -312,7 +312,7 @@ export default function CqrPage() {
             >
               <Github size={18} /> View on GitHub
             </a>
-            <Link href="/engagement" className="btn btn-secondary inline-flex items-center gap-2">
+            <Link href="/services" className="btn btn-secondary inline-flex items-center gap-2">
               Talk to {FOUNDER.name.split(' ')[0]} about an engagement
             </Link>
           </div>

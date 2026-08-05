@@ -159,7 +159,7 @@ export default function SolutionsPage() {
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Button href="/marketplace">Browse the Marketplace</Button>
-            <Button href="/engagement" variant="orange">Studio in Residence</Button>
+            <Button href="/services" variant="orange">See services</Button>
           </div>
         </div>
       </section>
