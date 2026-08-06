@@ -5,7 +5,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Search, Rocket, RefreshCw, ShieldCheck, FileText, Mic, CreditCard, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { FOUNDER, SITE, PLATFORMS } from '@/lib/constants'
+import { FOUNDER, SITE, PUBLISHED_PLATFORM_COUNT, SHARED_PACKAGE_COUNT } from '@/lib/constants'
 
 const DESCRIPTION =
   'Fixed-price AI builds for Australian businesses. A one-week Opportunity Audit for $2,500 + GST, ' +
@@ -87,7 +87,10 @@ export default function ServicesPage() {
             Most AI projects spend their first two months on the parts nobody sees — authentication,
             permissions, billing, document handling, voice, audit logging, compliance. I finished
             those two years ago.{' '}
-            <strong className="text-white">53 shared code packages, already written, already running.</strong>
+            <strong className="text-white">
+              {SHARED_PACKAGE_COUNT} shared code packages, already written, already running
+            </strong>{' '}
+            &mdash; installed from one private registry, not copy-pasted between repos.
           </p>
           <p className="text-base text-gray-light">
             So the clock starts on your actual problem, not the scaffolding around it.
@@ -209,7 +212,7 @@ export default function ServicesPage() {
               An agency quoting against this starts from an empty folder every time, which is why
               their number has a two in front of it and their timeline is in quarters. I start from
               an inventory — and everything below is already running in production across{' '}
-              {PLATFORMS.length} platforms.
+              {PUBLISHED_PLATFORM_COUNT} published platforms.
             </p>
           </div>
 

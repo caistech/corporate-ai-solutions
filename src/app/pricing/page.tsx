@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Calendar, Users, Building2, Briefcase, Rocket } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { FOUNDER, SITE, SKOOL, PLATFORMS } from '@/lib/constants'
+import { FOUNDER, SITE, SKOOL, PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 
 const DESCRIPTION =
   'Free with BYOK for every marketplace product. Studio-in-residence engagements from $65k/mo. Technical advisory from $15k/mo. Custom platform builds by negotiation.'
@@ -24,7 +24,7 @@ export default function PricingPage() {
           <div className="tag tag-center mb-4">Pricing</div>
           <h1 className="mb-6">Four ways to work with Corporate AI Solutions</h1>
           <p className="text-xl text-gray-light">
-            Use any of the {PLATFORMS.length} platforms self-serve on your own keys (BYOK).
+            Use any of the {PUBLISHED_PLATFORM_COUNT} published platforms self-serve on your own keys (BYOK).
             Bring the factory into your studio. Retain ongoing technical leadership.
             Commission a custom platform end-to-end.
           </p>
@@ -86,7 +86,7 @@ export default function PricingPage() {
                 <li>&middot; Skool community access</li>
                 <li>&middot; Share ideas and problems</li>
                 <li>&middot; Find potential collaborators</li>
-                <li>&middot; Learn in public from {PLATFORMS.length} live AI builds</li>
+                <li>&middot; Learn in public from {PUBLISHED_PLATFORM_COUNT} published AI builds</li>
                 <li>&middot; No commitment, no upsell</li>
               </ul>
               <Button href={SKOOL.url} external variant="secondary" fullWidth>
@@ -155,7 +155,7 @@ export default function PricingPage() {
                 <li>&middot; 1:1 sessions on your stack, your code, your architecture</li>
                 <li>&middot; AI stack selection &mdash; model choice, vendor risk, fallback strategy, agent vs. platform decisions</li>
                 <li>&middot; Architecture review against investor due-diligence standards</li>
-                <li>&middot; Direct access to my production playbook from {PLATFORMS.length} live AI platforms</li>
+                <li>&middot; Direct access to my production playbook from {PUBLISHED_PLATFORM_COUNT} published AI platforms</li>
                 <li>&middot; Compliance-by-design baked in (Australian Privacy Act, OWASP, SOC 2 &mdash; via Platform Trust)</li>
                 <li>&middot; Available remote in AU/SE Asia time zones</li>
               </ul>
@@ -201,7 +201,7 @@ export default function PricingPage() {
                 <li>&middot; Stack: Next.js, Supabase, Vercel, Anthropic Claude, OpenAI, ElevenLabs, MCP, Stripe</li>
                 <li>&middot; Multi-tenant SaaS, agentic workflows, voice AI, RAG, compliance, billing</li>
                 <li>&middot; Platform Trust middleware included for SOC 2 / OWASP / Australian Privacy Act posture</li>
-                <li>&middot; {PLATFORMS.length} delivered platforms as portfolio evidence</li>
+                <li>&middot; {PUBLISHED_PLATFORM_COUNT} published platforms as portfolio evidence</li>
               </ul>
               <div className="text-sm text-gray-light">
                 <p className="mb-2 text-white font-medium">Reference engagement</p>

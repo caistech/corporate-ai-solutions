@@ -2,16 +2,20 @@
 import { Metadata } from 'next'
 import { ArrowUpRight, Mic } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PLATFORMS } from '@/lib/constants'
+import { getPublishedPlatforms, PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Portfolio',
-  description: '38 AI platforms built in 12 months by one founder. The factory never stops.',
+  description: `${PUBLISHED_PLATFORM_COUNT} AI platforms published in 12 months by one founder. The factory never stops.`,
 }
 
 export default function PortfolioPage() {
-  const livePlatforms = PLATFORMS.filter(p => p.status === 'live')
-  const buildingPlatforms = PLATFORMS.filter(p => p.status === 'building')
+  // Scoped to the published set so the tiles and the grid below both add up to the headline.
+  // Counting all of PLATFORMS here put 50 cards under a 29 headline on the one page where a
+  // visitor can actually count them.
+  const publishedPlatforms = getPublishedPlatforms()
+  const livePlatforms = publishedPlatforms.filter(p => p.status === 'live')
+  const buildingPlatforms = publishedPlatforms.filter(p => p.status === 'building')
 
   return (
     <>
@@ -19,7 +23,7 @@ export default function PortfolioPage() {
       <section className="section bg-grid">
         <div className="max-w-4xl mx-auto">
           <div className="tag mb-4">The Portfolio</div>
-          <h1 className="mb-6">{PLATFORMS.length} Platforms Built</h1>
+          <h1 className="mb-6">{PUBLISHED_PLATFORM_COUNT} Platforms Published</h1>
           <p className="text-xl text-gray-light mb-8">
             Each one started as someone&apos;s problem. 
             Each one built in days, not months.
@@ -51,7 +55,7 @@ export default function PortfolioPage() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold mb-8">All Platforms</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PLATFORMS.map((platform) => (
+            {publishedPlatforms.map((platform) => (
               <div 
                 key={platform.id} 
                 className={`card ${platform.featured ? 'border-accent' : ''}`}

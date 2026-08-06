@@ -2,10 +2,10 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { FOUNDER, SITE } from '@/lib/constants'
+import { FOUNDER, SITE, PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 
 const DESCRIPTION =
-  'Studio partnerships for domain experts ready to co-found a vertical. Selective. Equity-based. 35+ live AI platforms as portfolio evidence.'
+  `Studio partnerships for domain experts ready to co-found a vertical. Selective. Equity-based. ${PUBLISHED_PLATFORM_COUNT} published AI platforms as portfolio evidence.`
 
 export const metadata: Metadata = {
   title: 'Studio Partnerships',
@@ -40,7 +40,7 @@ export default function StudioPartnerPage() {
               You bring deep industry expertise &mdash; 15+ years on the ground in construction,
               logistics, healthcare, finance, manufacturing, legal, or any sector where the workflows
               are real and the gaps are obvious. We bring the build capability &mdash; solo end-to-end
-              delivery, the Corporate AI Solutions stack, 35+ live AI platforms as portfolio evidence.
+              delivery, the Corporate AI Solutions stack, {PUBLISHED_PLATFORM_COUNT} published AI platforms as portfolio evidence.
             </p>
             <p>
               Together we ship a vertical platform in your industry. You operate the front of the
@@ -125,7 +125,7 @@ export default function StudioPartnerPage() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold mb-6">Current Studio Activity</h2>
           <p className="text-gray-light mb-6">
-            35+ AI platforms live in production today, across voice AI, agentic systems, multi-tenant
+            {PUBLISHED_PLATFORM_COUNT} AI platforms published and running in production today, across voice AI, agentic systems, multi-tenant
             SaaS, blockchain tokenisation, and MCP integrations. Reference verticals include:
           </p>
           <ul className="space-y-3 text-gray-light mb-6">
