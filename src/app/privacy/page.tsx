@@ -110,7 +110,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               <strong>Some of these providers store or process data outside Australia</strong>,
-              including in the United States. By sending us an enquiry or using the assistant you
+              including in India — where our database is hosted — and the United States. By
+              sending us an enquiry or using the assistant you
               consent to that transfer. We take reasonable steps to use providers with appropriate
               protections, but we cannot control an overseas recipient&apos;s handling to the same
               degree as our own.

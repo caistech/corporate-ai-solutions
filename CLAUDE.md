@@ -35,7 +35,7 @@ Marketing site and SaaS marketplace for Corporate AI Solutions (Longtail AI vent
 
 ## Tech Stack
 - **Frontend/API**: Next.js 14 (App Router, TypeScript strict, Tailwind CSS)
-- **Database**: Supabase (PostgreSQL + Auth + RLS) — Sydney region
+- **Database**: Supabase (PostgreSQL + Auth + RLS) — project `tfgtfhwvrswjvkyeyvsp`, **ap-south-1 (Mumbai)**, not Sydney. Data residency is disclosed in `/privacy`; see the portfolio region audit before claiming AU hosting anywhere.
 - **Payments**: Stripe (4 subscription tiers + credit packages)
 - **Voice AI**: ElevenLabs (4 agents: Alex, Scout, Morgan, Victoria)
 - **Animations**: Framer Motion
