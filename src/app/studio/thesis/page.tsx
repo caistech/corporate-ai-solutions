@@ -1,7 +1,7 @@
 // @explanatory-header-exempt — nested workflow page; entry-point header lives on the parent surface
 import { Metadata } from 'next'
 import { Button } from '@/components/ui/Button'
-import { getLivePlatforms, PLATFORMS } from '@/lib/constants'
+import { getPublishedPlatforms, PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 
 const DESCRIPTION =
   'The factory is the methodology. BYOK-first products free to the world, studio-in-residence engagements install the factory inside the next dev shop. Phase 2 is the Studio Fund.'
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default function ThesisPage() {
-  const liveCount = getLivePlatforms().length
+  const liveCount = getPublishedPlatforms().filter(p => p.status === 'live').length
 
   return (
     <>
@@ -192,7 +192,7 @@ export default function ThesisPage() {
                 year: 'Year 1 (now)',
                 title: 'Prove',
                 items: [
-                  `${liveCount} products live (${PLATFORMS.length} in the portfolio)`,
+                  `${liveCount} products live (${PUBLISHED_PLATFORM_COUNT} published)`,
                   'First BYOK release shipped (CQR)',
                   '2 studio-in-residence engagements completed',
                   '2 public case studies + Factory Floor essays',

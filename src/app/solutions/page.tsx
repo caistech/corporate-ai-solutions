@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, ExternalLink, Mic, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PLATFORMS, getParentPlatforms, SITE } from '@/lib/constants'
+import { PLATFORMS, getPublishedPlatforms, SITE } from '@/lib/constants'
 import { Platform } from '@/types'
 
 const DESCRIPTION =
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 }
 
 export default function SolutionsPage() {
-  const parentPlatforms = getParentPlatforms().filter(p => !p.marketplaceHidden)
+  const parentPlatforms = getPublishedPlatforms()
 
   const byokFree = parentPlatforms.filter(p => p.releaseMode === 'byok-free')
   const voiceCoaching = parentPlatforms.filter(p => p.category === 'voice-coaching')

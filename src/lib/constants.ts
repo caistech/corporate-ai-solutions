@@ -961,6 +961,27 @@ export const getFeaturedPlatforms = () => PLATFORMS.filter(p => p.featured)
 export const getVoiceAIPlatforms = () => PLATFORMS.filter(p => p.hasVoiceAI && p.type === 'parent')
 
 // ============================================
+// THE PUBLISHED COUNT — one number, everywhere
+// ============================================
+// Every public surface that states how many products exist quotes PUBLISHED_PLATFORM_COUNT,
+// and nothing else. It is exactly the set of cards /marketplace renders, which makes it the
+// only count a visitor can verify by counting. Anything larger (PLATFORMS.length = 50, which
+// includes white-label children and paid-client engagements held back from the marketplace) is
+// a claim they cannot check, and a homepage that says 50 over a marketplace that shows 29 reads
+// as inflation rather than scale. Quote the number a sceptic can count.
+export const getPublishedPlatforms = () => getParentPlatforms().filter(p => !p.marketplaceHidden)
+export const PUBLISHED_PLATFORM_COUNT = getPublishedPlatforms().length
+
+// Shared @caistech packages published to the private registry. Counted as the package
+// directories in cais-shared-services/packages/ that are NOT marked "private": true — i.e. the
+// ones that actually install. Re-verify with:
+//   cd ~/PycharmProjects/cais-shared-services/packages && for d in */; do \
+//     [ -f "$d/package.json" ] && ! grep -q '"private": *true' "$d/package.json" && echo "$d"; done | wc -l
+// Last verified 2026-08-06: 47 of 56 directories. State it as "published", never "built" —
+// the other 9 are private or WIP and cannot be shown to anyone who asks.
+export const SHARED_PACKAGE_COUNT = 47
+
+// ============================================
 // PROOF: the inspectable / runnable repo spine
 // ============================================
 // The small set of repos a technical evaluator can read or clone-and-run. This
@@ -980,7 +1001,7 @@ export interface ShowcaseRepo {
 export const SHOWCASE_REPOS: ShowcaseRepo[] = [
   {
     name: 'cais-shared-services',
-    what: 'Operator Core — the 44-package shared substrate ~38 products consume instead of re-implementing. The architecture, in one repo.',
+    what: `Operator Core — the ${SHARED_PACKAGE_COUNT}-package shared substrate every product installs from instead of re-implementing. The architecture, in one repo.`,
     repoUrl: 'https://github.com/caistech/cais-shared-services',
     label: 'Operator Core',
   },
@@ -1030,7 +1051,7 @@ export const VOICE_AGENTS: Record<string, VoiceAgentConfig> = {
     agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_MORGAN || '',
     name: 'Morgan',
     personality: 'Direct, builder-to-builder, no consulting-copy energy',
-    greeting: `Hi, I'm Morgan — the voice agent for Corporate AI Solutions. Dennis builds AI systems for established Australian businesses: a two-and-a-half-thousand-dollar audit that ends with a working prototype, or an eighteen-thousand-dollar three-week sprint that goes into production. There are also ${PLATFORMS.length} BYOK-first products in the marketplace, free to clone on your own keys. What brought you here?`,
+    greeting: `Hi, I'm Morgan — the voice agent for Corporate AI Solutions. Dennis builds AI systems for established Australian businesses: a two-and-a-half-thousand-dollar audit that ends with a working prototype, or an eighteen-thousand-dollar three-week sprint that goes into production. There are also ${PUBLISHED_PLATFORM_COUNT} BYOK-first products published in the marketplace, free to clone on your own keys. What brought you here?`,
     pageContext: 'canonical',
     gender: 'female',
     avatar: '/female_avatar.jpeg',
@@ -1048,7 +1069,7 @@ export const DEFAULT_AGENT = 'morgan'
 
 // Stats for homepage
 export const STATS = [
-  { number: String(PLATFORMS.length), label: 'Platforms Built' },
+  { number: String(PUBLISHED_PLATFORM_COUNT), label: 'Platforms Published' },
   { number: '72h', label: 'Average Build Time' },
   { number: '35+', label: 'Years Experience' },
 ]

@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 
 export default function JoinPage() {
   const [selectedRole, setSelectedRole] = useState<'devops' | 'gtm' | null>(null)
@@ -19,7 +20,7 @@ export default function JoinPage() {
             <span className="text-gradient-accent">Share the Upside.</span>
           </h1>
           <p className="text-xl text-gray-light">
-            We&apos;re assembling a team to scale 17+ AI platforms. Not employees—partners.
+            We&apos;re assembling a team to scale {PUBLISHED_PLATFORM_COUNT} published AI platforms. Not employees—partners.
             Equity in what you build. Upside in what you scale.
           </p>
         </div>
@@ -68,7 +69,7 @@ export default function JoinPage() {
               <div>
                 <h4 className="font-bold mb-3">What you&apos;ll do:</h4>
                 <ul className="space-y-2 text-sm text-gray-light">
-                  <li>• Harden and scale the existing portfolio of 35+ live platforms</li>
+                  <li>• Harden and scale the existing portfolio of {PUBLISHED_PLATFORM_COUNT} published platforms</li>
                   <li>• Build new platforms from validated problems (3-7 day cycles)</li>
                   <li>• Own infrastructure: Vercel, Supabase, ElevenLabs, Claude AI</li>
                   <li>• Improve build velocity of the studio</li>

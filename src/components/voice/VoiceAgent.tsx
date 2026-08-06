@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { Mic, MicOff, X, MessageCircle } from 'lucide-react'
 import { getAgentForPage, generateSessionId } from '@/lib/elevenlabs'
-import { VOICE_AGENTS, DEFAULT_AGENT, PLATFORMS } from '@/lib/constants'
+import { VOICE_AGENTS, DEFAULT_AGENT, PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 
 interface Message {
   role: 'user' | 'agent'
@@ -107,7 +107,7 @@ export function VoiceAgent() {
     setIsSpeaking(true)
     setTimeout(() => {
       const responses: Record<string, string> = {
-        'What do you offer?': `Three ways in. An Opportunity Audit is two and a half thousand plus GST for one week — Dennis maps the process, costs the automation targets, and you get a working prototype, not a slide deck. A Deployment Sprint is eighteen thousand plus GST for three weeks, fixed scope, production-ready, and you own the code outright with no licence and no lock-in. Run and Extend is three and a half thousand a month plus GST if you want him to keep building, cancellable any month. There are also ${PLATFORMS.length} BYOK products in the marketplace, free on your own keys. Which sounds like your shape?`,
+        'What do you offer?': `Three ways in. An Opportunity Audit is two and a half thousand plus GST for one week — Dennis maps the process, costs the automation targets, and you get a working prototype, not a slide deck. A Deployment Sprint is eighteen thousand plus GST for three weeks, fixed scope, production-ready, and you own the code outright with no licence and no lock-in. Run and Extend is three and a half thousand a month plus GST if you want him to keep building, cancellable any month. There are also ${PUBLISHED_PLATFORM_COUNT} BYOK products published in the marketplace, free on your own keys. Which sounds like your shape?`,
         'How does pricing work?': "Fixed price, fixed scope, fixed end date — an overrun is his, not yours. The Opportunity Audit is two and a half thousand plus GST for a week, and it is credited in full against a Sprint booked within thirty days. The Deployment Sprint is eighteen thousand plus GST for three weeks, half on signature and half on delivery. Run and Extend is three and a half thousand a month plus GST, cancel any month without penalty. What he does not do is day rates, staff augmentation, or open-ended retainers with no deliverable. What are you trying to solve?",
         'What happens in the audit?': "One week. Dennis maps how the process actually runs today, costs the parts worth automating, and builds a working prototype of the piece that matters — something you can click, not a recommendation. Two and a half thousand plus GST, credited in full against a Sprint if you book one within thirty days. If the audit finds it is not worth building, it tells you that in week one, and he would rather it did. What process is eating your team's time?",
       }

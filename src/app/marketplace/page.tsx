@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowUpRight, ArrowRight, Mic, Sparkles, ExternalLink, Shield, Github, Rocket, ShieldCheck, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PLATFORMS, getParentPlatforms, getChildrenOf, SHOWCASE_REPOS } from '@/lib/constants'
+import { PLATFORMS, getPublishedPlatforms, getChildrenOf, SHOWCASE_REPOS } from '@/lib/constants'
 import { Platform } from '@/types'
 
 const isRunnable = (p: Platform) => Boolean(p.githubUrl || p.repoUrl)
@@ -14,8 +14,9 @@ export const metadata: Metadata = {
 }
 
 export default function MarketplacePage() {
-  // Filter out paid-client engagements that live on /clients instead of the public marketplace.
-  const parentPlatforms = getParentPlatforms().filter(p => !p.marketplaceHidden)
+  // The canonical published set — paid-client engagements live on /clients, not here. This is the
+  // list every count on the site is quoted from, so it must stay the one the cards render from.
+  const parentPlatforms = getPublishedPlatforms()
   const generators = parentPlatforms.filter(p => p.isGenerator)
   const voiceCoaching = parentPlatforms.filter(p => p.category === 'voice-coaching')
   const businessTools = parentPlatforms.filter(p => p.category === 'business-tools')

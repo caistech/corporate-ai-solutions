@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { ArrowRight, Mic, Users, Layers, Rocket, ChevronRight, Sparkles, Linkedin, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PLATFORMS, SKOOL, FOUNDER, getParentPlatforms, getChildrenOf } from '@/lib/constants'
+import { SKOOL, FOUNDER, getParentPlatforms, getChildrenOf, PUBLISHED_PLATFORM_COUNT } from '@/lib/constants'
 import { AgentJsonLd } from '@caistech/webmcp-kit/react'
 import { agentConfig } from '@/agent-readiness.config'
 
@@ -19,7 +19,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-6 py-24 relative z-10">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 px-4 py-2 rounded-full mb-8">
             <Sparkles size={16} className="text-accent" />
-            <span className="text-sm text-accent">BYOK Factory · {PLATFORMS.length} live AI products · open source you can clone</span>
+            <span className="text-sm text-accent">BYOK Factory · {PUBLISHED_PLATFORM_COUNT} published AI products · open source you can clone</span>
           </div>
 
           <h1 className="mb-6">
@@ -33,7 +33,8 @@ export default function HomePage() {
           </p>
 
           <p className="text-base text-gray-light max-w-3xl mb-10 leading-relaxed">
-            One operator, {PLATFORMS.length} AI products on one shared substrate. If you want that
+            One operator, {PUBLISHED_PLATFORM_COUNT} AI products on one shared substrate &mdash; every one
+            of them listed on the marketplace, so you can count them yourself. If you want that
             velocity pointed at your problem, I take on fixed-price builds &mdash; a one-week
             audit, then a three-week build you own outright.
           </p>
@@ -137,11 +138,11 @@ export default function HomePage() {
                 <p className="text-gray-light mb-4">
                   All of this led to a realization: we&apos;d built a machine for turning problems
                   into platforms. Fast. Cheap. Repeatable. The unicorn isn&apos;t any single product —
-                  it&apos;s the factory that creates them. {PLATFORMS.length} products, on one shared
+                  it&apos;s the factory that creates them. {PUBLISHED_PLATFORM_COUNT} products, on one shared
                   substrate, that you can clone and inspect.
                 </p>
                 <p className="text-white font-medium">
-                  {PLATFORMS.length} platforms built. The factory is running. Now we scale.
+                  {PUBLISHED_PLATFORM_COUNT} platforms published. The factory is running. Now we scale.
                 </p>
               </div>
             </div>
@@ -250,7 +251,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-semibold mb-3">Use the Products BYOK-Free</h3>
               <p className="text-gray-light mb-6">
-                Browse {parentPlatforms.length} parent platforms. Clone the repo, deploy to your own
+                Browse {PUBLISHED_PLATFORM_COUNT} published platforms. Clone the repo, deploy to your own
                 Vercel with your own keys, walk the setup wizard. No subscription. Your infrastructure.
               </p>
               <ul className="space-y-3 mb-8 text-sm">
@@ -268,7 +269,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2 text-gray-light">
                   <ChevronRight size={16} className="text-accent" />
-                  + {parentPlatforms.length - 3} more parent platforms
+                  + {PUBLISHED_PLATFORM_COUNT - 3} more published platforms
                 </li>
               </ul>
               <Button href="/marketplace" fullWidth>
@@ -323,8 +324,8 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-12">
             <div>
               <p className="text-accent font-medium mb-2">Our Platforms</p>
-              <h2>{PLATFORMS.length} Platforms Built. The Factory Never Stops.</h2>
-              <p className="text-gray-light mt-2">Each platform is a public landing page you can visit. Generators spin up white-label versions in days.</p>
+              <h2>{PUBLISHED_PLATFORM_COUNT} Platforms Published. The Factory Never Stops.</h2>
+              <p className="text-gray-light mt-2">Each platform is a public landing page you can visit. Eight shown here &mdash; the marketplace lists all {PUBLISHED_PLATFORM_COUNT}. Generators spin up white-label versions in days.</p>
             </div>
             <Button href="/marketplace" variant="secondary">
               View All Details →
