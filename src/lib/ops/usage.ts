@@ -33,6 +33,8 @@ export interface UsageEventInput {
   organisationId?: string | null
   occurredAt?: string
   metadata?: Record<string, unknown>
+  /** Links this unit row to the ai_calls row that produced it (slice 0B). */
+  callId?: string | null
 }
 
 export interface RecordUsageResult {
@@ -93,6 +95,10 @@ export async function recordUsage(
 
   const rows: Record<string, unknown>[] = []
   let unpriced = 0
+  // One price lookup per distinct (provider, model, unit_type, date) instead of one per event.
+  // A single LLM call emits 2-4 events and the route accepts up to 500, so the un-memoised loop
+  // was up to 500 sequential round-trips for a handful of distinct prices.
+  const priceMemo = new Map<string, number | null>()
 
   for (const e of list) {
     const provider = e.provider.trim().toLowerCase()
@@ -100,7 +106,14 @@ export async function recordUsage(
     const occurredAt = e.occurredAt ?? new Date().toISOString()
     const onDate = occurredAt.split('T')[0]
 
-    const usdPerUnit = await priceForUsage(db, provider, model, e.unitType, onDate)
+    const memoKey = `${provider}|${model ?? ''}|${e.unitType}|${onDate}`
+    let usdPerUnit: number | null
+    if (priceMemo.has(memoKey)) {
+      usdPerUnit = priceMemo.get(memoKey) as number | null
+    } else {
+      usdPerUnit = await priceForUsage(db, provider, model, e.unitType, onDate)
+      priceMemo.set(memoKey, usdPerUnit)
+    }
     const priced = usdPerUnit !== null
     if (!priced) unpriced++
 
@@ -117,12 +130,150 @@ export async function recordUsage(
       organisation_id: e.organisationId ?? INTERNAL_ORG_ID,
       occurred_at: occurredAt,
       metadata: e.metadata ?? {},
+      call_id: e.callId ?? null,
     })
   }
 
   const { error } = await db.from('usage_events').insert(rows as never)
   if (error) {
     console.error('[ops/usage] recordUsage insert error:', error)
+    return { inserted: 0, unpriced }
+  }
+  return { inserted: rows.length, unpriced }
+}
+
+// ── Call-grain telemetry (slice 0B) ──────────────────────────────────────────────────────────
+
+/** One observed AI call. Mirrors @caistech/usage-meter's AiCallRecord. */
+export interface AiCallInput {
+  callId: string
+  productSlug: string
+  provider: string
+  operation: string
+  startedAt?: string
+  latencyMs?: number | null
+  status: string
+  environment?: string | null
+  modelRequested?: string | null
+  modelUsed?: string | null
+  operationVersion?: string | null
+  errorClass?: string | null
+  attempt?: number | null
+  rootCallId?: string | null
+  fallbackFrom?: string | null
+  inputTokens?: number | null
+  outputTokens?: number | null
+  cacheReadTokens?: number | null
+  cacheWriteTokens?: number | null
+  structuredValid?: boolean | null
+  schemaName?: string | null
+  refusalClass?: string | null
+  toolsOffered?: number | null
+  toolsCalled?: number | null
+  toolsWellformed?: number | null
+  sessionId?: string | null
+  requestId?: string | null
+  userRef?: string | null
+  metadata?: Record<string, unknown>
+}
+
+export interface RecordCallsResult {
+  inserted: number
+  unpriced: number
+}
+
+/**
+ * Price and insert call records. Same pricing source as recordUsage, so the two never disagree.
+ *
+ * `priced` is all-or-nothing: if any token field we hold has no price row, cost_usd stays null.
+ * A partial sum would look like a complete cost and be wrong in the direction of "cheaper than it
+ * was" — the same reason an unpriced event is never recorded as $0.
+ */
+export async function recordCalls(
+  db: SupabaseClient,
+  calls: AiCallInput | AiCallInput[],
+): Promise<RecordCallsResult> {
+  const list = Array.isArray(calls) ? calls : [calls]
+  if (list.length === 0) return { inserted: 0, unpriced: 0 }
+
+  const priceMemo = new Map<string, number | null>()
+  const priceFor = async (provider: string, model: string | null, unitType: string, onDate: string) => {
+    const key = `${provider}|${model ?? ''}|${unitType}|${onDate}`
+    if (priceMemo.has(key)) return priceMemo.get(key) as number | null
+    const p = await priceForUsage(db, provider, model, unitType, onDate)
+    priceMemo.set(key, p)
+    return p
+  }
+
+  const rows: Record<string, unknown>[] = []
+  let unpriced = 0
+
+  for (const c of list) {
+    const provider = c.provider.trim().toLowerCase()
+    const model = (c.modelUsed ?? c.modelRequested)?.trim() || null
+    const startedAt = c.startedAt ?? new Date().toISOString()
+    const onDate = startedAt.split('T')[0]
+
+    const units: Array<[string, number | null | undefined]> = [
+      ['input_tokens', c.inputTokens],
+      ['output_tokens', c.outputTokens],
+      ['cache_read_tokens', c.cacheReadTokens],
+      ['cache_write_tokens', c.cacheWriteTokens],
+    ]
+
+    let cost = 0
+    let anyUnits = false
+    let complete = true
+    for (const [unitType, n] of units) {
+      if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0) continue
+      anyUnits = true
+      const usd = await priceFor(provider, model, unitType, onDate)
+      if (usd === null) { complete = false; break }
+      cost += n * usd
+    }
+
+    const priced = anyUnits && complete
+    if (anyUnits && !complete) unpriced++
+
+    rows.push({
+      call_id: c.callId,
+      product_slug: c.productSlug.trim().toLowerCase(),
+      environment: c.environment ?? null,
+      provider,
+      model_requested: c.modelRequested ?? null,
+      model_used: c.modelUsed ?? null,
+      operation: c.operation,
+      operation_version: c.operationVersion ?? null,
+      started_at: startedAt,
+      latency_ms: c.latencyMs ?? null,
+      status: c.status,
+      error_class: c.errorClass ?? null,
+      attempt: c.attempt ?? 1,
+      root_call_id: c.rootCallId ?? null,
+      fallback_from: c.fallbackFrom ?? null,
+      input_tokens: c.inputTokens ?? null,
+      output_tokens: c.outputTokens ?? null,
+      cache_read_tokens: c.cacheReadTokens ?? null,
+      cache_write_tokens: c.cacheWriteTokens ?? null,
+      cost_usd: priced ? cost : null,
+      priced,
+      structured_valid: c.structuredValid ?? null,
+      schema_name: c.schemaName ?? null,
+      refusal_class: c.refusalClass ?? null,
+      tools_offered: c.toolsOffered ?? null,
+      tools_called: c.toolsCalled ?? null,
+      tools_wellformed: c.toolsWellformed ?? null,
+      session_id: c.sessionId ?? null,
+      request_id: c.requestId ?? null,
+      user_ref: c.userRef ?? null,
+      metadata: c.metadata ?? {},
+    })
+  }
+
+  // Upsert: a retried delivery of the same call must not fail the whole batch.
+  const { error } = await db.from('ai_calls').upsert(rows as never, { onConflict: 'call_id' })
+  if (error) {
+    console.error('[ops/usage] recordCalls insert error:', error)
     return { inserted: 0, unpriced }
   }
   return { inserted: rows.length, unpriced }
