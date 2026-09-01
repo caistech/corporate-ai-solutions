@@ -19,6 +19,7 @@ import { SolutionPanel } from './SolutionPanel'
 import { ExecutionPanel } from './ExecutionPanel'
 import { CompilePanel } from './CompilePanel'
 import { WorkloadPanel } from './WorkloadPanel'
+import { CompilerWaitlist } from './CompilerWaitlist'
 
 export type Stage = 1 | 2 | 3 | 4 | 5
 
@@ -134,7 +135,9 @@ export function AgenticWorkloadCompiler() {
             <span className="text-accent">without asking the developer to estimate token usage.</span>
           </p>
           <p className="text-lg text-gray-light mb-8 max-w-3xl">
-            You know what your agentic system does. We determine what inference workload that creates.
+            Describe your agentic network once. The compiler derives what inference workload it
+            creates — then price that against the latency vs batching tradeoffs your client
+            actually cares about.
           </p>
 
           {/* Core product principle — developer provides / compiler determines */}
@@ -158,6 +161,54 @@ export function AgenticWorkloadCompiler() {
             </div>
           </div>
 
+          {/* From solution to a price you can quote */}
+          <div className="mt-12 max-w-4xl">
+            <p className="font-mono text-xs uppercase tracking-widest text-accent mb-4">
+              How it works
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <StoryStep
+                icon={<Layers size={18} />}
+                step="1"
+                title="Describe"
+                body="Agents, tasks, workflows, tools and business volume. No token counts."
+              />
+              <StoryStep
+                icon={<Hammer size={18} />}
+                step="2"
+                title="Compile"
+                body="Derives the workload — inference operations, token profiles, execution opportunities."
+              />
+              <StoryStep
+                icon={<FlaskConical size={18} />}
+                step="3"
+                title="Simulate"
+                body="Runs the dataset across scenarios: all-realtime, mixed batching, all-batching."
+              />
+              <StoryStep
+                icon={<Zap size={18} />}
+                step="4"
+                title="Report"
+                body="Tokens / month per scenario, recommended harness, and a $ / month figure to quote."
+              />
+            </div>
+
+            <div className="mt-6 p-6 rounded-lg border border-accent/30 bg-accent/5">
+              <p className="text-sm text-gray-light leading-relaxed">
+                <span className="font-bold text-accent">The report you take to a client:</span>{' '}
+                &ldquo;running this network this way will use roughly X tokens a month — under
+                all-realtime, mixed-batching or all-batching. Here&apos;s the recommended model
+                harness and what it will cost them.&rdquo; No more estimating token usage on a
+                whiteboard.
+              </p>
+              <p className="mt-3 text-xs text-gray-light/80">
+                This prototype demonstrates steps 1&ndash;2 and the simulation seam (the workload
+                dataset). The report engine, provider pricing and harness recommendation land after
+                market validation — the waitlist is the signal that decides it.
+              </p>
+            </div>
+          </div>
+
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <button
               type="button"
@@ -175,6 +226,7 @@ export function AgenticWorkloadCompiler() {
             >
               <RefreshCcw size={18} /> Load Example
             </button>
+            <CompilerWaitlist />
           </div>
         </div>
       </section>
@@ -283,6 +335,43 @@ export function AgenticWorkloadCompiler() {
             </div>
           ))}
       </main>
+
+      {/* Closing CTA — waitlist */}
+      <section className="max-w-6xl mx-auto px-4 md:px-6 pb-20">
+        <div className="border border-gray-border rounded-lg bg-gray-dark p-8 text-center">
+          <h2 className="text-2xl font-bold mb-3">Support the build</h2>
+          <p className="text-gray-light mb-6 max-w-2xl mx-auto">
+            The compiler boundary is live today. The report engine is next — and it ships only if the
+            market signals it. Join the waitlist for early access and early-bird pricing when it does.
+          </p>
+          <div className="flex justify-center">
+            <CompilerWaitlist />
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function StoryStep({
+  icon,
+  step,
+  title,
+  body,
+}: {
+  icon: React.ReactNode
+  step: string
+  title: string
+  body: string
+}) {
+  return (
+    <div className="p-4 rounded-lg border border-gray-border bg-black/30">
+      <div className="flex items-center gap-2 text-accent mb-2">
+        {icon}
+        <span className="font-mono text-xs">Step {step}</span>
+      </div>
+      <p className="font-bold text-sm mb-1">{title}</p>
+      <p className="text-xs text-gray-light leading-relaxed">{body}</p>
     </div>
   )
 }

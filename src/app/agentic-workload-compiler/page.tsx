@@ -4,7 +4,7 @@ import { SITE } from '@/lib/constants'
 import { AgenticWorkloadCompiler } from '@/components/compiler/AgenticWorkloadCompiler'
 
 const DESCRIPTION =
-  'Turn an agentic AI solution into a standardised, provider-neutral workload model — without asking the developer to estimate token usage. Functional prototype.'
+  'Turn an agentic AI solution into a standardised, provider-neutral workload model — without asking the developer to estimate token usage. Compile the workload, run it across latency vs batching scenarios, and get a defensible cost figure to quote your client. Functional prototype — join the waitlist.'
 
 export const metadata: Metadata = {
   title: 'Agentic Workload Compiler',
