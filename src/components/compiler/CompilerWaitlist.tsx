@@ -16,12 +16,26 @@ type SubmitState = 'idle' | 'submitting' | 'success' | 'error'
  * taken — the promise is early access + early-bird pricing once the report
  * engine ships.
  */
-export function CompilerWaitlist({ className = '' }: { className?: string }) {
+export function CompilerWaitlist({
+  className = '',
+  label = 'Join the waitlist',
+  variant = 'secondary',
+}: {
+  className?: string
+  label?: string
+  /** 'secondary' = quiet outline; 'white' = solid conversion action for hero callouts. */
+  variant?: 'secondary' | 'white'
+}) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [state, setState] = useState<SubmitState>('idle')
   const [message, setMessage] = useState('')
   const emailRef = useRef<HTMLInputElement>(null)
+
+  const triggerClasses =
+    variant === 'white'
+      ? 'inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-black transition-colors hover:bg-gray-light'
+      : `btn btn-secondary inline-flex items-center gap-2 min-h-[44px] ${className}`
 
   useEffect(() => {
     if (!open) return
@@ -68,9 +82,9 @@ export function CompilerWaitlist({ className = '' }: { className?: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`btn btn-secondary inline-flex items-center gap-2 min-h-[44px] ${className}`}
+        className={triggerClasses}
       >
-        <Sparkles size={18} /> Join the waitlist
+        <Sparkles size={18} /> {label}
       </button>
 
       {open && (
@@ -119,11 +133,31 @@ export function CompilerWaitlist({ className = '' }: { className?: string }) {
               </div>
             ) : (
               <>
+                <p className="text-sm text-gray-light mb-4">
+                  The <span className="text-white">Agentic Workload Compiler</span> turns your
+                  agentic network — agents, tasks, workflows, tools and business volume — into a
+                  standardised workload model, then costs it across latency vs batching scenarios.
+                </p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-light mb-2">
+                  What you&apos;re signing up for
+                </p>
+                <ul className="mb-4 space-y-1.5 text-sm text-gray-light">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent" />
+                    Early access when the report engine ships
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent" />
+                    Early-bird pricing for the first cohort
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent" />
+                    A say in what gets built next
+                  </li>
+                </ul>
                 <p className="text-sm text-gray-light mb-6">
-                  The compiler boundary is live today. The report engine &mdash; scenario-based
-                  token and cost runs across latency / batching tradeoffs, harness recommendation,
-                  and a defensible <span className="text-white">$ per month</span> to quote your
-                  client &mdash; ships if the market signals it. Your signup is that signal.
+                  The compiler boundary is free to run today — no signup needed.{' '}
+                  <span className="text-white">The waitlist just decides whether the report engine gets built.</span>
                 </p>
                 <form onSubmit={submit} className="space-y-4">
                   <div>

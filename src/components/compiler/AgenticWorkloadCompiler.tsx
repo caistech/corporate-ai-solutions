@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react'
 import {
   Boxes,
+  CheckCircle2,
   FlaskConical,
   Hammer,
   Info,
@@ -226,7 +227,47 @@ export function AgenticWorkloadCompiler() {
             >
               <RefreshCcw size={18} /> Load Example
             </button>
-            <CompilerWaitlist />
+          </div>
+
+          {/* Not live yet — waitlist signup with a plain-language description */}
+          <div className="mt-10 max-w-4xl rounded-lg border border-accent/40 bg-accent/5 p-6 md:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="font-mono text-xs uppercase tracking-widest text-accent mb-3">
+                  Not live yet
+                </p>
+                <p className="font-bold text-white mb-3">What is the Agentic Workload Compiler?</p>
+                <p className="text-sm text-gray-light leading-relaxed">
+                  You describe your agentic network — agents, tasks, workflows, tools and business
+                  volume. The compiler derives the inference workload that network creates, instead
+                  of making you guess token counts. It then runs that workload against latency vs
+                  batching scenarios to produce the report you actually want: how many tokens per
+                  month, which model harness, and a defensible cost figure to quote your client.
+                </p>
+                <p className="mt-2 text-sm text-gray-light leading-relaxed">
+                  The compiler boundary works right now — no signup needed to try it. The report
+                  engine lands only if developers signal they want it. That&apos;s what the waitlist
+                  is for.
+                </p>
+                <ul className="mt-4 space-y-1.5 text-sm text-gray-light">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent" />
+                    Early access to the report engine when it ships
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent" />
+                    Early-bird pricing for the first cohort
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent" />
+                    A say in what gets built next
+                  </li>
+                </ul>
+              </div>
+              <div className="shrink-0">
+                <CompilerWaitlist label="Join Waitlist" variant="white" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
