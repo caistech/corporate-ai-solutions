@@ -1,8 +1,8 @@
 # LinkedIn Posts — Agentic Workload Compiler Launch
 
 Five posts for the AI-developer audience. Each points at the live compiler + waitlist:
+https://corporateaisolutions.com/agentic-workload-compiler
 
-> https://corporate-ai-solutions.vercel.app/agentic-workload-compiler
 
 ---
 
@@ -16,8 +16,9 @@ It's guesswork dressed as diligence. The client signs it, you build it, and the 
 
 I built a prototype that kills the guesswork. You describe your agentic network — agents, tasks, workflows, tools, business volume. The compiler derives the inference workload from your structure instead of your vibes. No token counts to estimate. Then it prices that against the latency vs batching tradeoffs your client actually cares about.
 
-Try the prototype (no signup needed to use it):
-https://corporate-ai-solutions.vercel.app/agentic-workload-compiler
+Join the waitlist for early access now:
+
+https://corporateaisolutions.com/agentic-workload-compiler
 
 The report engine is next and only ships if the market signals it. Join the waitlist if you'd use this.
 
@@ -33,8 +34,9 @@ That conversation is where agentic product sales get squishy. Nobody has a defen
 
 The Agentic Workload Compiler makes that number concrete. You describe the solution once. It derives the workload. Then you run scenarios: all-realtime, mixed batching, all-batching. The report you walk into the room with says "X tokens a month, recommended harness, about $Y a month — and here's the tradeoff you're choosing."
 
-Functional prototype is live:
-https://corporate-ai-solutions.vercel.app/agentic-workload-compiler
+Join the waitlist for early access now:
+
+https://corporateaisolutions.com/agentic-workload-compiler
 
 If that's a conversation you want to win, get on the list for the report engine.
 
@@ -54,8 +56,9 @@ I'm doing the opposite, so let me be precise about what's live and what isn't.
 
 Why not build it? Because the go/no-go should come from the market, not from my keyboard. If enough developers say "I'd use this to price the agentic networks I build for clients," it gets built.
 
-That's the waitlist:
-https://corporate-ai-solutions.vercel.app/agentic-workload-compiler
+Join the waitlist for early access now:
+
+https://corporateaisolutions.com/agentic-workload-compiler
 
 ---
 
@@ -67,8 +70,9 @@ That's why the compiler has one hard design rule: the person entering the data n
 
 The payoff is the bit everyone actually asks for: walking a client through what their agentic system will truly run, and having a number that survives scrutiny instead of a whiteboard estimate.
 
-Prototype, free to play with:
-https://corporate-ai-solutions.vercel.app/agentic-workload-compiler
+Join the waitlist for early access now:
+
+https://corporateaisolutions.com/agentic-workload-compiler
 
 If you've priced an agentic deployment this year and have a story about it — better yet, join the waitlist so the report engine actually gets built.
 
@@ -82,7 +86,8 @@ Agentic systems get all their interesting finance questions asked at the wrong l
 
 The Agentic Workload Compiler was built to answer the second question. You describe your network's design; it derives the workload; you compare scenarios instead of comparing price lists. Because the network is yours, the model is a variable, and the workload is the thing you can actually engineer.
 
-Take the compiled workload for one of your real networks and run the scenarios:
-https://corporate-ai-solutions.vercel.app/agentic-workload-compiler
+Join the waitlist for early access now:
+
+https://corporateaisolutions.com/agentic-workload-compiler
 
 The harness recommendation + cost engine is in validation. The waitlist decides when it ships.

@@ -16,7 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/marketplace/cqr',
     '/voice-ai',
     '/solutions',
-    '/agentic-workload-compiler',
+    '/infera',
     '/contact',
     '/about',
   ]

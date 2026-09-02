@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { CheckCircle2, Loader2, Sparkles, X } from 'lucide-react'
 
-const PLATFORM = 'agentic-workload-compiler'
+const PLATFORM = 'infera'
 const SOURCE = 'compiler-waitlist-modal'
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error'

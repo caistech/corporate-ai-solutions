@@ -32,7 +32,7 @@ const STAGES: { id: Stage; label: string }[] = [
   { id: 5, label: 'Simulate' },
 ]
 
-export function AgenticWorkloadCompiler() {
+export function Infera() {
   const [solution, setSolution] = useState<Solution>(() => cloneSolution(SAMPLE_SOLUTION))
   const [compiled, setCompiled] = useState<CompiledWorkload | null>(null)
   const [snapshot, setSnapshot] = useState<string | null>(null)
@@ -110,8 +110,8 @@ export function AgenticWorkloadCompiler() {
   }
 
   const stageDescriptions: Record<Stage, string> = {
-    1: 'Describe what the system does: agents, tasks, workflows and tools. You describe the solution; the compiler derives the workload from its structure.',
-    2: 'The only question worth asking: when does the result need to be available? The compiler maps the business answer to execution characteristics.',
+    1: 'Describe what the Infera system does: agents, tasks, workflows and tools. You describe the solution; the compiler derives the workload from its structure.',
+    2: 'The only question worth asking: when does the result need to be available? The Infera compiler maps the business answer to execution characteristics.',
     3: 'Runs the deterministic compiler over the current solution: inference operations, execution profiles, token profiles, batching and validation.',
     4: 'The standardised, provider-neutral workload dataset derived from your solution — inference operations, execution opportunities, assumptions with provenance, and validation.',
     5: 'The compiled workload is ready to run against different inference configurations to estimate workload, performance and cost.',
@@ -138,7 +138,7 @@ export function AgenticWorkloadCompiler() {
                   month, which model harness, and a defensible cost figure to quote your client.
                 </p>
                 <p className="mt-2 text-sm text-gray-light leading-relaxed">
-                  The compiler boundary works right now — no signup needed to try it. The report
+                  The Infera compiler boundary works right now — no signup needed to try it. The report
                   engine lands only if developers signal they want it. That&apos;s what the waitlist
                   is for.
                 </p>
@@ -170,13 +170,13 @@ export function AgenticWorkloadCompiler() {
               Compiler boundary only
             </span>
           </div>
-          <h1 className="mb-5">Agentic Workload Compiler</h1>
+          <h1 className="mb-5">Infera</h1>
           <p className="text-xl text-white mb-4 max-w-3xl">
             Turn an agentic solution into a standardised workload model —{' '}
             <span className="text-accent">without asking the developer to estimate token usage.</span>
           </p>
           <p className="text-lg text-gray-light mb-8 max-w-3xl">
-            Describe your agentic network once. The compiler derives what inference workload it
+            Describe your agentic network once. Infera derives what inference workload it
             creates — then price that against the latency vs batching tradeoffs your client
             actually cares about.
           </p>
