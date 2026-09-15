@@ -8,7 +8,7 @@
 // env round-trip.
 
 /**
- * The methodology-cockpit in-context clarifier agent (the /admin/methodology card detail).
+ * The cockpit in-context clarifier agent (mounted on the /admin card-detail surface).
  * Provisioned via `npm run provision:clarifier`; that script prints the agent ID to paste in
  * as the fallback below (or set NEXT_PUBLIC_ELEVENLABS_AGENT_COCKPIT_CLARIFIER on Vercel).
  */
