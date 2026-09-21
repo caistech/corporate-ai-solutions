@@ -69,22 +69,29 @@ export async function middleware(request: NextRequest) {
   const isCallback = pathname.startsWith('/pipeline/auth/')
   const isAdminCallback = pathname.startsWith('/admin/pipeline/auth/')
   const isAdmin = pathname.startsWith('/admin')
+  // /portfolio-admin sits at the domain root (outside /admin) but is operator-only in exactly
+  // the same way — the CAIS entity-level control plane over every project (Kira, F2K-Checkpoint,
+  // etc.), not a marketing surface. Reuses the SAME /admin/login rather than a third login flow.
+  const isPortfolioAdmin = pathname.startsWith('/portfolio-admin')
+  const isOperatorGated = isAdmin || isPortfolioAdmin
 
-  // Unauthenticated → the CORRECT login (PRODUCT_STANDARDS §8.5 dual-auth): admin paths go to the
-  // admin login, user paths to the user login. Covers /admin/* + /pipeline/* (the methodology
-  // cockpit fires real outreach + API cost, so an open surface is a live exposure). The login
-  // pages + the magic-link callbacks are exempt — they must be reachable to authenticate.
+  // Unauthenticated → the CORRECT login (PRODUCT_STANDARDS §8.5 dual-auth): admin/portfolio-admin
+  // paths go to the admin login, user paths to the user login. Covers /admin/* + /portfolio-admin/*
+  // + /pipeline/* (the methodology cockpit fires real outreach + API cost, so an open surface is a
+  // live exposure). The login pages + the magic-link callbacks are exempt — they must be reachable
+  // to authenticate.
   if (!isLogin && !isAdminLogin && !isCallback && !isAdminCallback && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = isAdmin ? '/admin/login' : '/pipeline/login'
+    url.pathname = isOperatorGated ? '/admin/login' : '/pipeline/login'
     return NextResponse.redirect(url)
   }
 
-  // /admin/* is operator-only: a logged-in user must also be on the admin allowlist. Send an authed
-  // non-operator to the admin login with a denied flag so they get a CLEAR "no admin access" message
-  // (not a silent bounce to the marketing homepage — a dead end for a signed-in user). The admin
-  // login itself is exempt (the isAdminLogin clause below routes an already-authed user onward).
-  if (isAdmin && !isAdminLogin && user && !isOperator(user.email)) {
+  // /admin/* and /portfolio-admin/* are operator-only: a logged-in user must also be on the admin
+  // allowlist. Send an authed non-operator to the admin login with a denied flag so they get a
+  // CLEAR "no admin access" message (not a silent bounce to the marketing homepage — a dead end
+  // for a signed-in user). The admin login itself is exempt (the isAdminLogin clause below routes
+  // an already-authed user onward).
+  if (isOperatorGated && !isAdminLogin && user && !isOperator(user.email)) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin/login'
     url.search = ''
@@ -123,5 +130,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/pipeline/:path*', '/admin/:path*', '/api/methodology/:path*'],
+  matcher: ['/pipeline/:path*', '/admin/:path*', '/portfolio-admin/:path*', '/api/methodology/:path*'],
 }
