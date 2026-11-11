@@ -1,3 +1,6 @@
+// @explanatory-header-exempt — a legal document opens with its own title and lead paragraph that
+// state what it covers and why it matters; a marketing-shaped header above it would be redundant
+// and would read as sales copy sitting on top of a contract.
 import type { Metadata } from 'next'
 import { SITE } from '@/lib/constants'
 

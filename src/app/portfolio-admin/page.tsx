@@ -1,3 +1,7 @@
+// @explanatory-header-exempt — the page opens with a hand-built <header> carrying an h1 and a
+// paragraph that answer what this is, what it holds (portfolio-level facts only) and what to do
+// (follow a project link down into its own portal); the shared component would sit above that and
+// repeat it.
 // /portfolio-admin — the Corporate AI Solutions / Global Buildtech Australia entity-level
 // control plane. This sits above individual products (Kira, F2K-Checkpoint, etc.) — it is
 // NOT another product's own admin, and it is not the /admin/pipeline validation cockpit
