@@ -44,9 +44,24 @@ export interface RecordUsageResult {
 }
 
 /**
+ * The provider's served id usually carries a version suffix the price table does not use:
+ * `gpt-4.1-mini-2025-04-14` is served where `gpt-4.1-mini` is priced.
+ *
+ * Matching the exact string only meant every REAL call recorded as `priced = false` — measured
+ * 2026-11-10 on Kira: 28 of 34 events unpriced, all of them the dated id, while the six priced ones
+ * were hand-posted with the undated one. An unpriced event is honest ("unknown"), but a product whose
+ * entire traffic is unpriced reports $0.00, and a zero is indistinguishable from "this cost nothing".
+ */
+export function normaliseModelId(model: string | null): string | null {
+  if (!model) return null
+  return model.trim().replace(/-\d{4}-\d{2}-\d{2}$/, '').replace(/-latest$/i, '')
+}
+
+/**
  * Latest USD-per-unit in effect on `onDate` for a provider/model/unit_type. Precedence:
  *   1. exact (provider, model, unit_type)
- *   2. provider-wide default (provider, model IS NULL, unit_type)
+ *   2. the same model without its version suffix (`-2025-04-14`, `-latest`)
+ *   3. provider-wide default (provider, model IS NULL, unit_type)
  * Returns null when nothing matches — the caller records the event as unpriced rather than $0.
  */
 export async function priceForUsage(
@@ -72,10 +87,17 @@ export async function priceForUsage(
   const rows = (data ?? []) as Array<{ usd_per_unit: number; model: string | null }>
   if (rows.length === 0) return null
 
-  // Prefer an exact model match (rows are already newest-first), else a provider-wide default.
+  // Prefer an exact model match, then the undated sibling, then a provider-wide default.
   const wanted = model?.trim() ?? null
   const exact = rows.find((r) => r.model === wanted)
   if (exact) return Number(exact.usd_per_unit)
+
+  const normalised = normaliseModelId(wanted)
+  if (normalised && normalised !== wanted) {
+    const sibling = rows.find((r) => r.model === normalised)
+    if (sibling) return Number(sibling.usd_per_unit)
+  }
+
   const generic = rows.find((r) => r.model === null)
   return generic ? Number(generic.usd_per_unit) : null
 }
