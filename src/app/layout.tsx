@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
 import { CorporateHeader } from '@/components/corporate/CorporateHeader'
@@ -25,6 +25,15 @@ export const metadata: Metadata = {
     title: 'Corporate AI Solutions | The Factory That Builds AI Companies',
     description: 'Don\'t take the count on faith — clone one and run it. Open, BYOK AI products built by one operator, on your keys and your infra. Available for contract builds.',
   },
+}
+
+// Next.js injects a default viewport meta, but it is declared here explicitly for two reasons:
+// it is what `portfolio-gate`'s responsive audit (#2) checks for, and an explicit declaration is
+// the one that survives someone later adding a custom `<head>` — at which point the default stop
+// being obvious. `width=device-width, initial-scale=1` is the floor PRODUCT_STANDARDS §1 sets.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

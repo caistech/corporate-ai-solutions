@@ -1,16 +1,18 @@
 {
   "baseUrl": "https://corporate-ai-solutions.vercel.app",
   "_comment": "Marketing + marketplace site. No user auth — see gate.yml for the auth-smoke skip rationale.",
+  "_redirects": "The four commercial URLs 307 to /services on purpose (3f21ea1, 2026-08-05 — the site offered four price points across four pages and a buyer could not tell what was for sale). next.config.js keeps them `permanent: false` deliberately, because `permanent: true` is cached hard by browsers and would make restoring /pricing or /engagement painful. So the smoke pins 307 exactly: a 2xx here would mean the redirect was removed, and a 308 would mean someone made it permanent, and both deserve to fail the gate rather than pass silently. /services is listed separately so the destination itself is walked — a redirect that lands on a 404 is not coverage.",
   "routes": [
     { "path": "/" },
-    { "path": "/pricing" },
+    { "path": "/services" },
     { "path": "/about" },
     { "path": "/contact" },
     { "path": "/community" },
     { "path": "/marketplace" },
     { "path": "/marketplace/cqr" },
-    { "path": "/engagement" },
-    { "path": "/studio/partner", "expectedStatus": 308 },
-    { "path": "/partner", "expectedStatus": 308 }
+    { "path": "/pricing", "expectedStatus": 307 },
+    { "path": "/engagement", "expectedStatus": 307 },
+    { "path": "/studio/partner", "expectedStatus": 307 },
+    { "path": "/partner", "expectedStatus": 307 }
   ]
 }
