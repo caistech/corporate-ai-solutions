@@ -376,6 +376,9 @@ export default function VoiceCoach({
           agentId={COACH_AGENT_ID}
           mode="interview"
           placement="inline"
+          // The tenant's day, not the viewer's: the coach answers "what happened today" about the
+          // CAS business, so a browser in another zone must not move that boundary.
+          timeZone="Australia/Perth"
           title="Talk through your idea with the coach. One question at a time; answers save as you go."
           textFallback
           textInput

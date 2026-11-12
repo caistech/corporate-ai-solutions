@@ -43,6 +43,8 @@ export function CockpitClarifier({ card }: CockpitClarifierProps) {
       agentId={COCKPIT_CLARIFIER_AGENT_ID}
       mode="clarifier"
       placement="floating"
+      // The tenant's day, not the viewer's — see AdminChromeClarifier.
+      timeZone="Australia/Perth"
       title="Methodology clarifier — ask about Gate 1, what Launch fires, or which decision fits this card."
       textFallback
       clientTools={clientTools}

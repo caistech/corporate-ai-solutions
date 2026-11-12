@@ -36,6 +36,9 @@ export function AdminChromeClarifier() {
       agentId={COCKPIT_CLARIFIER_AGENT_ID}
       mode="clarifier"
       placement="floating"
+      // The cockpit is operated from the CAS business — the agent's "today" is that day, not the
+      // browser's. Passed explicitly so a viewer on a UTC laptop still asks about the tenant's day.
+      timeZone="Australia/Perth"
       title="Methodology clarifier — ask about the pipeline, the gates, or what an action fires."
       textFallback
       clientTools={clientTools}
